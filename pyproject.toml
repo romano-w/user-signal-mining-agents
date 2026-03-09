@@ -1,7 +1,32 @@
 [project]
 name = "user-signal-mining-agents"
 version = "0.1.0"
-description = "Add your description here"
+description = "Founder-grounded review mining experiments for surfacing actionable focus points from user reviews."
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.13.1",
+    "python-dotenv>=1.2.2",
+    "torch==2.10.0+cu130",
+    "torchvision==0.25.0+cu130",
+]
+
+[project.scripts]
+usm = "user_signal_mining_agents.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/user_signal_mining_agents"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
+torchvision = { index = "pytorch-cu130" }

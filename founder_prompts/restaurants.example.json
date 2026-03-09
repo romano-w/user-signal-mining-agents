@@ -1,0 +1,14 @@
+[
+  {
+    "id": "restaurant-loyalty-repeat-visits",
+    "statement": "I run a neighborhood restaurant and want to understand what keeps first-time guests from becoming regulars.",
+    "domain": "restaurants",
+    "notes": "Focus on operational, menu, and service pain points that influence repeat visits."
+  },
+  {
+    "id": "restaurant-takeout-speed",
+    "statement": "I run a casual takeout restaurant and want to know which customer pain points most hurt perceived speed and reliability.",
+    "domain": "restaurants",
+    "notes": "Look for signals tied to pickup, order accuracy, delivery handoff, and wait times."
+  }
+]
