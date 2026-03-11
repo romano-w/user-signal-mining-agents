@@ -11,6 +11,7 @@ from ..agents.baseline import run_baseline
 from ..agents.judge import judge_pair
 from ..agents.pipeline import run_pipeline
 from ..config import Settings, get_settings
+from .. import console as con
 from ..schemas import (
     EvaluationSummary,
     FounderPrompt,
@@ -52,27 +53,30 @@ def run_evaluation(
         allowed = set(prompt_ids)
         prompts = [p for p in prompts if p.id in allowed]
 
+    con.header(
+        "Founder-Grounded Review Mining Evaluation",
+        f"{len(prompts)} prompt(s) | model: {s.llm_model} | provider: {s.llm_provider}",
+    )
+
     pairs: list[PromptEvaluationPair] = []
 
     for i, prompt in enumerate(prompts, start=1):
-        print(f"\n{'='*60}")
-        print(f"[{i}/{len(prompts)}] Evaluating: {prompt.id}")
-        print(f"{'='*60}")
-
         run_dir = s.run_artifacts_dir / prompt.id
 
-        # Check if this prompt is fully complete (all 4 files exist)
+        # Files
         judge_b_path = run_dir / "judge_baseline.json"
         judge_p_path = run_dir / "judge_pipeline.json"
         baseline_path = run_dir / "baseline.json"
         pipeline_path = run_dir / "pipeline.json"
 
+        con.prompt_table(prompt.id, i, len(prompts))
+
+        # Check if fully complete
         if skip_cached:
             cached_judge_b = _try_load_judge(judge_b_path)
             cached_judge_p = _try_load_judge(judge_p_path)
             if cached_judge_b and cached_judge_p:
-                print(f"  [COMPLETE] Using cached results for {prompt.id}")
-                cached_prompt = _try_load_synthesis(baseline_path)
+                con.cached("COMPLETE", f"Using cached results for {prompt.id}")
                 pairs.append(PromptEvaluationPair(
                     prompt=prompt,
                     baseline_scores=cached_judge_b,
@@ -83,14 +87,14 @@ def run_evaluation(
         # Baseline
         baseline_result = _try_load_synthesis(baseline_path) if skip_cached else None
         if baseline_result:
-            print(f"  [baseline] Using cached result from {baseline_path}")
+            con.cached("baseline", f"Using cached result")
         else:
             baseline_result = run_baseline(prompt, s)
 
         # Pipeline
         pipeline_result = _try_load_synthesis(pipeline_path) if skip_cached else None
         if pipeline_result:
-            print(f"  [pipeline] Using cached result from {pipeline_path}")
+            con.cached("pipeline", f"Using cached result")
         else:
             pipeline_result = run_pipeline(prompt, s)
 
@@ -109,6 +113,11 @@ def run_evaluation(
             pipeline_judge.model_dump_json(indent=2),
             encoding="utf-8",
         )
+
+        # Show per-prompt scores
+        b = baseline_judge.scores
+        p = pipeline_judge.scores
+        con.step("scores", f"B={b.overall_avg:.1f} vs P={p.overall_avg:.1f}")
 
         pairs.append(PromptEvaluationPair(
             prompt=prompt,

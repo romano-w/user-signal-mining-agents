@@ -5,6 +5,7 @@ from __future__ import annotations
 from ..config import Settings, get_settings
 from ..retrieval.index import search_dense_index
 from ..schemas import EvidenceSnippet, FounderPrompt, IntentBundle
+from .. import console as con
 
 
 def retrieve_and_filter(
@@ -18,7 +19,7 @@ def retrieve_and_filter(
 
     # Collect queries: original statement + intent-derived queries
     queries = [prompt.statement] + list(intent.retrieval_queries)
-    print(f"  [evidence] Searching with {len(queries)} queries...")
+    con.step("evidence", f"Searching with {len(queries)} queries...")
 
     # Gather all hits, tracking best score per snippet
     best_by_id: dict[str, tuple[float, EvidenceSnippet]] = {}
@@ -41,5 +42,5 @@ def retrieve_and_filter(
     # Take top synthesis_evidence_k
     top_k = s.synthesis_evidence_k
     evidence = [snippet for _score, snippet in ranked[:top_k]]
-    print(f"  [evidence] Selected {len(evidence)} snippets from {len(best_by_id)} unique candidates.")
+    con.step("evidence", f"Selected {len(evidence)} snippets from {len(best_by_id)} unique candidates")
     return evidence

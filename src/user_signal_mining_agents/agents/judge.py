@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..config import Settings, get_settings
 from ..llm_client import call_llm_json
+from .. import console as con
 from ..schemas import (
     FocusPoint,
     FounderPrompt,
@@ -52,7 +53,7 @@ def judge_pair(
         "contradiction_handling, non_redundancy (all 1-5), and rationale."
     )
 
-    print(f"  [judge] Scoring prompt {prompt.id!r}...")
+    con.step("judge", f"Scoring prompt {prompt.id!r}...")
     raw = call_llm_json(system_prompt=system_prompt, user_prompt=user_prompt, settings=s)
 
     if not isinstance(raw, dict):

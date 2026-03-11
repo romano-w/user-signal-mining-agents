@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..config import Settings, get_settings
 from ..schemas import FounderPrompt, SynthesisResult
+from .. import console as con
 from .evidence_filter import retrieve_and_filter
 from .intent import decompose_intent
 from .synthesis import run_synthesis
@@ -19,7 +20,7 @@ def run_pipeline(
 
     # Step 1 — Intent decomposition
     intent = decompose_intent(prompt, s)
-    print(f"  [pipeline] Intent: {len(intent.retrieval_queries)} queries, "
+    con.step("pipeline", f"Intent: {len(intent.retrieval_queries)} queries, "
           f"{len(intent.counter_hypotheses)} counter-hypotheses")
 
     # Step 2 — Multi-query retrieval + dedup + re-rank
@@ -36,5 +37,5 @@ def run_pipeline(
         result.model_dump_json(indent=2, exclude_none=True),
         encoding="utf-8",
     )
-    print(f"  [pipeline] Saved -> {output_path}")
+    con.success("pipeline", f"Saved -> {output_path}")
     return result

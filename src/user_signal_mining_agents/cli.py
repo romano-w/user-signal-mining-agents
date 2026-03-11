@@ -224,12 +224,37 @@ def cmd_run_pipeline(prompt_id: str | None) -> int:
 def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
     from .evaluation.runner import run_evaluation
     from .evaluation.report import generate_report
+    from . import console as con
 
     settings = get_settings()
     prompt_ids = [prompt_id] if prompt_id else None
     summary = run_evaluation(settings, prompt_ids=prompt_ids, skip_cached=not no_cache)
     report_path = generate_report(summary, settings.run_artifacts_dir)
-    print(f"\nReport saved to {report_path}")
+
+    # Show aggregate scores table
+    if summary.pairs:
+        dims = ["relevance", "actionability", "evidence_grounding",
+                "contradiction_handling", "non_redundancy"]
+        dim_labels = {
+            "relevance": "Relevance",
+            "actionability": "Actionability",
+            "evidence_grounding": "Evidence Grounding",
+            "contradiction_handling": "Contradiction Handling",
+            "non_redundancy": "Non Redundancy",
+        }
+        scores: dict[str, tuple[float, float]] = {}
+        for dim in dims:
+            b_avg = sum(getattr(p.baseline_scores.scores, dim) for p in summary.pairs) / len(summary.pairs)
+            p_avg = sum(getattr(p.pipeline_scores.scores, dim) for p in summary.pairs) / len(summary.pairs)
+            scores[dim_labels[dim]] = (b_avg, p_avg)
+
+        b_overall = sum(v[0] for v in scores.values()) / len(scores)
+        p_overall = sum(v[1] for v in scores.values()) / len(scores)
+
+        con.console.print()
+        con.results_table(scores, b_overall, p_overall)
+
+    con.success("report", f"Saved to {report_path}")
     return 0
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..config import Settings, get_settings
+from .. import console as con
 from ..llm_client import call_llm_json
 from ..schemas import (
     EvidenceSnippet,
@@ -87,7 +88,7 @@ def run_synthesis(
         f"Evidence snippets:\n{evidence_block}"
     )
 
-    print(f"  [synthesis] Calling LLM for prompt {prompt.id!r}...")
+    con.step("synthesis", f"Calling LLM for prompt {prompt.id!r}...")
     raw = call_llm_json(system_prompt=system_prompt, user_prompt=user_prompt, settings=s)
 
     focus_list = raw if isinstance(raw, list) else raw.get("focus_points", raw)

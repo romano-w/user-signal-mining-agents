@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from ..config import Settings, get_settings
+from .. import console as con
 from ..llm_client import call_llm_json
 from ..retrieval.index import search_dense_index
 from ..schemas import (
@@ -84,7 +85,7 @@ def run_baseline(
     )
 
     # 3. Call LLM
-    print(f"  [baseline] Calling LLM for prompt {prompt.id!r}...")
+    con.step("baseline", f"Calling LLM for prompt {prompt.id!r}...")
     raw = call_llm_json(system_prompt=system_prompt, user_prompt=user_prompt, settings=s)
 
     # 4. Parse focus points
@@ -106,5 +107,5 @@ def run_baseline(
         result.model_dump_json(indent=2, exclude_none=True),
         encoding="utf-8",
     )
-    print(f"  [baseline] Saved -> {output_path}")
+    con.success("baseline", f"Saved -> {output_path}")
     return result

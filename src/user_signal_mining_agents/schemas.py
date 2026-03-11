@@ -74,6 +74,16 @@ class JudgeScores(BaseModel):
     non_redundancy: float = Field(ge=1, le=5)
     rationale: str
 
+    @property
+    def overall_avg(self) -> float:
+        return (
+            self.relevance
+            + self.actionability
+            + self.evidence_grounding
+            + self.contradiction_handling
+            + self.non_redundancy
+        ) / 5
+
 
 class JudgeResult(BaseModel):
     model_config = ConfigDict(extra="forbid")

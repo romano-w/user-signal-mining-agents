@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..config import Settings, get_settings
 from ..llm_client import call_llm_json
+from .. import console as con
 from ..schemas import FounderPrompt, IntentBundle
 
 
@@ -22,7 +23,7 @@ def decompose_intent(
     system_prompt = _load_prompt_template(s)
     user_prompt = f"Founder statement:\n{prompt.statement}"
 
-    print(f"  [intent] Decomposing intent for prompt {prompt.id!r}...")
+    con.step("intent", f"Decomposing intent for prompt {prompt.id!r}...")
     raw = call_llm_json(system_prompt=system_prompt, user_prompt=user_prompt, settings=s)
 
     if not isinstance(raw, dict):

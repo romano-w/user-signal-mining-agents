@@ -11,6 +11,7 @@ from typing import Any
 import openai
 
 from .config import Settings, get_settings
+from . import console as con
 
 
 _PROVIDER_BASE_URLS: dict[str, str] = {
@@ -44,7 +45,7 @@ def _next_gemini_key(s: Settings) -> str:
             )
         _gemini_key_cycle = itertools.cycle(keys)
         key_count = len(keys)
-        print(f"  [LLM] Gemini key rotation: {key_count} key(s) available")
+        con.step("LLM", f"Gemini key rotation: {key_count} key(s) available")
     return next(_gemini_key_cycle)
 
 
@@ -114,10 +115,7 @@ def call_llm(
             )
             usage = response.usage
             if usage:
-                print(
-                    f"  [LLM] {resolved_model} -- "
-                    f"prompt {usage.prompt_tokens} / completion {usage.completion_tokens} tokens"
-                )
+                con.llm_tokens(resolved_model, usage.prompt_tokens, usage.completion_tokens)
             return response.choices[0].message.content or ""
 
         except (openai.RateLimitError, openai.APITimeoutError) as exc:
@@ -130,7 +128,7 @@ def call_llm(
                 wait = server_delay + 2  # respect server hint
             else:
                 wait = min(5 * attempt, 60)  # 5, 10, 15, 20... capped at 60
-            print(f"  [LLM] rate limited, rotating key & waiting {wait:.0f}s (attempt {attempt}/{max_retries})")
+            con.llm_rate_limited(wait, attempt, max_retries)
             time.sleep(wait)
 
     return ""  # unreachable
