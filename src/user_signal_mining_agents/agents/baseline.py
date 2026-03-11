@@ -54,6 +54,10 @@ def _normalize_focus_point(raw: dict) -> dict:
     ss = out.get("supporting_snippets")
     if isinstance(ss, list):
         out["supporting_snippets"] = [_coerce_to_str(s) for s in ss][:5]
+    # Provide defaults for commonly missing fields
+    out.setdefault("counter_signal", "No counter-signal identified.")
+    out.setdefault("next_validation_question", "What additional data would help validate this finding?")
+    out.setdefault("supporting_snippets", [])
     # Drop any extra keys Gemini invented that Pydantic would reject
     known = {"label", "why_it_matters", "supporting_snippets", "counter_signal", "next_validation_question"}
     out = {k: v for k, v in out.items() if k in known}

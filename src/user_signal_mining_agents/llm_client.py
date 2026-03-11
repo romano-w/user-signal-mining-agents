@@ -146,24 +146,56 @@ def call_llm_json(
     """Call the LLM and parse the response as JSON.
 
     Strips markdown fences if the model wraps JSON in ```json ... ```.
+    On parse failure, attempts basic repair then retries the LLM call once.
     """
 
-    raw = call_llm(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
-        settings=settings,
-        model=model,
-        temperature=temperature,
-        max_retries=max_retries,
-    )
+    for json_attempt in range(2):
+        raw = call_llm(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            settings=settings,
+            model=model,
+            temperature=temperature,
+            max_retries=max_retries,
+        )
 
-    text = raw.strip()
-    if text.startswith("```"):
-        lines = text.splitlines()
-        if lines[0].startswith("```"):
-            lines = lines[1:]
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-        text = "\n".join(lines).strip()
+        text = raw.strip()
+        if text.startswith("```"):
+            lines = text.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            text = "\n".join(lines).strip()
 
-    return json.loads(text)
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            # Attempt basic repair: fix common issues
+            repaired = _repair_json(text)
+            try:
+                return json.loads(repaired)
+            except json.JSONDecodeError:
+                if json_attempt == 0:
+                    con.warning("JSON parse failed, retrying LLM call...")
+                    continue
+                raise
+
+    return {}  # unreachable
+
+
+def _repair_json(text: str) -> str:
+    """Attempt basic JSON repair for common LLM output issues."""
+    import re
+
+    # Remove trailing commas before ] or }
+    text = re.sub(r",\s*([}\]])", r"\1", text)
+
+    # Try to extract just the JSON array or object
+    # Sometimes the LLM adds text before/after the JSON
+    match = re.search(r"(\[[\s\S]*\]|\{[\s\S]*\})", text)
+    if match:
+        text = match.group(1)
+
+    return text
+

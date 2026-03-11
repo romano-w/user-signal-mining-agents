@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import random
+
 from ..config import Settings, get_settings
 from ..llm_client import call_llm_json
 from .. import console as con
@@ -36,37 +38,60 @@ def judge_pair(
     pipeline_result: SynthesisResult,
     settings: Settings | None = None,
 ) -> tuple[JudgeResult, JudgeResult]:
-    """Score both system outputs for a single founder prompt."""
+    """Score both system outputs for a single founder prompt.
+
+    Randomizes A/B position to remove positional bias, then maps scores back.
+    """
 
     s = settings or get_settings()
     system_prompt = _load_prompt_template(s)
 
-    baseline_block = _format_focus_points("System A (Baseline)", baseline_result.focus_points)
-    pipeline_block = _format_focus_points("System B (Pipeline)", pipeline_result.focus_points)
+    # Randomize which system is presented as A vs B
+    baseline_first = random.random() < 0.5
+
+    if baseline_first:
+        a_label, b_label = "System A", "System B"
+        a_result, b_result = baseline_result, pipeline_result
+        con.step("judge", f"Scoring prompt {prompt.id!r} (A=baseline, B=pipeline)...")
+    else:
+        a_label, b_label = "System A", "System B"
+        a_result, b_result = pipeline_result, baseline_result
+        con.step("judge", f"Scoring prompt {prompt.id!r} (A=pipeline, B=baseline)...")
+
+    a_block = _format_focus_points(a_label, a_result.focus_points)
+    b_block = _format_focus_points(b_label, b_result.focus_points)
 
     user_prompt = (
         f"Founder statement:\n{prompt.statement}\n\n"
-        f"{baseline_block}\n\n"
-        f"{pipeline_block}\n\n"
+        f"{a_block}\n\n"
+        f"{b_block}\n\n"
         "Score both systems. Return JSON with keys \"system_a\" and \"system_b\", "
         "each containing: relevance, actionability, evidence_grounding, "
         "contradiction_handling, non_redundancy (all 1-5), and rationale."
     )
 
-    con.step("judge", f"Scoring prompt {prompt.id!r}...")
     raw = call_llm_json(system_prompt=system_prompt, user_prompt=user_prompt, settings=s)
 
     if not isinstance(raw, dict):
         raise ValueError(f"Expected dict from judge LLM, got {type(raw).__name__}")
 
+    a_scores = JudgeScores.model_validate(raw["system_a"])
+    b_scores = JudgeScores.model_validate(raw["system_b"])
+
+    # Map scores back to correct systems
+    if baseline_first:
+        baseline_scores, pipeline_scores = a_scores, b_scores
+    else:
+        baseline_scores, pipeline_scores = b_scores, a_scores
+
     baseline_judge = JudgeResult(
         prompt_id=prompt.id,
         system_variant="baseline",
-        scores=JudgeScores.model_validate(raw["system_a"]),
+        scores=baseline_scores,
     )
     pipeline_judge = JudgeResult(
         prompt_id=prompt.id,
         system_variant="pipeline",
-        scores=JudgeScores.model_validate(raw["system_b"]),
+        scores=pipeline_scores,
     )
     return baseline_judge, pipeline_judge

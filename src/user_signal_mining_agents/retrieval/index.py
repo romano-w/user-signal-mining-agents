@@ -1,17 +1,30 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
+
+import os
+os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
+os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
 
 import numpy as np
 import torch
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 
+import transformers
+transformers.logging.set_verbosity_error()
+
 from ..data.chunking import load_snippets_jsonl, write_snippets_jsonl
 from ..schemas import EvidenceSnippet
+
+# Suppress noisy model-loading logs from sentence-transformers
+for _logger_name in ("sentence_transformers", "transformers.modeling_utils"):
+    logging.getLogger(_logger_name).setLevel(logging.ERROR)
 
 
 EMBEDDINGS_FILENAME = "embeddings.npy"
@@ -49,13 +62,20 @@ def resolve_embedding_device(device: str | None) -> str:
     return device
 
 
+# Singleton cache: (model_name, device) -> SentenceTransformer
+_MODEL_CACHE: dict[tuple[str, str], SentenceTransformer] = {}
+
+
 def load_embedding_model(
     model_name: str,
     *,
     device: str | None = None,
 ) -> SentenceTransformer:
     resolved_device = resolve_embedding_device(device)
-    return SentenceTransformer(model_name, device=resolved_device)
+    cache_key = (model_name, resolved_device)
+    if cache_key not in _MODEL_CACHE:
+        _MODEL_CACHE[cache_key] = SentenceTransformer(model_name, device=resolved_device)
+    return _MODEL_CACHE[cache_key]
 
 
 def build_dense_index(
@@ -115,13 +135,20 @@ def build_dense_index_from_jsonl(
     )
 
 
+# Cache loaded index data to avoid re-reading from disk on every search
+_INDEX_CACHE: dict[str, tuple[DenseIndexMetadata, np.ndarray, list[EvidenceSnippet]]] = {}
+
+
 def load_dense_index(index_dir: Path) -> tuple[DenseIndexMetadata, np.ndarray, list[EvidenceSnippet]]:
-    metadata = DenseIndexMetadata.model_validate_json(
-        (index_dir / METADATA_FILENAME).read_text(encoding="utf-8")
-    )
-    embeddings = np.load(index_dir / EMBEDDINGS_FILENAME)
-    snippets = load_snippets_jsonl(index_dir / SNIPPETS_FILENAME)
-    return metadata, embeddings, snippets
+    cache_key = str(index_dir)
+    if cache_key not in _INDEX_CACHE:
+        metadata = DenseIndexMetadata.model_validate_json(
+            (index_dir / METADATA_FILENAME).read_text(encoding="utf-8")
+        )
+        embeddings = np.load(index_dir / EMBEDDINGS_FILENAME)
+        snippets = load_snippets_jsonl(index_dir / SNIPPETS_FILENAME)
+        _INDEX_CACHE[cache_key] = (metadata, embeddings, snippets)
+    return _INDEX_CACHE[cache_key]
 
 
 def search_dense_index(
