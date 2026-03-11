@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>USM Human Annotation Workbench</title>
+  <style>
+    :root {
+      --bg: #f2ece2;
+      --paper: #fffdf8;
+      --ink: #1f1a14;
+      --muted: #6f6458;
+      --line: #e4d6c4;
+      --accent: #c7522a;
+      --accent-strong: #a73f1f;
+      --ok: #237547;
+      --shadow: 0 12px 28px rgba(53, 38, 23, 0.12);
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 5% 5%, #fff6ee 0%, transparent 42%),
+        radial-gradient(circle at 95% 0%, #efe9dc 0%, transparent 35%),
+        linear-gradient(180deg, #f8f4ec 0%, var(--bg) 100%);
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: 100vh;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar header {
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      margin: 0;
+      font-size: 1.1rem;
+      letter-spacing: 0.02em;
+    }
+
+    .subtle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .field {
+      margin: 10px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .field input,
+    .field textarea {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      color: inherit;
+      background: #fff;
+    }
+
+    .field textarea {
+      min-height: 84px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    .task-toolbar {
+      margin: 2px 18px 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      padding: 8px 12px;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .button:hover {
+      border-color: #ccb8a1;
+      transform: translateY(-1px);
+    }
+
+    .button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .button.primary:hover {
+      background: var(--accent-strong);
+    }
+
+    .task-list {
+      overflow: auto;
+      padding: 0 10px 12px;
+      margin: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-row {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      background: #fff;
+      transition: 130ms ease;
+    }
+
+    .task-row:hover {
+      border-color: #cfb79d;
+      transform: translateX(2px);
+    }
+
+    .task-row.active {
+      border-color: var(--accent);
+      background: #fff8f4;
+    }
+
+    .task-title {
+      margin: 0 0 4px;
+      font-size: 0.9rem;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    .task-meta {
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      padding: 1px 8px;
+      min-height: 22px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      background: #fff;
+    }
+
+    .chip.ok {
+      border-color: #c3e2d1;
+      background: #eaf6ef;
+      color: var(--ok);
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+    }
+
+    .headline {
+      margin: 0;
+      font-size: 1.3rem;
+      font-family: "Georgia", "Times New Roman", serif;
+    }
+
+    .status {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .status.error {
+      color: #a7372a;
+      font-weight: 700;
+    }
+
+    .status.success {
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    .progress {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .prompt {
+      padding: 16px;
+    }
+
+    .prompt h2 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+    }
+
+    .prompt p {
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .prompt-notes {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background: #f7f2e9;
+      border: 1px dashed #ddccba;
+      color: #514739;
+      font-size: 0.9rem;
+    }
+
+    .two-up {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .system-card {
+      padding: 14px;
+      min-width: 0;
+    }
+
+    .system-card h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .focus-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .focus-point {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .focus-point h4 {
+      margin: 0 0 6px;
+      font-size: 0.9rem;
+      line-height: 1.35;
+    }
+
+    .focus-point p {
+      margin: 0 0 7px;
+      font-size: 0.86rem;
+      line-height: 1.4;
+      color: #3f352a;
+    }
+
+    .focus-point ul {
+      margin: 0;
+      padding-left: 17px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.83rem;
+      color: #4f4338;
+    }
+
+    .rubric {
+      padding: 14px;
+      overflow-x: auto;
+    }
+
+    .rubric table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    .rubric th,
+    .rubric td {
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      padding: 10px 8px;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .rubric th {
+      color: #4d4236;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.75rem;
+    }
+
+    .dim-title {
+      margin: 0;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #362b20;
+    }
+
+    .dim-help {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.79rem;
+      line-height: 1.35;
+    }
+
+    .score-group {
+      display: inline-flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .score-group input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .score-pill {
+      border: 1px solid #cdb79f;
+      border-radius: 999px;
+      min-width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      cursor: pointer;
+      background: #fff;
+      user-select: none;
+    }
+
+    .score-group input:checked + .score-pill {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .pref-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      align-items: center;
+    }
+
+    .pref-row > span {
+      font-weight: 700;
+      color: #53493d;
+    }
+
+    .choice {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: #fff;
+      font-size: 0.85rem;
+    }
+
+    .difficulty {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #4f4337;
+      font-size: 0.88rem;
+    }
+
+    .difficulty input {
+      width: 180px;
+    }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .evidence {
+      padding: 14px;
+    }
+
+    .evidence-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .evidence-top h3 {
+      margin: 0;
+    }
+
+    .evidence-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 9px;
+    }
+
+    .snippet {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .snippet p {
+      margin: 0;
+      font-size: 0.83rem;
+      line-height: 1.4;
+      color: #3f342a;
+      max-height: 140px;
+      overflow: auto;
+    }
+
+    .snippet-meta {
+      color: var(--muted);
+      font-size: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    @media (max-width: 1180px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        min-height: 260px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .two-up {
+        grid-template-columns: 1fr;
+      }
+
+      .notes-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="panel sidebar">
+      <header>
+        <h1 class="brand">Human Annotation Workbench</h1>
+        <p class="subtle">Side-by-side grading for blinded System A/B outputs.</p>
+      </header>
+      <div class="field">
+        <label for="annotatorInput">Annotator ID</label>
+        <input id="annotatorInput" placeholder="e.g. reviewer_01" />
+      </div>
+      <div class="task-toolbar">
+        <button id="loadTasksBtn" class="button primary" type="button">Load Tasks</button>
+        <button id="exportBtn" class="button" type="button">Export My JSON</button>
+      </div>
+      <ul id="taskList" class="task-list"></ul>
+    </aside>
+
+    <main class="main">
+      <section class="panel topbar">
+        <div>
+          <h2 id="topTitle" class="headline">Select a task</h2>
+          <p id="statusLine" class="status">Annotator ID is required before saving.</p>
+        </div>
+        <div id="progressText" class="progress">0 / 0 completed</div>
+      </section>
+
+      <section class="panel prompt">
+        <h2 id="promptLabel">Prompt</h2>
+        <p id="promptStatement">Choose a task to begin annotation.</p>
+        <div id="promptNotes" class="prompt-notes" hidden></div>
+      </section>
+
+      <section class="two-up">
+        <article class="panel system-card">
+          <h3>System A Focus Points</h3>
+          <div id="systemAList" class="focus-list"></div>
+        </article>
+        <article class="panel system-card">
+          <h3>System B Focus Points</h3>
+          <div id="systemBList" class="focus-list"></div>
+        </article>
+      </section>
+
+      <section class="panel rubric">
+        <table>
+          <thead>
+            <tr>
+              <th>Rubric Dimension</th>
+              <th>System A (1-5)</th>
+              <th>System B (1-5)</th>
+            </tr>
+          </thead>
+          <tbody id="rubricRows"></tbody>
+        </table>
+
+        <div class="notes-grid">
+          <div class="field" style="margin:0;">
+            <label for="aRationale">System A rationale (optional)</label>
+            <textarea id="aRationale" placeholder="Brief reasoning for A scores..."></textarea>
+          </div>
+          <div class="field" style="margin:0;">
+            <label for="bRationale">System B rationale (optional)</label>
+            <textarea id="bRationale" placeholder="Brief reasoning for B scores..."></textarea>
+          </div>
+        </div>
+
+        <div class="pref-row">
+          <span>Overall preference</span>
+          <label class="choice"><input type="radio" name="overallPreference" value="system_a" /> System A</label>
+          <label class="choice"><input type="radio" name="overallPreference" value="system_b" /> System B</label>
+          <label class="choice"><input type="radio" name="overallPreference" value="tie" /> Tie</label>
+        </div>
+
+        <div class="difficulty">
+          <label for="difficultyInput"><strong>Difficulty</strong> (1 easy - 5 difficult)</label>
+          <input id="difficultyInput" type="range" min="1" max="5" value="3" />
+          <span id="difficultyLabel">3</span>
+        </div>
+
+        <div class="actions">
+          <button id="saveBtn" type="button" class="button primary">Save</button>
+          <button id="saveNextBtn" type="button" class="button">Save + Next</button>
+          <button id="nextBtn" type="button" class="button">Next Task</button>
+          <button id="prevBtn" type="button" class="button">Previous Task</button>
+        </div>
+      </section>
+
+      <section class="panel evidence">
+        <div class="evidence-top">
+          <h3 id="evidenceTitle">Retrieved Evidence</h3>
+          <input id="evidenceSearch" class="button" style="border-radius:10px; padding:8px 10px; min-width:260px;" placeholder="Filter snippets..." />
+        </div>
+        <div id="evidenceList" class="evidence-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const DEFAULT_ANNOTATOR = __DEFAULT_ANNOTATOR__;
+    const DIMENSIONS = __RUBRIC_DIMENSIONS__;
+
+    const state = {
+      tasks: [],
+      currentTaskId: null,
+      currentTask: null,
+      evidenceFilter: "",
+      dirty: false,
+    };
+
+    const refs = {
+      annotatorInput: document.getElementById("annotatorInput"),
+      loadTasksBtn: document.getElementById("loadTasksBtn"),
+      exportBtn: document.getElementById("exportBtn"),
+      taskList: document.getElementById("taskList"),
+      topTitle: document.getElementById("topTitle"),
+      statusLine: document.getElementById("statusLine"),
+      progressText: document.getElementById("progressText"),
+      promptLabel: document.getElementById("promptLabel"),
+      promptStatement: document.getElementById("promptStatement"),
+      promptNotes: document.getElementById("promptNotes"),
+      systemAList: document.getElementById("systemAList"),
+      systemBList: document.getElementById("systemBList"),
+      rubricRows: document.getElementById("rubricRows"),
+      aRationale: document.getElementById("aRationale"),
+      bRationale: document.getElementById("bRationale"),
+      difficultyInput: document.getElementById("difficultyInput"),
+      difficultyLabel: document.getElementById("difficultyLabel"),
+      saveBtn: document.getElementById("saveBtn"),
+      saveNextBtn: document.getElementById("saveNextBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      prevBtn: document.getElementById("prevBtn"),
+      evidenceSearch: document.getElementById("evidenceSearch"),
+      evidenceTitle: document.getElementById("evidenceTitle"),
+      evidenceList: document.getElementById("evidenceList"),
+    };
+    function init() {
+      refs.annotatorInput.value = DEFAULT_ANNOTATOR || "";
+      refs.loadTasksBtn.addEventListener("click", () => loadTasks(true));
+      refs.exportBtn.addEventListener("click", exportResults);
+      refs.saveBtn.addEventListener("click", () => saveCurrent(false));
+      refs.saveNextBtn.addEventListener("click", () => saveCurrent(true));
+      refs.nextBtn.addEventListener("click", () => navigateTask(1));
+      refs.prevBtn.addEventListener("click", () => navigateTask(-1));
+      refs.evidenceSearch.addEventListener("input", (event) => {
+        state.evidenceFilter = event.target.value || "";
+        renderEvidence();
+      });
+      refs.difficultyInput.addEventListener("input", () => {
+        refs.difficultyLabel.textContent = refs.difficultyInput.value;
+        markDirty();
+      });
+
+      document.addEventListener("input", (event) => {
+        if (event.target.matches("textarea, input[type='radio']")) {
+          markDirty();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.ctrlKey && event.key.toLowerCase() === "s") {
+          event.preventDefault();
+          saveCurrent(false);
+          return;
+        }
+        if (event.altKey && event.key === "ArrowRight") {
+          event.preventDefault();
+          navigateTask(1);
+          return;
+        }
+        if (event.altKey && event.key === "ArrowLeft") {
+          event.preventDefault();
+          navigateTask(-1);
+        }
+      });
+
+      loadTasks(false);
+    }
+
+    function setStatus(message, tone = "normal") {
+      refs.statusLine.textContent = message;
+      refs.statusLine.classList.remove("error", "success");
+      if (tone === "error") refs.statusLine.classList.add("error");
+      if (tone === "success") refs.statusLine.classList.add("success");
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function getAnnotatorId(required = false) {
+      const value = refs.annotatorInput.value.trim();
+      if (!required) return value;
+      if (!value) {
+        throw new Error("Annotator ID is required.");
+      }
+      return value;
+    }
+
+    async function apiGet(url) {
+      const response = await fetch(url);
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof payload.error === "string" ? payload.error : "Request failed.");
+      }
+      return payload;
+    }
+
+    async function apiPost(url, body) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof payload.error === "string" ? payload.error : "Request failed.");
+      }
+      return payload;
+    }
+
+    async function loadTasks(selectInitialTask) {
+      try {
+        const annotator = getAnnotatorId(false);
+        const query = annotator ? `?annotator_id=${encodeURIComponent(annotator)}` : "";
+        const payload = await apiGet(`/api/tasks${query}`);
+        state.tasks = payload.tasks || [];
+        renderTaskList();
+        updateProgress(payload.completed ?? 0, payload.total ?? 0);
+
+        if (!state.tasks.length) {
+          state.currentTaskId = null;
+          state.currentTask = null;
+          refs.topTitle.textContent = "No tasks found";
+          clearTaskRender();
+          setStatus("No valid HumanAnnotationTask files were found.", "error");
+          return;
+        }
+
+        if (selectInitialTask || !state.currentTaskId) {
+          const firstPending = state.tasks.find((t) => !t.is_completed);
+          const nextId = (firstPending || state.tasks[0]).task_id;
+          await loadTask(nextId, false);
+        } else {
+          await loadTask(state.currentTaskId, false);
+        }
+      } catch (error) {
+        setStatus(String(error.message || error), "error");
+      }
+    }
+
+    function updateProgress(completed, total) {
+      refs.progressText.textContent = `${completed} / ${total} completed`;
+    }
+
+    function renderTaskList() {
+      refs.taskList.innerHTML = "";
+      for (const task of state.tasks) {
+        const li = document.createElement("li");
+        const className = task.task_id === state.currentTaskId ? "task-row active" : "task-row";
+        li.innerHTML = `
+          <article class="${className}" data-task-id="${escapeHtml(task.task_id)}">
+            <p class="task-title">${escapeHtml(task.prompt_id)}: ${escapeHtml(task.statement)}</p>
+            <p class="task-meta">
+              <span class="chip">${escapeHtml(task.domain)}</span>
+              <span class="chip">${task.evidence_count} snippets</span>
+              <span class="chip ${task.is_completed ? "ok" : ""}">${task.is_completed ? "completed" : "pending"}</span>
+            </p>
+          </article>
+        `;
+        li.querySelector("article").addEventListener("click", () => loadTask(task.task_id, true));
+        refs.taskList.appendChild(li);
+      }
+    }
+
+    function clearTaskRender() {
+      refs.promptLabel.textContent = "Prompt";
+      refs.promptStatement.textContent = "Choose a task to begin annotation.";
+      refs.promptNotes.hidden = true;
+      refs.systemAList.innerHTML = "";
+      refs.systemBList.innerHTML = "";
+      refs.rubricRows.innerHTML = "";
+      refs.evidenceTitle.textContent = "Retrieved Evidence";
+      refs.evidenceList.innerHTML = "";
+      refs.aRationale.value = "";
+      refs.bRationale.value = "";
+      refs.difficultyInput.value = "3";
+      refs.difficultyLabel.textContent = "3";
+      for (const input of document.querySelectorAll("input[name='overallPreference']")) {
+        input.checked = false;
+      }
+    }
+
+    async function loadTask(taskId, confirmUnsaved) {
+      if (confirmUnsaved && state.dirty) {
+        const proceed = window.confirm("You have unsaved changes. Discard and switch tasks?");
+        if (!proceed) return;
+      }
+      try {
+        const annotator = getAnnotatorId(false);
+        const query = annotator ? `?annotator_id=${encodeURIComponent(annotator)}` : "";
+        const payload = await apiGet(`/api/tasks/${encodeURIComponent(taskId)}${query}`);
+        state.currentTaskId = taskId;
+        state.currentTask = payload.task;
+        state.dirty = false;
+        refs.topTitle.textContent = `Task: ${taskId}`;
+
+        renderTaskList();
+        renderPrompt();
+        renderFocusPoints();
+        renderRubric(payload.existing_result || null);
+        refs.evidenceSearch.value = "";
+        state.evidenceFilter = "";
+        renderEvidence();
+        setStatus("Task loaded. Score both systems on every rubric dimension.");
+      } catch (error) {
+        setStatus(String(error.message || error), "error");
+      }
+    }
+
+    function renderPrompt() {
+      const prompt = state.currentTask?.prompt;
+      if (!prompt) return;
+      refs.promptLabel.textContent = `Prompt: ${prompt.id}`;
+      refs.promptStatement.textContent = prompt.statement;
+      if (prompt.notes) {
+        refs.promptNotes.hidden = false;
+        refs.promptNotes.textContent = prompt.notes;
+      } else {
+        refs.promptNotes.hidden = true;
+      }
+    }
+
+    function renderFocusCard(point, index) {
+      const snippets = (point.supporting_snippets || [])
+        .map((snippet) => `<li>${escapeHtml(snippet)}</li>`)
+        .join("");
+      return `
+        <article class="focus-point">
+          <h4>${index + 1}. ${escapeHtml(point.label)}</h4>
+          <p><strong>Why it matters:</strong> ${escapeHtml(point.why_it_matters)}</p>
+          <p><strong>Counter-signal:</strong> ${escapeHtml(point.counter_signal)}</p>
+          <p><strong>Next validation:</strong> ${escapeHtml(point.next_validation_question)}</p>
+          <ul>${snippets}</ul>
+        </article>
+      `;
+    }
+
+    function renderFocusPoints() {
+      const task = state.currentTask;
+      if (!task) return;
+      refs.systemAList.innerHTML = (task.system_a_focus_points || [])
+        .map((point, index) => renderFocusCard(point, index))
+        .join("");
+      refs.systemBList.innerHTML = (task.system_b_focus_points || [])
+        .map((point, index) => renderFocusCard(point, index))
+        .join("");
+    }
+
+    function scoreChoices(name, selectedValue) {
+      return [1, 2, 3, 4, 5]
+        .map((score) => {
+          const checked = Number(selectedValue) === score ? "checked" : "";
+          return `
+            <label>
+              <input type="radio" name="${name}" value="${score}" ${checked} />
+              <span class="score-pill">${score}</span>
+            </label>
+          `;
+        })
+        .join("");
+    }
+
+    function renderRubric(existingResult) {
+      refs.rubricRows.innerHTML = DIMENSIONS.map((dimension) => {
+        const aValue = existingResult?.system_a_scores?.[dimension.key] || null;
+        const bValue = existingResult?.system_b_scores?.[dimension.key] || null;
+        const aName = `a_${dimension.key}`;
+        const bName = `b_${dimension.key}`;
+        return `
+          <tr>
+            <td>
+              <p class="dim-title">${escapeHtml(dimension.label)}</p>
+              <p class="dim-help">${escapeHtml(dimension.description)}</p>
+            </td>
+            <td><div class="score-group">${scoreChoices(aName, aValue)}</div></td>
+            <td><div class="score-group">${scoreChoices(bName, bValue)}</div></td>
+          </tr>
+        `;
+      }).join("");
+
+      refs.aRationale.value = existingResult?.system_a_scores?.rationale || "";
+      refs.bRationale.value = existingResult?.system_b_scores?.rationale || "";
+      const selectedPref = existingResult?.overall_preference || null;
+      for (const input of document.querySelectorAll("input[name='overallPreference']")) {
+        input.checked = input.value === selectedPref;
+      }
+      const difficulty = existingResult?.difficulty_rating || 3;
+      refs.difficultyInput.value = String(difficulty);
+      refs.difficultyLabel.textContent = String(difficulty);
+    }
+
+    function renderEvidence() {
+      const evidence = state.currentTask?.retrieved_evidence || [];
+      const filter = state.evidenceFilter.trim().toLowerCase();
+      const shown = evidence.filter((snippet) => {
+        if (!filter) return true;
+        const corpus = `${snippet.business_name || ""} ${snippet.text || ""}`.toLowerCase();
+        return corpus.includes(filter);
+      });
+
+      refs.evidenceTitle.textContent = `Retrieved Evidence (${shown.length}/${evidence.length})`;
+      refs.evidenceList.innerHTML = shown
+        .map((snippet) => {
+          const business = snippet.business_name || snippet.business_id;
+          const stars = snippet.stars != null ? `${snippet.stars.toFixed(1)}★` : "n/a";
+          const location = [snippet.city, snippet.state].filter(Boolean).join(", ");
+          return `
+            <article class="snippet">
+              <div class="snippet-meta">
+                <span class="chip">${escapeHtml(business || "unknown")}</span>
+                <span class="chip">${escapeHtml(stars)}</span>
+                ${location ? `<span class="chip">${escapeHtml(location)}</span>` : ""}
+              </div>
+              <p>${escapeHtml(snippet.text || "")}</p>
+            </article>
+          `;
+        })
+        .join("");
+    }
+
+    function markDirty() {
+      if (!state.currentTask) return;
+      state.dirty = true;
+    }
+
+    function collectDimensionScores(prefix) {
+      const scores = {};
+      for (const dimension of DIMENSIONS) {
+        const choice = document.querySelector(`input[name='${prefix}_${dimension.key}']:checked`);
+        if (!choice) {
+          throw new Error(`Missing score for ${dimension.label} (${prefix.toUpperCase()}).`);
+        }
+        scores[dimension.key] = Number(choice.value);
+      }
+      return scores;
+    }
+
+    function collectPayload() {
+      if (!state.currentTask) {
+        throw new Error("No task loaded.");
+      }
+      const annotatorId = getAnnotatorId(true);
+      const systemAScores = collectDimensionScores("a");
+      const systemBScores = collectDimensionScores("b");
+      const pref = document.querySelector("input[name='overallPreference']:checked");
+      if (!pref) {
+        throw new Error("Select an overall preference (System A, System B, or Tie).");
+      }
+
+      return {
+        task_id: state.currentTask.task_id,
+        annotator_id: annotatorId,
+        system_a_scores: {
+          ...systemAScores,
+          rationale: refs.aRationale.value.trim() || null,
+        },
+        system_b_scores: {
+          ...systemBScores,
+          rationale: refs.bRationale.value.trim() || null,
+        },
+        overall_preference: pref.value,
+        difficulty_rating: Number(refs.difficultyInput.value),
+        annotated_at: new Date().toISOString(),
+      };
+    }
+
+    async function saveCurrent(goNext) {
+      try {
+        const payload = collectPayload();
+        await apiPost(`/api/tasks/${encodeURIComponent(payload.task_id)}/result`, payload);
+        state.dirty = false;
+        setStatus(`Saved annotation for ${payload.task_id}.`, "success");
+        await loadTasks(false);
+        if (goNext) {
+          navigateTask(1, true);
+        }
+      } catch (error) {
+        setStatus(String(error.message || error), "error");
+      }
+    }
+
+    function currentTaskIndex() {
+      return state.tasks.findIndex((task) => task.task_id === state.currentTaskId);
+    }
+
+    async function navigateTask(direction, skipConfirm = false) {
+      if (!state.tasks.length) return;
+      const index = currentTaskIndex();
+      const start = index < 0 ? 0 : index;
+      let next = start + direction;
+      if (next < 0) next = 0;
+      if (next >= state.tasks.length) next = state.tasks.length - 1;
+      if (next === start && state.tasks.length > 0) return;
+      await loadTask(state.tasks[next].task_id, !skipConfirm);
+    }
+
+    async function exportResults() {
+      try {
+        const annotator = getAnnotatorId(true);
+        const payload = await apiGet(`/api/export?annotator_id=${encodeURIComponent(annotator)}`);
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `human_annotations_${annotator}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        setStatus(`Exported ${payload.count} saved results.`, "success");
+      } catch (error) {
+        setStatus(String(error.message || error), "error");
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

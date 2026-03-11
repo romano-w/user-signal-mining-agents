@@ -103,6 +103,7 @@ uv run usm evaluate
 | `uv run usm validate-founder-prompts` | Validate the founder prompt benchmark file |
 | `uv run usm search --query "slow service"` | Search the dense index and print top-K results |
 | `uv run usm fetch-yelp-dataset` | Download and extract the Yelp dataset |
+| `uv run usm annotate-human` | Launch the local human-annotation GUI for blinded A/B scoring |
 
 ### Data preparation scripts
 
@@ -110,6 +111,25 @@ uv run usm evaluate
 |---|---|
 | `uv run python scripts/build_yelp_subset.py` | Build the processed review snippet JSONL |
 | `uv run python scripts/build_index.py` | Build the dense embedding index |
+
+## Human Annotation GUI
+
+Use the built-in local web app to score sampled tasks from `artifacts/runs/_human_annotations`.
+
+```powershell
+# Default directory: artifacts/runs/_human_annotations
+uv run usm annotate-human --annotator-id reviewer_01
+
+# Optional: custom folder / host / port
+uv run usm annotate-human --tasks-dir artifacts/runs/_human_annotations --host 127.0.0.1 --port 8765
+```
+
+What it provides:
+- Blinded side-by-side System A vs System B focus points
+- 1-5 scoring across all rubric dimensions
+- Overall preference + difficulty rating
+- Per-annotator autosave to `artifacts/runs/_human_annotations/_results/<annotator_id>/<task_id>.json`
+- One-click export of your saved annotations as a single JSON file
 
 ## Configuration
 

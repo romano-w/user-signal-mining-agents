@@ -130,6 +130,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="Sweep only this prompt. Omit to sweep all.",
     )
 
+    annotate_parser = subparsers.add_parser(
+        "annotate-human",
+        help="Launch a local web GUI for scoring blinded human-annotation tasks.",
+    )
+    annotate_parser.add_argument(
+        "--tasks-dir",
+        type=Path,
+        default=None,
+        help="Optional task directory. Defaults to artifacts/runs/_human_annotations.",
+    )
+    annotate_parser.add_argument(
+        "--host",
+        type=str,
+        default="127.0.0.1",
+        help="Host interface for the local server.",
+    )
+    annotate_parser.add_argument(
+        "--port",
+        type=int,
+        default=8765,
+        help="Port for the local annotation server.",
+    )
+    annotate_parser.add_argument(
+        "--annotator-id",
+        type=str,
+        default="",
+        help="Optional default annotator ID pre-filled in the UI.",
+    )
+
     return parser
 
 
@@ -315,6 +344,25 @@ def cmd_sweep(prompt_id: str | None) -> int:
     return 0
 
 
+def cmd_annotate_human(
+    tasks_dir: Path | None,
+    *,
+    host: str,
+    port: int,
+    annotator_id: str,
+) -> int:
+    from .evaluation.human_annotation_gui import run_annotation_server
+
+    settings = get_settings()
+    target_dir = tasks_dir or (settings.run_artifacts_dir / "_human_annotations")
+    run_annotation_server(
+        target_dir,
+        host=host,
+        port=port,
+        default_annotator_id=annotator_id,
+    )
+    return 0
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -342,5 +390,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "sweep":
         return cmd_sweep(args.prompt_id)
 
+    if args.command == "annotate-human":
+        return cmd_annotate_human(
+            args.tasks_dir,
+            host=args.host,
+            port=args.port,
+            annotator_id=args.annotator_id,
+        )
+
     parser.error(f"Unknown command: {args.command}")
     return 2
+

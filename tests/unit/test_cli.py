@@ -66,3 +66,57 @@ def test_main_dispatches_to_command_handler(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(cli, "cmd_show_config", lambda: 123)
     result = cli.main(["show-config"])
     assert result == 123
+
+
+def test_build_parser_supports_annotate_human_command() -> None:
+    parser = cli.build_parser()
+    args = parser.parse_args([
+        "annotate-human",
+        "--tasks-dir",
+        "artifacts/runs/_human_annotations",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "9001",
+        "--annotator-id",
+        "reviewer_1",
+    ])
+    assert args.command == "annotate-human"
+    assert args.tasks_dir == Path("artifacts/runs/_human_annotations")
+    assert args.host == "127.0.0.1"
+    assert args.port == 9001
+    assert args.annotator_id == "reviewer_1"
+
+
+def test_cmd_annotate_human_dispatches_to_server(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+) -> None:
+    from user_signal_mining_agents.evaluation import human_annotation_gui
+
+    called: dict[str, object] = {}
+
+    def _fake_run_annotation_server(
+        tasks_dir: Path,
+        *,
+        host: str,
+        port: int,
+        default_annotator_id: str,
+    ) -> None:
+        called["tasks_dir"] = tasks_dir
+        called["host"] = host
+        called["port"] = port
+        called["default_annotator_id"] = default_annotator_id
+
+    monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
+    monkeypatch.setattr(human_annotation_gui, "run_annotation_server", _fake_run_annotation_server)
+
+    code = cli.cmd_annotate_human(None, host="127.0.0.1", port=9001, annotator_id="reviewer_1")
+
+    assert code == 0
+    assert called == {
+        "tasks_dir": tmp_settings.run_artifacts_dir / "_human_annotations",
+        "host": "127.0.0.1",
+        "port": 9001,
+        "default_annotator_id": "reviewer_1",
+    }
