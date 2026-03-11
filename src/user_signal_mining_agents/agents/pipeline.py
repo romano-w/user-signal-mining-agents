@@ -1,4 +1,4 @@
-"""Pipeline orchestrator: intent → evidence filter → synthesis."""
+"""Pipeline orchestrator: intent → evidence filter → synthesis → verify."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from ..config import Settings, get_settings
 from ..schemas import FounderPrompt, SynthesisResult
 from .. import console as con
 from .evidence_filter import retrieve_and_filter
+from .evidence_verifier import verify_evidence
 from .intent import decompose_intent
 from .synthesis import run_synthesis
 
@@ -28,6 +29,9 @@ def run_pipeline(
 
     # Step 3 — Grounded synthesis
     result = run_synthesis(prompt, intent, evidence, s)
+
+    # Step 4 — Evidence-grounding verification
+    result = verify_evidence(result, evidence, s)
 
     # Persist
     run_dir = s.run_artifacts_dir / prompt.id

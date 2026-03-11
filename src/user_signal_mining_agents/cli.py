@@ -119,6 +119,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Re-run both systems even if cached results exist.",
     )
 
+    sweep_parser = subparsers.add_parser(
+        "sweep",
+        help="Run prompt variant sweep and compare pipeline scores.",
+    )
+    sweep_parser.add_argument(
+        "--prompt-id",
+        type=str,
+        default=None,
+        help="Sweep only this prompt. Omit to sweep all.",
+    )
+
     return parser
 
 
@@ -261,6 +272,49 @@ def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
     return 0
 
 
+def cmd_sweep(prompt_id: str | None) -> int:
+    from .evaluation.prompt_sweep import run_sweep
+    from . import console as con
+    from rich.table import Table
+
+    settings = get_settings()
+    prompt_ids = [prompt_id] if prompt_id else None
+
+    con.header(
+        "Prompt Variant Sweep",
+        f"model: {settings.llm_model} | provider: {settings.llm_provider}",
+    )
+
+    results = run_sweep(settings, prompt_ids=prompt_ids)
+
+    # Build comparison table
+    table = Table(title="Sweep Results", show_lines=True)
+    table.add_column("Variant", style="cyan bold")
+    table.add_column("Description", style="dim")
+    table.add_column("Rel", justify="center")
+    table.add_column("Act", justify="center")
+    table.add_column("Evi", justify="center")
+    table.add_column("Con", justify="center")
+    table.add_column("NR", justify="center")
+    table.add_column("Overall", justify="center", style="bold")
+
+    for r in results:
+        table.add_row(
+            r.variant,
+            r.description,
+            f"{r.scores.get('relevance', 0):.1f}",
+            f"{r.scores.get('actionability', 0):.1f}",
+            f"{r.scores.get('evidence_grounding', 0):.1f}",
+            f"{r.scores.get('contradiction_handling', 0):.1f}",
+            f"{r.scores.get('non_redundancy', 0):.1f}",
+            f"{r.overall:.2f}",
+        )
+
+    con.console.print()
+    con.console.print(table)
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -285,6 +339,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return cmd_run_pipeline(args.prompt_id)
     if args.command == "evaluate":
         return cmd_evaluate(args.prompt_id, no_cache=args.no_cache)
+    if args.command == "sweep":
+        return cmd_sweep(args.prompt_id)
 
     parser.error(f"Unknown command: {args.command}")
     return 2
