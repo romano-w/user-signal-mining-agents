@@ -15,7 +15,8 @@ Founder Prompt ─────────────────────�
 ├─ Pipeline (multi-step)                                                │
 │   ├─ Intent Agent → decompose into keywords, queries, hypotheses      │
 │   ├─ Evidence Filter → multi-query retrieval → deduplicate + rerank   │
-│   └─ Synthesis Agent → grounded focus points with inline quotes       │
+│   ├─ Synthesis Agent → grounded focus points with inline quotes       │
+│   └─ Evidence Verifier → check for strict quotes and hallucination    │
 │                                                                       │
 └─ Judge (LLM-as-judge)                                                 │
     ├─ A/B position debiasing (random system assignment)                │
@@ -88,6 +89,8 @@ uv run usm evaluate
 | `uv run usm evaluate` | Run full evaluation: baseline + pipeline + judge for all prompts |
 | `uv run usm evaluate --no-cache` | Re-run everything from scratch (ignores cached results) |
 | `uv run usm evaluate --prompt-id <id>` | Evaluate a single prompt |
+| `uv run usm sweep` | Run sweep of prompt variants (A/B testing) |
+| `uv run usm sweep --prompt-id <id>` | Run sweep on a single prompt |
 | `uv run usm run-baseline --prompt-id <id>` | Run baseline only for one prompt |
 | `uv run usm run-pipeline --prompt-id <id>` | Run pipeline only for one prompt |
 
