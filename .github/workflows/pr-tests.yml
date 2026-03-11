@@ -1,0 +1,45 @@
+name: PR Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Run fast offline test gate
+        run: |
+          uv run pytest \
+            -m "not integration and not live" \
+            --cov=user_signal_mining_agents \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-fail-under=80 \
+            --junitxml=artifacts/test-results/pr-junit.xml
+
+      - name: Upload coverage and test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-test-artifacts
+          path: |
+            coverage.xml
+            artifacts/test-results/pr-junit.xml

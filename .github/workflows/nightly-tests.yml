@@ -1,0 +1,43 @@
+name: Nightly Offline Tests
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Run full offline suite (includes integration)
+        run: |
+          uv run pytest \
+            -m "not live" \
+            --cov=user_signal_mining_agents \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --junitxml=artifacts/test-results/nightly-junit.xml
+
+      - name: Upload nightly artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-test-artifacts
+          path: |
+            coverage.xml
+            artifacts/test-results/nightly-junit.xml

@@ -1,0 +1,3 @@
+{"business_id":"b-1","name":"Pasta Place","city":"Austin","state":"TX","stars":4.0,"review_count":120,"categories":"Restaurants, Italian"}
+{"business_id":"b-2","name":"Burger Spot","city":"Austin","state":"TX","stars":3.5,"review_count":80,"categories":"Restaurants, Burgers"}
+{"business_id":"b-3","name":"Book Shop","city":"Austin","state":"TX","stars":4.5,"review_count":10,"categories":"Shopping, Books"}

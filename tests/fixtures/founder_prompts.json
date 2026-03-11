@@ -1,0 +1,12 @@
+[
+  {
+    "id": "fp-1",
+    "statement": "Why do first-time guests not return?",
+    "domain": "restaurants"
+  },
+  {
+    "id": "fp-2",
+    "statement": "Why is pickup speed inconsistent?",
+    "domain": "restaurants"
+  }
+]

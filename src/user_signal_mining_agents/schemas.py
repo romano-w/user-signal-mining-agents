@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -105,4 +106,43 @@ class EvaluationSummary(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     pairs: list[PromptEvaluationPair] = Field(default_factory=list)
+
+
+class HumanAnnotationTask(BaseModel):
+    """The data payload presented to the human annotator (completely blinded)."""
+    model_config = ConfigDict(extra="forbid")
+
+    task_id: str
+    prompt: FounderPrompt
+    retrieved_evidence: list[EvidenceSnippet]
+    system_a_focus_points: list[FocusPoint]
+    system_b_focus_points: list[FocusPoint]
+    
+    # Hidden metadata not shown in the annotation UI
+    ground_truth_mapping: dict[str, str]
+
+
+class HumanAnnotationScores(BaseModel):
+    """The scores provided by the human for a single system's output."""
+    model_config = ConfigDict(extra="forbid")
+
+    relevance: int = Field(ge=1, le=5)
+    actionability: int = Field(ge=1, le=5)
+    evidence_grounding: int = Field(ge=1, le=5)
+    contradiction_handling: int = Field(ge=1, le=5)
+    non_redundancy: int = Field(ge=1, le=5)
+    rationale: str | None = None
+
+
+class HumanAnnotationResult(BaseModel):
+    """The final completed annotation."""
+    model_config = ConfigDict(extra="forbid")
+
+    task_id: str
+    annotator_id: str
+    system_a_scores: HumanAnnotationScores
+    system_b_scores: HumanAnnotationScores
+    overall_preference: Literal["system_a", "system_b", "tie"]
+    difficulty_rating: int = Field(ge=1, le=5, description="How subjective or difficult was this to grade?")
+    annotated_at: datetime = Field(default_factory=datetime.utcnow)
 

@@ -19,6 +19,13 @@ dependencies = [
 [project.scripts]
 usm = "user_signal_mining_agents.cli:main"
 
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.1",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -34,3 +41,24 @@ packages = ["src/user_signal_mining_agents"]
 [tool.uv.sources]
 torch = { index = "pytorch-cu130" }
 torchvision = { index = "pytorch-cu130" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "integration: offline integration tests",
+    "live: tests that require live external services",
+]
+
+[tool.coverage.run]
+source = ["user_signal_mining_agents"]
+branch = true
+omit = [
+    "*/user_signal_mining_agents/__main__.py",
+    "*/user_signal_mining_agents/evaluation/sample_annotations.py",
+]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
