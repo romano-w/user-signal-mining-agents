@@ -5,6 +5,9 @@ import json
 from pathlib import Path
 from typing import Sequence
 
+from dotenv import load_dotenv
+load_dotenv()  # Export .env vars to os.environ for HF Hub, etc.
+
 from pydantic import TypeAdapter
 
 from .config import ROOT_DIR, ensure_scaffold_directories, get_settings
