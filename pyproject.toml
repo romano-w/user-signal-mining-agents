@@ -5,9 +5,12 @@ description = "Founder-grounded review mining experiments for surfacing actionab
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "numpy>=2.4.3",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
     "python-dotenv>=1.2.2",
+    "openai>=1.82.0",
+    "sentence-transformers>=5.2.3",
     "torch==2.10.0+cu130",
     "torchvision==0.25.0+cu130",
 ]

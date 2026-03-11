@@ -30,11 +30,15 @@ class EvidenceSnippet(BaseModel):
     snippet_id: str
     review_id: str
     business_id: str
+    source: str = "yelp_review"
     business_name: str | None = None
     categories: list[str] = Field(default_factory=list)
     text: str
     stars: float | None = None
     city: str | None = None
+    state: str | None = None
+    review_date: str | None = None
+    chunk_index: int | None = None
     relevance_score: float | None = None
     intensity_score: float | None = None
     diversity_group: str | None = None
@@ -45,7 +49,7 @@ class FocusPoint(BaseModel):
 
     label: str
     why_it_matters: str
-    supporting_snippets: list[str] = Field(min_length=2, max_length=3)
+    supporting_snippets: list[str] = Field(min_length=1, max_length=5)
     counter_signal: str
     next_validation_question: str
 
@@ -77,3 +81,18 @@ class JudgeResult(BaseModel):
     prompt_id: str
     system_variant: Literal["baseline", "pipeline"]
     scores: JudgeScores
+
+
+class PromptEvaluationPair(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    prompt: FounderPrompt
+    baseline_scores: JudgeResult
+    pipeline_scores: JudgeResult
+
+
+class EvaluationSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    pairs: list[PromptEvaluationPair] = Field(default_factory=list)
+

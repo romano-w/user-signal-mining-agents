@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,6 +12,7 @@ DATA_DIR = ROOT_DIR / "data"
 ARTIFACTS_DIR = ROOT_DIR / "artifacts"
 PROMPTS_DIR = ROOT_DIR / "prompts"
 FOUNDER_PROMPTS_DIR = ROOT_DIR / "founder_prompts"
+YELP_DATASET_DIR = DATA_DIR / "raw" / "Yelp-JSON"
 
 
 class Settings(BaseSettings):
@@ -25,18 +26,38 @@ class Settings(BaseSettings):
     )
 
     environment: str = "development"
-    llm_provider: str = "openai"
-    llm_model: str = "gpt-5-mini"
+    openai_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("OPENAI_API_KEY", "USM_OPENAI_API_KEY"),
+    )
+    gemini_api_key_1: str = Field(
+        default="",
+        validation_alias=AliasChoices("GEMINI_API_KEY_1", "USM_GEMINI_API_KEY_1", "GEMINI_API_KEY"),
+    )
+    gemini_api_key_2: str = Field(
+        default="",
+        validation_alias=AliasChoices("GEMINI_API_KEY_2", "USM_GEMINI_API_KEY_2"),
+    )
+    openrouter_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("OPENROUTER_API_KEY", "USM_OPENROUTER_API_KEY"),
+    )
+    llm_provider: str = "gemini"
+    llm_model: str = "gemini-3.1-flash-lite-preview"
+    llm_base_url: str = ""
+    llm_temperature: float = 0.3
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
-    founder_prompts_path: Path = Field(
-        default=FOUNDER_PROMPTS_DIR / "restaurants.example.json"
-    )
+    founder_prompts_path: Path = Field(default=FOUNDER_PROMPTS_DIR / "restaurants.json")
+    yelp_download_url: str = "https://business.yelp.com/external-assets/files/Yelp-JSON.zip"
+    yelp_dataset_dir: Path = Field(default=YELP_DATASET_DIR)
+    yelp_download_zip_path: Path = Field(default=YELP_DATASET_DIR / "Yelp-JSON.zip")
+    yelp_tar_path: Path = Field(default=YELP_DATASET_DIR / "yelp_dataset.tar")
     yelp_businesses_path: Path = Field(
-        default=DATA_DIR / "raw" / "yelp_academic_dataset_business.json"
+        default=YELP_DATASET_DIR / "yelp_academic_dataset_business.json"
     )
     yelp_reviews_path: Path = Field(
-        default=DATA_DIR / "raw" / "yelp_academic_dataset_review.json"
+        default=YELP_DATASET_DIR / "yelp_academic_dataset_review.json"
     )
     working_subset_path: Path = Field(
         default=DATA_DIR / "processed" / "restaurant_reviews.jsonl"
@@ -45,8 +66,16 @@ class Settings(BaseSettings):
     run_artifacts_dir: Path = Field(default=ARTIFACTS_DIR / "runs")
     prompts_dir: Path = Field(default=PROMPTS_DIR)
 
+    restaurant_review_limit: int | None = 75000
+    max_reviews_per_business: int = 200
+    min_review_characters: int = 60
+    chunk_sentence_window: int = 2
+    chunk_sentence_stride: int = 1
+    max_chunks_per_review: int = 3
+
     retrieval_top_k: int = 50
     synthesis_evidence_k: int = 15
+    embedding_batch_size: int = 128
     min_focus_points: int = 3
     max_focus_points: int = 5
 
@@ -56,6 +85,7 @@ def ensure_scaffold_directories(settings: Settings) -> list[Path]:
 
     directories = [
         DATA_DIR / "raw",
+        settings.yelp_dataset_dir,
         DATA_DIR / "processed",
         ARTIFACTS_DIR,
         settings.index_dir,

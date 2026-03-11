@@ -1,0 +1,62 @@
+[
+  {
+    "id": "restaurant-loyalty-repeat-visits",
+    "statement": "I run a neighborhood restaurant and want to understand what keeps first-time guests from becoming regulars.",
+    "domain": "restaurants",
+    "notes": "Focus on operational, menu, and service pain points that influence repeat visits."
+  },
+  {
+    "id": "restaurant-takeout-speed",
+    "statement": "I run a casual takeout restaurant and want to know which customer pain points most hurt perceived speed and reliability.",
+    "domain": "restaurants",
+    "notes": "Look for signals tied to pickup flow, order accuracy, packaging, and wait times."
+  },
+  {
+    "id": "restaurant-price-value-trust",
+    "statement": "I run a premium casual restaurant and need to understand when guests feel the experience is not worth the price.",
+    "domain": "restaurants",
+    "notes": "Look for value breakdowns tied to portions, service, ambiance, and consistency."
+  },
+  {
+    "id": "restaurant-date-night-ambiance",
+    "statement": "I run a date-night restaurant and want to know which issues most damage the feeling of a special evening.",
+    "domain": "restaurants",
+    "notes": "Prioritize ambiance, pacing, reservation handling, noise, and service recovery."
+  },
+  {
+    "id": "restaurant-brunch-weekend-flow",
+    "statement": "I run a brunch spot and want to understand what frustrates guests during busy weekend visits.",
+    "domain": "restaurants",
+    "notes": "Look at waits, line management, seating, communication, and kitchen throughput."
+  },
+  {
+    "id": "restaurant-family-friendly-experience",
+    "statement": "I run a family-friendly restaurant and want to know what makes parents feel the experience is stressful instead of easy.",
+    "domain": "restaurants",
+    "notes": "Focus on seating, kids' menu clarity, pacing, noise, and staff accommodation."
+  },
+  {
+    "id": "restaurant-dietary-restriction-trust",
+    "statement": "I run a restaurant serving guests with dietary restrictions and want to understand what most affects trust and confidence.",
+    "domain": "restaurants",
+    "notes": "Look for signals around allergy handling, labeling, staff knowledge, and cross-contamination fears."
+  },
+  {
+    "id": "restaurant-service-recovery",
+    "statement": "I run a restaurant and want to understand which mistakes customers are willing to forgive versus which ones permanently damage trust.",
+    "domain": "restaurants",
+    "notes": "Focus on recovery quality after delays, wrong orders, rude service, or billing issues."
+  },
+  {
+    "id": "restaurant-late-night-consistency",
+    "statement": "I run a late-night restaurant and want to know what makes the experience feel unreliable after peak evening hours.",
+    "domain": "restaurants",
+    "notes": "Look for patterns tied to staffing, cleanliness, item availability, and speed late in the night."
+  },
+  {
+    "id": "restaurant-local-discovery-standout",
+    "statement": "I run an independent local restaurant and want to understand why some guests try us once but do not feel compelled to recommend us.",
+    "domain": "restaurants",
+    "notes": "Look for issues tied to distinctiveness, signature items, hospitality, and memorability."
+  }
+]
