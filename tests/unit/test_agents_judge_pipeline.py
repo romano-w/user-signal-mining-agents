@@ -147,3 +147,29 @@ def test_pipeline_runs_steps_in_order_and_persists(
     assert output.exists()
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["system_variant"] == "pipeline"
+
+def test_judge_named_pair_supports_custom_variant_labels(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+    founder_prompt,
+    focus_point_factory,
+) -> None:
+    control_result = _make_result("control", founder_prompt, focus_point_factory)
+    hybrid_result = _make_result("full_hybrid", founder_prompt, focus_point_factory)
+
+    monkeypatch.setattr(judge.random, "random", lambda: 0.1)
+    monkeypatch.setattr(judge, "call_llm_json", lambda **_kwargs: _judge_payload(5.0, 3.0))
+
+    control_judge, hybrid_judge = judge.judge_named_pair(
+        founder_prompt,
+        control_result,
+        hybrid_result,
+        left_variant="control",
+        right_variant="full_hybrid",
+        settings=tmp_settings,
+    )
+
+    assert control_judge.system_variant == "control"
+    assert hybrid_judge.system_variant == "full_hybrid"
+    assert control_judge.scores.relevance == 5.0
+    assert hybrid_judge.scores.relevance == 3.0

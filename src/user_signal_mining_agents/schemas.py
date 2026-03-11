@@ -58,7 +58,7 @@ class FocusPoint(BaseModel):
 class SynthesisResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    system_variant: Literal["baseline", "pipeline"]
+    system_variant: str
     prompt: FounderPrompt
     intent_bundle: IntentBundle | None = None
     retrieved_evidence: list[EvidenceSnippet] = Field(default_factory=list)
@@ -90,7 +90,7 @@ class JudgeResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     prompt_id: str
-    system_variant: Literal["baseline", "pipeline"]
+    system_variant: str
     scores: JudgeScores
 
 
@@ -145,4 +145,5 @@ class HumanAnnotationResult(BaseModel):
     overall_preference: Literal["system_a", "system_b", "tie"]
     difficulty_rating: int = Field(ge=1, le=5, description="How subjective or difficult was this to grade?")
     annotated_at: datetime = Field(default_factory=datetime.utcnow)
+
 

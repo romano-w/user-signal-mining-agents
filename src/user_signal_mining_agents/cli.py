@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Sequence
 
 from dotenv import load_dotenv
+
 load_dotenv()  # Export .env vars to os.environ for HF Hub, etc.
 
 from pydantic import TypeAdapter
@@ -103,6 +104,33 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run only this prompt. Omit to run all.",
     )
 
+    list_variants_parser = subparsers.add_parser(
+        "list-variants",
+        help="List available experimental pipeline variants.",
+    )
+    list_variants_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show full stage graph for each variant.",
+    )
+
+    run_variant_parser = subparsers.add_parser(
+        "run-variant",
+        help="Run one experimental variant for one or all prompts.",
+    )
+    run_variant_parser.add_argument(
+        "--variant",
+        type=str,
+        required=True,
+        help="Variant id to run (use `usm list-variants`).",
+    )
+    run_variant_parser.add_argument(
+        "--prompt-id",
+        type=str,
+        default=None,
+        help="Run only this prompt. Omit to run all.",
+    )
+
     evaluate_parser = subparsers.add_parser(
         "evaluate",
         help="Run baseline + pipeline + judge for all prompts, then generate a report.",
@@ -117,6 +145,28 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-cache",
         action="store_true",
         help="Re-run both systems even if cached results exist.",
+    )
+
+    evaluate_variants_parser = subparsers.add_parser(
+        "evaluate-variants",
+        help="Compare experimental variants against the control pipeline.",
+    )
+    evaluate_variants_parser.add_argument(
+        "--variants",
+        type=str,
+        default=None,
+        help="Comma-separated variant ids. Omit to run the default candidate set.",
+    )
+    evaluate_variants_parser.add_argument(
+        "--prompt-id",
+        type=str,
+        default=None,
+        help="Evaluate only this prompt. Omit for staged default prompt subset.",
+    )
+    evaluate_variants_parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Re-run variants and judge even if cached results exist.",
     )
 
     sweep_parser = subparsers.add_parser(
@@ -244,6 +294,15 @@ def _load_prompts(prompt_id: str | None = None) -> list[FounderPrompt]:
     return prompts
 
 
+def _parse_variant_ids(variants_arg: str | None) -> list[str] | None:
+    if variants_arg is None:
+        return None
+    variant_ids = [v.strip() for v in variants_arg.split(",") if v.strip()]
+    if not variant_ids:
+        raise ValueError("--variants was provided but no variant ids were parsed")
+    return variant_ids
+
+
 def cmd_run_baseline(prompt_id: str | None) -> int:
     from .agents.baseline import run_baseline
 
@@ -264,6 +323,30 @@ def cmd_run_pipeline(prompt_id: str | None) -> int:
     return 0
 
 
+def cmd_list_variants(*, verbose: bool = False) -> int:
+    from .agents.variant_pipeline import list_variant_specs
+
+    specs = list_variant_specs()
+    print("Available variants:")
+    for spec in specs:
+        print(f"- {spec.name}: {spec.description}")
+        if verbose:
+            for stage in spec.stages:
+                deps = ", ".join(stage.depends_on) if stage.depends_on else "none"
+                print(f"    - {stage.stage_id} (depends on: {deps})")
+    return 0
+
+
+def cmd_run_variant(variant: str, prompt_id: str | None) -> int:
+    from .agents.variant_pipeline import run_variant_pipeline
+
+    prompts = _load_prompts(prompt_id)
+    for prompt in prompts:
+        run_variant_pipeline(prompt, variant)
+    print(f"Variant {variant!r} complete for {len(prompts)} prompt(s).")
+    return 0
+
+
 def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
     from .evaluation.runner import run_evaluation
     from .evaluation.report import generate_report
@@ -276,8 +359,13 @@ def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
 
     # Show aggregate scores table
     if summary.pairs:
-        dims = ["relevance", "actionability", "evidence_grounding",
-                "contradiction_handling", "non_redundancy"]
+        dims = [
+            "relevance",
+            "actionability",
+            "evidence_grounding",
+            "contradiction_handling",
+            "non_redundancy",
+        ]
         dim_labels = {
             "relevance": "Relevance",
             "actionability": "Actionability",
@@ -298,6 +386,49 @@ def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
         con.results_table(scores, b_overall, p_overall)
 
     con.success("report", f"Saved to {report_path}")
+    return 0
+
+
+def cmd_evaluate_variants(
+    variants_arg: str | None,
+    prompt_id: str | None,
+    *,
+    no_cache: bool,
+) -> int:
+    from .evaluation.variant_report import generate_variant_report
+    from .evaluation.variant_runner import run_variant_evaluation
+    from . import console as con
+    from rich.table import Table
+
+    settings = get_settings()
+    prompt_ids = [prompt_id] if prompt_id else None
+    variant_ids = _parse_variant_ids(variants_arg)
+
+    summary = run_variant_evaluation(
+        settings,
+        variant_ids=variant_ids,
+        prompt_ids=prompt_ids,
+        skip_cached=not no_cache,
+    )
+    report_path = generate_variant_report(summary, settings.run_artifacts_dir.parent / "variant_runs")
+
+    table = Table(title="Variant Results", show_lines=True)
+    table.add_column("Variant", style="cyan bold")
+    table.add_column("Control", justify="center")
+    table.add_column("Variant", justify="center")
+    table.add_column("Delta", justify="center")
+
+    for aggregate in summary.aggregates:
+        table.add_row(
+            aggregate.variant,
+            f"{aggregate.control_overall:.2f}",
+            f"{aggregate.variant_overall:.2f}",
+            f"{aggregate.delta_overall:+.2f}",
+        )
+
+    con.console.print()
+    con.console.print(table)
+    con.success("variant-report", f"Saved to {report_path}")
     return 0
 
 
@@ -385,8 +516,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         return cmd_run_baseline(args.prompt_id)
     if args.command == "run-pipeline":
         return cmd_run_pipeline(args.prompt_id)
+    if args.command == "list-variants":
+        return cmd_list_variants(verbose=args.verbose)
+    if args.command == "run-variant":
+        return cmd_run_variant(args.variant, args.prompt_id)
     if args.command == "evaluate":
         return cmd_evaluate(args.prompt_id, no_cache=args.no_cache)
+    if args.command == "evaluate-variants":
+        return cmd_evaluate_variants(args.variants, args.prompt_id, no_cache=args.no_cache)
     if args.command == "sweep":
         return cmd_sweep(args.prompt_id)
 

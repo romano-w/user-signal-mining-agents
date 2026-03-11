@@ -120,3 +120,27 @@ def test_cmd_annotate_human_dispatches_to_server(
         "port": 9001,
         "default_annotator_id": "reviewer_1",
     }
+
+
+def test_build_parser_supports_variant_commands() -> None:
+    parser = cli.build_parser()
+
+    list_args = parser.parse_args(["list-variants"])
+    assert list_args.command == "list-variants"
+
+    run_args = parser.parse_args(["run-variant", "--variant", "full_hybrid", "--prompt-id", "p1"])
+    assert run_args.command == "run-variant"
+    assert run_args.variant == "full_hybrid"
+    assert run_args.prompt_id == "p1"
+
+    eval_args = parser.parse_args(["evaluate-variants", "--variants", "critic_loop,full_hybrid"])
+    assert eval_args.command == "evaluate-variants"
+    assert eval_args.variants == "critic_loop,full_hybrid"
+
+
+def test_parse_variant_ids() -> None:
+    assert cli._parse_variant_ids("a,b , c") == ["a", "b", "c"]
+    assert cli._parse_variant_ids(None) is None
+
+    with pytest.raises(ValueError, match="no variant ids"):
+        cli._parse_variant_ids("  , ")

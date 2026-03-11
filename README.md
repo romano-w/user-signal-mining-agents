@@ -93,6 +93,9 @@ uv run usm evaluate
 | `uv run usm sweep --prompt-id <id>` | Run sweep on a single prompt |
 | `uv run usm run-baseline --prompt-id <id>` | Run baseline only for one prompt |
 | `uv run usm run-pipeline --prompt-id <id>` | Run pipeline only for one prompt |
+| `uv run usm list-variants` | List available experimental pipeline variants |
+| `uv run usm run-variant --variant <id> --prompt-id <id>` | Run one experimental variant for one prompt |
+| `uv run usm evaluate-variants --variants <id,id>` | Compare selected variants against control pipeline |
 
 ### Setup & utilities
 
@@ -182,6 +185,10 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 │   ├── baseline.md             # Zero-shot baseline prompt
 │   ├── intent.md               # Intent decomposition prompt
 │   ├── synthesis.md            # Multi-step synthesis prompt
+│   ├── query_planner.md        # Retrieval query expansion prompt
+│   ├── counterevidence_miner.md # Contradiction query generation prompt
+│   ├── critic.md               # Draft critique prompt
+│   ├── refiner.md              # Critique-driven rewrite prompt
 │   └── judge.md                # LLM judge rubric prompt
 ├── scripts/                    # Data preparation scripts
 ├── src/user_signal_mining_agents/
@@ -190,9 +197,14 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 │   │   ├── intent.py           # Intent decomposition agent
 │   │   ├── evidence_filter.py  # Multi-query retrieval + dedup
 │   │   ├── synthesis.py        # Grounded synthesis agent
+│   │   ├── query_planner.py    # Query expansion agent
+│   │   ├── counterevidence_miner.py # Contradiction mining agent
+│   │   ├── critic.py           # Post-synthesis critic agent
+│   │   ├── refiner.py          # Critique-driven refinement agent
+│   │   ├── variant_pipeline.py # Configurable variant DAG runner
 │   │   ├── pipeline.py         # Pipeline orchestrator
 │   │   └── judge.py            # LLM judge (A/B debiased)
-│   ├── evaluation/             # Evaluation runner and report generator
+│   ├── evaluation/             # Evaluation runners and report generation
 │   ├── retrieval/              # Dense embedding index and search
 │   ├── data/                   # Dataset loading and chunking
 │   ├── cli.py                  # CLI entry point
@@ -236,3 +248,5 @@ uv run python scripts/build_index.py --device cpu
 ## Data Policy
 
 The Yelp dataset is intended for educational use. Review the [official terms](https://business.yelp.com/data/resources/open-dataset/) before use. Raw data, processed outputs, and generated artifacts are excluded from git.
+
+

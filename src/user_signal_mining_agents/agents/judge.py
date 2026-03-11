@@ -1,4 +1,4 @@
-"""LLM Judge: score baseline vs pipeline outputs on the 5-dimension rubric."""
+"""LLM Judge: score two system outputs on the 5-dimension rubric."""
 
 from __future__ import annotations
 
@@ -32,13 +32,16 @@ def _format_focus_points(label: str, points: list[FocusPoint]) -> str:
     return "\n".join(lines)
 
 
-def judge_pair(
+def judge_named_pair(
     prompt: FounderPrompt,
-    baseline_result: SynthesisResult,
-    pipeline_result: SynthesisResult,
+    left_result: SynthesisResult,
+    right_result: SynthesisResult,
+    *,
+    left_variant: str,
+    right_variant: str,
     settings: Settings | None = None,
 ) -> tuple[JudgeResult, JudgeResult]:
-    """Score both system outputs for a single founder prompt.
+    """Score two arbitrary system outputs for one founder prompt.
 
     Randomizes A/B position to remove positional bias, then maps scores back.
     """
@@ -47,16 +50,16 @@ def judge_pair(
     system_prompt = _load_prompt_template(s)
 
     # Randomize which system is presented as A vs B
-    baseline_first = random.random() < 0.5
+    left_first = random.random() < 0.5
 
-    if baseline_first:
+    if left_first:
         a_label, b_label = "System A", "System B"
-        a_result, b_result = baseline_result, pipeline_result
-        con.step("judge", f"Scoring prompt {prompt.id!r} (A=baseline, B=pipeline)...")
+        a_result, b_result = left_result, right_result
+        con.step("judge", f"Scoring prompt {prompt.id!r} (A={left_variant}, B={right_variant})...")
     else:
         a_label, b_label = "System A", "System B"
-        a_result, b_result = pipeline_result, baseline_result
-        con.step("judge", f"Scoring prompt {prompt.id!r} (A=pipeline, B=baseline)...")
+        a_result, b_result = right_result, left_result
+        con.step("judge", f"Scoring prompt {prompt.id!r} (A={right_variant}, B={left_variant})...")
 
     a_block = _format_focus_points(a_label, a_result.focus_points)
     b_block = _format_focus_points(b_label, b_result.focus_points)
@@ -78,20 +81,38 @@ def judge_pair(
     a_scores = JudgeScores.model_validate(raw["system_a"])
     b_scores = JudgeScores.model_validate(raw["system_b"])
 
-    # Map scores back to correct systems
-    if baseline_first:
-        baseline_scores, pipeline_scores = a_scores, b_scores
+    # Map scores back to the original system ordering
+    if left_first:
+        left_scores, right_scores = a_scores, b_scores
     else:
-        baseline_scores, pipeline_scores = b_scores, a_scores
+        left_scores, right_scores = b_scores, a_scores
 
-    baseline_judge = JudgeResult(
+    left_judge = JudgeResult(
         prompt_id=prompt.id,
-        system_variant="baseline",
-        scores=baseline_scores,
+        system_variant=left_variant,
+        scores=left_scores,
     )
-    pipeline_judge = JudgeResult(
+    right_judge = JudgeResult(
         prompt_id=prompt.id,
-        system_variant="pipeline",
-        scores=pipeline_scores,
+        system_variant=right_variant,
+        scores=right_scores,
     )
-    return baseline_judge, pipeline_judge
+    return left_judge, right_judge
+
+
+def judge_pair(
+    prompt: FounderPrompt,
+    baseline_result: SynthesisResult,
+    pipeline_result: SynthesisResult,
+    settings: Settings | None = None,
+) -> tuple[JudgeResult, JudgeResult]:
+    """Backward-compatible baseline vs pipeline scorer."""
+
+    return judge_named_pair(
+        prompt,
+        baseline_result,
+        pipeline_result,
+        left_variant="baseline",
+        right_variant="pipeline",
+        settings=settings,
+    )

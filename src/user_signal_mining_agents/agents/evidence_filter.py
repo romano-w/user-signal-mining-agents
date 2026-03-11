@@ -8,22 +8,39 @@ from ..schemas import EvidenceSnippet, FounderPrompt, IntentBundle
 from .. import console as con
 
 
-def retrieve_and_filter(
+def _dedupe_queries(queries: list[str]) -> list[str]:
+    """Preserve order while dropping empty/duplicate queries."""
+
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for query in queries:
+        normalized = query.strip()
+        if not normalized:
+            continue
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        deduped.append(normalized)
+    return deduped
+
+
+def retrieve_for_queries(
     prompt: FounderPrompt,
-    intent: IntentBundle,
+    queries: list[str],
     settings: Settings | None = None,
 ) -> list[EvidenceSnippet]:
-    """Retrieve snippets for each query in the intent bundle, deduplicate, re-rank."""
+    """Retrieve snippets for a list of queries, deduplicate, and keep top-K."""
 
     s = settings or get_settings()
+    deduped_queries = _dedupe_queries(queries)
+    if not deduped_queries:
+        deduped_queries = [prompt.statement]
 
-    # Collect queries: original statement + intent-derived queries
-    queries = [prompt.statement] + list(intent.retrieval_queries)
-    con.step("evidence", f"Searching with {len(queries)} queries...")
+    con.step("evidence", f"Searching with {len(deduped_queries)} queries...")
 
     # Gather all hits, tracking best score per snippet
     best_by_id: dict[str, tuple[float, EvidenceSnippet]] = {}
-    for query in queries:
+    for query in deduped_queries:
         hits = search_dense_index(
             query,
             index_dir=s.index_dir,
@@ -44,3 +61,14 @@ def retrieve_and_filter(
     evidence = [snippet for _score, snippet in ranked[:top_k]]
     con.step("evidence", f"Selected {len(evidence)} snippets from {len(best_by_id)} unique candidates")
     return evidence
+
+
+def retrieve_and_filter(
+    prompt: FounderPrompt,
+    intent: IntentBundle,
+    settings: Settings | None = None,
+) -> list[EvidenceSnippet]:
+    """Retrieve snippets for each query in the intent bundle, deduplicate, re-rank."""
+
+    queries = [prompt.statement] + list(intent.retrieval_queries)
+    return retrieve_for_queries(prompt, queries, settings)
