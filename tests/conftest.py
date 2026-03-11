@@ -38,7 +38,7 @@ def reset_singletons() -> None:
 def tmp_settings(tmp_path: Path) -> Settings:
     prompts_dir = tmp_path / "prompts"
     prompts_dir.mkdir(parents=True, exist_ok=True)
-    for name in ("baseline.md", "intent.md", "synthesis.md", "judge.md", "evidence_verifier.md"):
+    for name in ("baseline.md", "intent.md", "synthesis.md", "judge.md", "evidence_verifier.md", "query_planner.md", "counterevidence_miner.md", "critic.md", "refiner.md"):
         (prompts_dir / name).write_text(f"template::{name}", encoding="utf-8")
 
     founder_prompts_path = tmp_path / "founder_prompts.json"
@@ -155,3 +155,4 @@ def synthesis_result(
         retrieved_evidence=[evidence_factory(1), evidence_factory(2)],
         focus_points=[focus_point_factory(1), focus_point_factory(2), focus_point_factory(3)],
     )
+

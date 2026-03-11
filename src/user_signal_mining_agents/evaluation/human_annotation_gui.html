@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>USM Human Annotation Workbench</title>
+  <style>
+    :root {
+      --bg: #f2ece2;
+      --paper: #fffdf8;
+      --ink: #1f1a14;
+      --muted: #6f6458;
+      --line: #e4d6c4;
+      --accent: #c7522a;
+      --accent-strong: #a73f1f;
+      --ok: #237547;
+      --shadow: 0 12px 28px rgba(53, 38, 23, 0.12);
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 5% 5%, #fff6ee 0%, transparent 42%),
+        radial-gradient(circle at 95% 0%, #efe9dc 0%, transparent 35%),
+        linear-gradient(180deg, #f8f4ec 0%, var(--bg) 100%);
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: 100vh;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar header {
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      margin: 0;
+      font-size: 1.1rem;
+      letter-spacing: 0.02em;
+    }
+
+    .subtle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .field {
+      margin: 10px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .field input,
+    .field textarea {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      color: inherit;
+      background: #fff;
+    }
+
+    .field textarea {
+      min-height: 84px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    .task-toolbar {
+      margin: 2px 18px 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      padding: 8px 12px;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .button:hover {
+      border-color: #ccb8a1;
+      transform: translateY(-1px);
+    }
+
+    .button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .button.primary:hover {
+      background: var(--accent-strong);
+    }
+
+    .task-list {
+      overflow: auto;
+      padding: 0 10px 12px;
+      margin: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-row {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      background: #fff;
+      transition: 130ms ease;
+    }
+
+    .task-row:hover {
+      border-color: #cfb79d;
+      transform: translateX(2px);
+    }
+
+    .task-row.active {
+      border-color: var(--accent);
+      background: #fff8f4;
+    }
+
+    .task-title {
+      margin: 0 0 4px;
+      font-size: 0.9rem;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    .task-meta {
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      padding: 1px 8px;
+      min-height: 22px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      background: #fff;
+    }
+
+    .chip.ok {
+      border-color: #c3e2d1;
+      background: #eaf6ef;
+      color: var(--ok);
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+    }
+
+    .headline {
+      margin: 0;
+      font-size: 1.3rem;
+      font-family: "Georgia", "Times New Roman", serif;
+    }
+
+    .status {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .status.error {
+      color: #a7372a;
+      font-weight: 700;
+    }
+
+    .status.success {
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    .progress {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .prompt {
+      padding: 16px;
+    }
+
+    .prompt h2 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+    }
+
+    .prompt p {
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .prompt-notes {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background: #f7f2e9;
+      border: 1px dashed #ddccba;
+      color: #514739;
+      font-size: 0.9rem;
+    }
+
+    .two-up {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .system-card {
+      padding: 14px;
+      min-width: 0;
+    }
+
+    .system-card h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .focus-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .focus-point {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .focus-point h4 {
+      margin: 0 0 6px;
+      font-size: 0.9rem;
+      line-height: 1.35;
+    }
+
+    .focus-point p {
+      margin: 0 0 7px;
+      font-size: 0.86rem;
+      line-height: 1.4;
+      color: #3f352a;
+    }
+
+    .focus-point ul {
+      margin: 0;
+      padding-left: 17px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.83rem;
+      color: #4f4338;
+    }
+
+    .rubric {
+      padding: 14px;
+      overflow-x: auto;
+    }
+
+    .rubric table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    .rubric th,
+    .rubric td {
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      padding: 10px 8px;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .rubric th {
+      color: #4d4236;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.75rem;
+    }
+
+    .dim-title {
+      margin: 0;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #362b20;
+    }
+
+    .dim-help {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.79rem;
+      line-height: 1.35;
+    }
+
+    .score-group {
+      display: inline-flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .score-group input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .score-pill {
+      border: 1px solid #cdb79f;
+      border-radius: 999px;
+      min-width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      cursor: pointer;
+      background: #fff;
+      user-select: none;
+    }
+
+    .score-group input:checked + .score-pill {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .pref-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      align-items: center;
+    }
+
+    .pref-row > span {
+      font-weight: 700;
+      color: #53493d;
+    }
+
+    .choice {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: #fff;
+      font-size: 0.85rem;
+    }
+
+    .difficulty {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #4f4337;
+      font-size: 0.88rem;
+    }
+
+    .difficulty input {
+      width: 180px;
+    }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .evidence {
+      padding: 14px;
+    }
+
+    .evidence-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .evidence-top h3 {
+      margin: 0;
+    }
+
+    .evidence-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 9px;
+    }
+
+    .snippet {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .snippet p {
+      margin: 0;
+      font-size: 0.83rem;
+      line-height: 1.4;
+      color: #3f342a;
+      max-height: 140px;
+      overflow: auto;
+    }
+
+    .snippet-meta {
+      color: var(--muted);
+      font-size: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    @media (max-width: 1180px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        min-height: 260px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .two-up {
+        grid-template-columns: 1fr;
+      }
+
+      .notes-grid {
+        grid-template-columns: 1fr;
+      }
+    }
++  </style>
++</head>
++<body>
++  <div class="shell">
++    <aside class="panel sidebar">
++      <header>
++        <h1 class="brand">Human Annotation Workbench</h1>
++        <p class="subtle">Side-by-side grading for blinded System A/B outputs.</p>
++      </header>
++      <div class="field">
++        <label for="annotatorInput">Annotator ID</label>
++        <input id="annotatorInput" placeholder="e.g. reviewer_01" />
++      </div>
++      <div class="task-toolbar">
++        <button id="loadTasksBtn" class="button primary" type="button">Load Tasks</button>
++        <button id="exportBtn" class="button" type="button">Export My JSON</button>
++      </div>
++      <ul id="taskList" class="task-list"></ul>
++    </aside>
++
++    <main class="main">
++      <section class="panel topbar">
++        <div>
++          <h2 id="topTitle" class="headline">Select a task</h2>
++          <p id="statusLine" class="status">Annotator ID is required before saving.</p>
++        </div>
++        <div id="progressText" class="progress">0 / 0 completed</div>
++      </section>
++
++      <section class="panel prompt">
++        <h2 id="promptLabel">Prompt</h2>
++        <p id="promptStatement">Choose a task to begin annotation.</p>
++        <div id="promptNotes" class="prompt-notes" hidden></div>
++      </section>
++
++      <section class="two-up">
++        <article class="panel system-card">
++          <h3>System A Focus Points</h3>
++          <div id="systemAList" class="focus-list"></div>
++        </article>
++        <article class="panel system-card">
++          <h3>System B Focus Points</h3>
++          <div id="systemBList" class="focus-list"></div>
++        </article>
++      </section>
++
++      <section class="panel rubric">
++        <table>
++          <thead>
++            <tr>
++              <th>Rubric Dimension</th>
++              <th>System A (1-5)</th>
++              <th>System B (1-5)</th>
++            </tr>
++          </thead>
++          <tbody id="rubricRows"></tbody>
++        </table>
++
++        <div class="notes-grid">
++          <div class="field" style="margin:0;">
++            <label for="aRationale">System A rationale (optional)</label>
++            <textarea id="aRationale" placeholder="Brief reasoning for A scores..."></textarea>
++          </div>
++          <div class="field" style="margin:0;">
++            <label for="bRationale">System B rationale (optional)</label>
++            <textarea id="bRationale" placeholder="Brief reasoning for B scores..."></textarea>
++          </div>
++        </div>
++
++        <div class="pref-row">
++          <span>Overall preference</span>
++          <label class="choice"><input type="radio" name="overallPreference" value="system_a" /> System A</label>
++          <label class="choice"><input type="radio" name="overallPreference" value="system_b" /> System B</label>
++          <label class="choice"><input type="radio" name="overallPreference" value="tie" /> Tie</label>
++        </div>
++
++        <div class="difficulty">
++          <label for="difficultyInput"><strong>Difficulty</strong> (1 easy - 5 difficult)</label>
++          <input id="difficultyInput" type="range" min="1" max="5" value="3" />
++          <span id="difficultyLabel">3</span>
++        </div>
++
++        <div class="actions">
++          <button id="saveBtn" type="button" class="button primary">Save</button>
++          <button id="saveNextBtn" type="button" class="button">Save + Next</button>
++          <button id="nextBtn" type="button" class="button">Next Task</button>
++          <button id="prevBtn" type="button" class="button">Previous Task</button>
++        </div>
++      </section>
++
++      <section class="panel evidence">
++        <div class="evidence-top">
++          <h3 id="evidenceTitle">Retrieved Evidence</h3>
++          <input id="evidenceSearch" class="button" style="border-radius:10px; padding:8px 10px; min-width:260px;" placeholder="Filter snippets..." />
++        </div>
++        <div id="evidenceList" class="evidence-list"></div>
++      </section>
++    </main>
++  </div>
++
++  <script>
++    const DEFAULT_ANNOTATOR = __DEFAULT_ANNOTATOR__;
++    const DIMENSIONS = __RUBRIC_DIMENSIONS__;
++
++    const state = {
++      tasks: [],
++      currentTaskId: null,
++      currentTask: null,
++      evidenceFilter: "",
++      dirty: false,
++    };
++
++    const refs = {
++      annotatorInput: document.getElementById("annotatorInput"),
++      loadTasksBtn: document.getElementById("loadTasksBtn"),
++      exportBtn: document.getElementById("exportBtn"),
++      taskList: document.getElementById("taskList"),
++      topTitle: document.getElementById("topTitle"),
++      statusLine: document.getElementById("statusLine"),
++      progressText: document.getElementById("progressText"),
++      promptLabel: document.getElementById("promptLabel"),
++      promptStatement: document.getElementById("promptStatement"),
++      promptNotes: document.getElementById("promptNotes"),
++      systemAList: document.getElementById("systemAList"),
++      systemBList: document.getElementById("systemBList"),
++      rubricRows: document.getElementById("rubricRows"),
++      aRationale: document.getElementById("aRationale"),
++      bRationale: document.getElementById("bRationale"),
++      difficultyInput: document.getElementById("difficultyInput"),
++      difficultyLabel: document.getElementById("difficultyLabel"),
++      saveBtn: document.getElementById("saveBtn"),
++      saveNextBtn: document.getElementById("saveNextBtn"),
++      nextBtn: document.getElementById("nextBtn"),
++      prevBtn: document.getElementById("prevBtn"),
++      evidenceSearch: document.getElementById("evidenceSearch"),
++      evidenceTitle: document.getElementById("evidenceTitle"),
++      evidenceList: document.getElementById("evidenceList"),
++    };

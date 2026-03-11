@@ -41,3 +41,25 @@ def test_retrieve_and_filter_dedupes_and_keeps_best_score(
     assert seen_queries == [founder_prompt.statement, "slow service", "long wait"]
     assert [snippet.snippet_id for snippet in evidence] == ["s-1", "s-4", "s-3"]
     assert evidence[0].relevance_score == pytest.approx(0.91)
+
+def test_retrieve_for_queries_dedupes_empty_and_duplicate_queries(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+    founder_prompt,
+    evidence_factory,
+) -> None:
+    seen_queries: list[str] = []
+
+    def _search(query: str, **_kwargs):
+        seen_queries.append(query)
+        return [DenseRetrievalHit(snippet=evidence_factory(1), score=0.5)]
+
+    monkeypatch.setattr(evidence_filter, "search_dense_index", _search)
+
+    evidence_filter.retrieve_for_queries(
+        founder_prompt,
+        ["", founder_prompt.statement, founder_prompt.statement, "slow service"],
+        tmp_settings,
+    )
+
+    assert seen_queries == [founder_prompt.statement, "slow service"]
