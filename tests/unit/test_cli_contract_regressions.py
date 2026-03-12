@@ -20,38 +20,56 @@ def test_build_parser_foundation_command_defaults() -> None:
 
     retrieval_args = parser.parse_args(["eval-retrieval"])
     assert retrieval_args.label_set is None
+    assert retrieval_args.mode is None
+    assert retrieval_args.reranker is None
+    assert retrieval_args.k_values == "1,3,5,10"
+    assert retrieval_args.top_k is None
+    assert retrieval_args.output_dir is None
 
     robustness_args = parser.parse_args(["eval-robustness"])
     assert robustness_args.suite == "default"
+    assert robustness_args.prompt_id is None
+    assert robustness_args.no_cache is False
 
 
 @pytest.mark.parametrize(
-    ("handler", "argv", "expected_args"),
+    ("handler", "argv", "expected_args", "expected_kwargs"),
     [
         (
             "cmd_ingest",
             ["ingest", "--adapter", "support_tickets", "--input-path", "data/input.jsonl"],
             ("support_tickets", Path("data/input.jsonl")),
+            {},
         ),
         (
             "cmd_snapshot_data",
             ["snapshot-data", "--dataset-id", "restaurants_v2"],
             ("restaurants_v2",),
+            {},
         ),
         (
             "cmd_eval_retrieval",
             ["eval-retrieval", "--label-set", "artifacts/retrieval_labels.jsonl"],
             (Path("artifacts/retrieval_labels.jsonl"),),
+            {
+                "mode": None,
+                "reranker": None,
+                "k_values": "1,3,5,10",
+                "top_k": None,
+                "output_dir": None,
+            },
         ),
         (
             "cmd_eval_robustness",
             ["eval-robustness", "--suite", "adversarial_core"],
-            ("adversarial_core",),
+            ("adversarial_core", None),
+            {"no_cache": False},
         ),
         (
             "cmd_compare_runs",
             ["compare-runs", "--run-a", "run_001", "--run-b", "run_002"],
             ("run_001", "run_002"),
+            {},
         ),
     ],
 )
@@ -60,11 +78,13 @@ def test_main_dispatches_foundation_surfaces(
     handler: str,
     argv: list[str],
     expected_args: tuple[object, ...],
+    expected_kwargs: dict[str, object],
 ) -> None:
-    called: dict[str, tuple[object, ...]] = {}
+    called: dict[str, object] = {}
 
-    def _fake_handler(*args: object) -> int:
+    def _fake_handler(*args: object, **kwargs: object) -> int:
         called["args"] = args
+        called["kwargs"] = kwargs
         return 211
 
     monkeypatch.setattr(cli, handler, _fake_handler)
@@ -73,62 +93,22 @@ def test_main_dispatches_foundation_surfaces(
 
     assert result == 211
     assert called["args"] == expected_args
+    assert called["kwargs"] == expected_kwargs
 
 
-@pytest.mark.parametrize(
-    ("command", "fn_name", "kwargs", "expected_payload"),
-    [
-        (
-            "ingest",
-            "cmd_ingest",
-            {"adapter": "app_reviews", "input_path": Path("incoming.jsonl")},
-            {"adapter": "app_reviews", "input_path": "incoming.jsonl"},
-        ),
-        (
-            "snapshot-data",
-            "cmd_snapshot_data",
-            {"dataset_id": "restaurants_v3"},
-            {"dataset_id": "restaurants_v3"},
-        ),
-        (
-            "eval-retrieval",
-            "cmd_eval_retrieval",
-            {"label_set": Path("labels.jsonl")},
-            {"label_set": "labels.jsonl"},
-        ),
-        (
-            "eval-robustness",
-            "cmd_eval_robustness",
-            {"suite": "noise_shift"},
-            {"suite": "noise_shift"},
-        ),
-        (
-            "compare-runs",
-            "cmd_compare_runs",
-            {"run_a": "run_a", "run_b": "run_b"},
-            {"run_a": "run_a", "run_b": "run_b"},
-        ),
-    ],
-)
-def test_foundation_placeholder_payload_shape_is_stable(
+def test_compare_runs_placeholder_payload_shape_is_stable(
     capsys: pytest.CaptureFixture[str],
-    command: str,
-    fn_name: str,
-    kwargs: dict[str, object],
-    expected_payload: dict[str, object],
 ) -> None:
-    command_fn = getattr(cli, fn_name)
-
-    code = command_fn(**kwargs)
+    code = cli.cmd_compare_runs("run_a", "run_b")
 
     assert code == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload == {
         "status": "foundation-placeholder",
-        "command": command,
+        "command": "compare-runs",
         "notes": (
             "This command surface is intentionally scaffolded in the foundation branch. "
             "Program-specific agent branches should replace this placeholder implementation."
         ),
-        "payload": expected_payload,
+        "payload": {"run_a": "run_a", "run_b": "run_b"},
     }

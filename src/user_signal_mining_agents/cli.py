@@ -458,7 +458,7 @@ def cmd_search(query: str, top_k: int) -> int:
         print()
     return 0
 
-`r`ndef _load_prompts(prompt_id: str | None = None, domain_arg: str | None = None) -> list[FounderPrompt]:
+def _load_prompts(prompt_id: str | None = None, domain_arg: str | None = None) -> list[FounderPrompt]:
     settings = get_settings()
     domain_ids = _parse_domain_ids(domain_arg)
     prompts = load_founder_prompts(settings, domain_ids=domain_ids)
@@ -552,7 +552,7 @@ def cmd_run_variant(variant: str, prompt_id: str | None, domain_arg: str | None)
     return 0
 
 
-def cmd_evaluate(prompt_id: str | None, domain_arg: str | None, *, no_cache: bool) -> int:
+def cmd_evaluate(prompt_id: str | None, domain_arg: str | None = None, *, no_cache: bool = False) -> int:
     from .evaluation.failure_taxonomy import generate_failure_taxonomy
     from .evaluation.report import generate_report
     from .evaluation.runner import run_evaluation
@@ -701,11 +701,11 @@ def cmd_snapshot_data(dataset_id: str) -> int:
 def cmd_eval_retrieval(
     label_set: Path | None,
     *,
-    mode: str | None,
-    reranker: str | None,
-    k_values: str,
-    top_k: int | None,
-    output_dir: Path | None,
+    mode: str | None = None,
+    reranker: str | None = None,
+    k_values: str = "1,3,5,10",
+    top_k: int | None = None,
+    output_dir: Path | None = None,
 ) -> int:
     from rich.table import Table
 
@@ -760,9 +760,9 @@ def cmd_eval_retrieval(
 
 def cmd_eval_robustness(
     suite: str,
-    prompt_id: str | None,
+    prompt_id: str | None = None,
     *,
-    no_cache: bool,
+    no_cache: bool = False,
 ) -> int:
     from .evaluation.robustness_report import generate_robustness_report
     from .evaluation.robustness_runner import run_robustness_suite, suite_output_dir
@@ -952,6 +952,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     parser.error(f"Unknown command: {args.command}")
     return 2
+
+
 
 
 
