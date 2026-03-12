@@ -142,14 +142,18 @@ def call_llm_json(
     model: str | None = None,
     temperature: float | None = None,
     max_retries: int = 6,
+    json_attempts: int = 3,
 ) -> dict[str, Any] | list[Any]:
     """Call the LLM and parse the response as JSON.
 
     Strips markdown fences if the model wraps JSON in ```json ... ```.
-    On parse failure, attempts basic repair then retries the LLM call once.
+    On parse failure, attempts basic repair and retries the LLM call.
     """
 
-    for json_attempt in range(2):
+    if json_attempts < 1:
+        raise ValueError("json_attempts must be >= 1")
+
+    for json_attempt in range(json_attempts):
         raw = call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
@@ -176,7 +180,7 @@ def call_llm_json(
             try:
                 return json.loads(repaired)
             except json.JSONDecodeError:
-                if json_attempt == 0:
+                if json_attempt < json_attempts - 1:
                     con.warning("JSON parse failed, retrying LLM call...")
                     continue
                 raise
@@ -198,4 +202,3 @@ def _repair_json(text: str) -> str:
         text = match.group(1)
 
     return text
-

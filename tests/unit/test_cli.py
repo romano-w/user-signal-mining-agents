@@ -32,6 +32,11 @@ def test_build_parser_supports_domain_filters() -> None:
     evaluate_args = parser.parse_args(["evaluate", "--domain", "restaurants,saas"])
     assert evaluate_args.command == "evaluate"
     assert evaluate_args.domain == "restaurants,saas"
+    assert evaluate_args.judge_panel_size is None
+
+    evaluate_panel_args = parser.parse_args(["evaluate", "--judge-panel-size", "3"])
+    assert evaluate_panel_args.command == "evaluate"
+    assert evaluate_panel_args.judge_panel_size == 3
 
     baseline_args = parser.parse_args(["run-baseline", "--domain", "saas"])
     assert baseline_args.command == "run-baseline"

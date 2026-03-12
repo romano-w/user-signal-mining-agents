@@ -176,6 +176,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Comma-separated domain ids. Omit to use enabled domain packs.",
     )
+    evaluate_parser.add_argument(
+        "--judge-panel-size",
+        type=int,
+        default=None,
+        help="Optional deterministic judge panel size (must be >= 1).",
+    )
 
     evaluate_variants_parser = subparsers.add_parser(
         "evaluate-variants",

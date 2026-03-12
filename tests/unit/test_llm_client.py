@@ -159,9 +159,29 @@ def test_call_llm_json_repairs_and_retries(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr(llm_client.con, "warning", lambda msg: warnings.append(msg))
 
     with pytest.raises(json.JSONDecodeError):
-        llm_client.call_llm_json(system_prompt="s", user_prompt="u", settings=_settings())
+        llm_client.call_llm_json(
+            system_prompt="s",
+            user_prompt="u",
+            settings=_settings(),
+            json_attempts=2,
+        )
 
     assert warnings == ["JSON parse failed, retrying LLM call..."]
+
+
+def test_call_llm_json_succeeds_on_third_attempt(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = iter(["not json", "still not json", "{\"focus_points\": []}"])
+    monkeypatch.setattr(llm_client, "call_llm", lambda **_kwargs: next(calls))
+    warnings: list[str] = []
+    monkeypatch.setattr(llm_client.con, "warning", lambda msg: warnings.append(msg))
+
+    payload = llm_client.call_llm_json(system_prompt="s", user_prompt="u", settings=_settings())
+
+    assert payload == {"focus_points": []}
+    assert warnings == [
+        "JSON parse failed, retrying LLM call...",
+        "JSON parse failed, retrying LLM call...",
+    ]
 
 
 def test_repair_json_removes_trailing_commas_and_extracts_json() -> None:
