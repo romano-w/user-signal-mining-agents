@@ -156,10 +156,10 @@ def test_judge_panel_result_accepts_minimal_aggregate_payload() -> None:
             "panel_size": 3,
             "aggregate_scores": {
                 "relevance": 4.2,
-                "actionability": 4.1,
-                "evidence_grounding": 4.3,
-                "contradiction_handling": 4.0,
-                "non_redundancy": 4.0,
+                "overall_preference": 4.1,
+                "coverage": 4.3,
+                "contradiction": 4.0,
+                "distinctiveness": 4.0,
                 "rationale": "aggregate",
             },
         }
@@ -198,3 +198,4 @@ def test_failure_tag_robustness_case_and_domain_pack_accept_minimal_payloads() -
     assert tag.evidence_refs == []
     assert case.transform_spec == {}
     assert pack.enabled is True
+

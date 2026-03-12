@@ -28,23 +28,22 @@ Founder Prompt ─────────────────────�
 | Dimension | What it measures |
 |---|---|
 | **Relevance** | Does the output address the founder's specific intent? |
-| **Actionability** | Would the founder know what to investigate next? |
-| **Evidence Grounding** | Are claims tied to real customer quotes? |
-| **Contradiction Handling** | Does the output acknowledge counter-signals? |
-| **Non Redundancy** | Are focus points distinct rather than repetitive? |
+| **Contradiction** | Does the output acknowledge counter-signals? |
+| **Coverage** | Does the output cover the most important evidence-backed themes? |
+| **Distinctiveness** | Are focus points distinct rather than repetitive? |
+| **Overall Preference** | All-things-considered, how preferable is this output for founder decision-making? |
 
 ### Latest Results
 
 | Dimension | Baseline | Pipeline | Δ |
 |---|:---:|:---:|:---:|
 | Relevance | 4.70 | 4.50 | -0.20 |
-| Actionability | 4.50 | 4.50 | +0.00 |
-| Evidence Grounding | 4.70 | 4.70 | +0.00 |
-| Contradiction Handling | 4.30 | 4.60 | **+0.30** |
-| Non Redundancy | 4.30 | 4.50 | **+0.20** |
-| **Overall** | **4.50** | **4.56** | **+0.06** |
+| Contradiction | 4.30 | 4.60 | **+0.30** |
+| Coverage | 4.70 | 4.70 | +0.00 |
+| Distinctiveness | 4.30 | 4.50 | **+0.20** |
+| **Overall Preference** | **4.50** | **4.56** | **+0.06** |
 
-> Pipeline edges out baseline primarily through better contradiction handling and non-redundancy, driven by multi-query retrieval producing more diverse evidence.
+> Pipeline edges out baseline primarily through better contradiction handling and distinctiveness, while maintaining coverage.
 
 ## Prerequisites
 

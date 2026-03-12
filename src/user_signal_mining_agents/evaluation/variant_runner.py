@@ -19,10 +19,9 @@ from ..schemas import FounderPrompt, JudgeResult, SynthesisResult
 
 RUBRIC_DIMS = [
     "relevance",
-    "actionability",
-    "evidence_grounding",
-    "contradiction_handling",
-    "non_redundancy",
+    "contradiction",
+    "coverage",
+    "distinctiveness",
 ]
 
 DEFAULT_STAGED_PROMPT_IDS = [
@@ -230,8 +229,8 @@ def run_variant_evaluation(
             dim: _avg([getattr(row.variant_scores.scores, dim) for row in rows])
             for dim in RUBRIC_DIMS
         }
-        control_overall = _avg(list(control_scores.values()))
-        variant_overall = _avg(list(variant_scores.values()))
+        control_overall = _avg([row.control_scores.scores.overall_preference for row in rows])
+        variant_overall = _avg([row.variant_scores.scores.overall_preference for row in rows])
 
         aggregates.append(
             VariantAggregate(
@@ -253,3 +252,4 @@ def run_variant_evaluation(
         aggregates=aggregates,
         comparisons_by_variant=comparisons_by_variant,
     )
+

@@ -82,7 +82,7 @@ def test_run_variant_pipeline_full_hybrid_includes_all_new_stages(
     monkeypatch.setattr(variant_pipeline, "retrieve_for_queries", lambda *_args, **_kwargs: calls.append("evidence") or [evidence_factory(1), evidence_factory(2)])
     monkeypatch.setattr(variant_pipeline, "mine_counterevidence_queries", lambda *_args, **_kwargs: calls.append("counterevidence") or ["counter query"])
     monkeypatch.setattr(variant_pipeline, "run_synthesis", lambda *_args, **_kwargs: calls.append("synthesis") or synthesis_result)
-    monkeypatch.setattr(variant_pipeline, "critique_focus_points", lambda *_args, **_kwargs: calls.append("critic") or ["improve non-redundancy"])
+    monkeypatch.setattr(variant_pipeline, "critique_focus_points", lambda *_args, **_kwargs: calls.append("critic") or ["improve distinctiveness"])
     monkeypatch.setattr(
         variant_pipeline,
         "refine_focus_points",

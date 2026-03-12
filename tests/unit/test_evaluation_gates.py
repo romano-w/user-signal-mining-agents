@@ -11,10 +11,10 @@ from user_signal_mining_agents.schemas import JudgeResult, JudgeScores
 def _scores(value: float) -> JudgeScores:
     return JudgeScores(
         relevance=value,
-        actionability=value,
-        evidence_grounding=value,
-        contradiction_handling=value,
-        non_redundancy=value,
+        overall_preference=value,
+        coverage=value,
+        contradiction=value,
+        distinctiveness=value,
         rationale=f"score={value}",
     )
 
@@ -88,3 +88,4 @@ def test_find_critical_metric_regressions_flags_dimension_and_overall_drops() ->
 
     metrics = {violation.metric for violation in violations}
     assert metrics == {*gates.RUBRIC_DIMS, "overall"}
+

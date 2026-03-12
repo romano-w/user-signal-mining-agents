@@ -23,10 +23,10 @@ from user_signal_mining_agents.schemas import (
 def _scores(value: float, rationale: str = "ok") -> JudgeScores:
     return JudgeScores(
         relevance=value,
-        actionability=value,
-        evidence_grounding=value,
-        contradiction_handling=value,
-        non_redundancy=value,
+        overall_preference=value,
+        coverage=value,
+        contradiction=value,
+        distinctiveness=value,
         rationale=rationale,
     )
 
@@ -266,7 +266,7 @@ def _panel(prompt_id: str, variant: str, values: list[float], *, p_value: float)
         aggregate_scores=_scores(mean_value, rationale=f"panel-{variant}"),
         metrics_with_ci=[
             MetricWithCI(
-                metric="overall_avg",
+                metric="overall_preference",
                 mean=mean_value,
                 ci95_lower=mean_value - 0.1,
                 ci95_upper=mean_value + 0.1,
@@ -275,7 +275,7 @@ def _panel(prompt_id: str, variant: str, values: list[float], *, p_value: float)
         ],
         significance=[
             SignificanceResult(
-                metric="overall_avg",
+                metric="overall_preference",
                 p_value=p_value,
                 is_significant=p_value < 0.05,
                 effect_size=0.3,
@@ -342,4 +342,5 @@ def test_generate_report_includes_panel_confidence_context(tmp_path: Path) -> No
     assert "Confidence context" in text
     assert "Panel Confidence (3 judges)" in text
     assert "p-value (Pipeline vs Baseline)" in text
+
 

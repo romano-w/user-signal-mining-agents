@@ -643,17 +643,15 @@ def cmd_evaluate(
     if summary.pairs:
         dims = [
             "relevance",
-            "actionability",
-            "evidence_grounding",
-            "contradiction_handling",
-            "non_redundancy",
+            "contradiction",
+            "coverage",
+            "distinctiveness",
         ]
         dim_labels = {
             "relevance": "Relevance",
-            "actionability": "Actionability",
-            "evidence_grounding": "Evidence Grounding",
-            "contradiction_handling": "Contradiction Handling",
-            "non_redundancy": "Non Redundancy",
+            "contradiction": "Contradiction",
+            "coverage": "Coverage",
+            "distinctiveness": "Distinctiveness",
         }
         scores: dict[str, tuple[float, float]] = {}
         for dim in dims:
@@ -661,8 +659,8 @@ def cmd_evaluate(
             p_avg = sum(getattr(pair.pipeline_scores.scores, dim) for pair in summary.pairs) / len(summary.pairs)
             scores[dim_labels[dim]] = (b_avg, p_avg)
 
-        b_overall = sum(value[0] for value in scores.values()) / len(scores)
-        p_overall = sum(value[1] for value in scores.values()) / len(scores)
+        b_overall = sum(pair.baseline_scores.scores.overall_preference for pair in summary.pairs) / len(summary.pairs)
+        p_overall = sum(pair.pipeline_scores.scores.overall_preference for pair in summary.pairs) / len(summary.pairs)
 
         con.console.print()
         con.results_table(scores, b_overall, p_overall)
@@ -954,10 +952,9 @@ def cmd_sweep(prompt_id: str | None, domain_arg: str | None) -> int:
     table.add_column("Variant", style="cyan bold")
     table.add_column("Description", style="dim")
     table.add_column("Rel", justify="center")
-    table.add_column("Act", justify="center")
-    table.add_column("Evi", justify="center")
     table.add_column("Con", justify="center")
-    table.add_column("NR", justify="center")
+    table.add_column("Cov", justify="center")
+    table.add_column("Dist", justify="center")
     table.add_column("Overall", justify="center", style="bold")
 
     for r in results:
@@ -965,10 +962,9 @@ def cmd_sweep(prompt_id: str | None, domain_arg: str | None) -> int:
             r.variant,
             r.description,
             f"{r.scores.get('relevance', 0):.1f}",
-            f"{r.scores.get('actionability', 0):.1f}",
-            f"{r.scores.get('evidence_grounding', 0):.1f}",
-            f"{r.scores.get('contradiction_handling', 0):.1f}",
-            f"{r.scores.get('non_redundancy', 0):.1f}",
+            f"{r.scores.get('contradiction', 0):.1f}",
+            f"{r.scores.get('coverage', 0):.1f}",
+            f"{r.scores.get('distinctiveness', 0):.1f}",
             f"{r.overall:.2f}",
         )
 
@@ -1069,6 +1065,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     parser.error(f"Unknown command: {args.command}")
     return 2
+
 
 
 

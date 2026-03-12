@@ -18,23 +18,18 @@ RUBRIC_DIMENSIONS: list[dict[str, str]] = [
         "description": "How directly does the output address the founder prompt?",
     },
     {
-        "key": "actionability",
-        "label": "Actionability",
-        "description": "Does this provide concrete next directions for investigation?",
-    },
-    {
-        "key": "evidence_grounding",
-        "label": "Evidence Grounding",
-        "description": "Are the claims backed by grounded review evidence?",
-    },
-    {
-        "key": "contradiction_handling",
-        "label": "Contradiction Handling",
+        "key": "contradiction",
+        "label": "Contradiction",
         "description": "Does this meaningfully account for counter-signals?",
     },
     {
-        "key": "non_redundancy",
-        "label": "Non Redundancy",
+        "key": "coverage",
+        "label": "Coverage",
+        "description": "Does this cover the most important user-signal themes in evidence?",
+    },
+    {
+        "key": "distinctiveness",
+        "label": "Distinctiveness",
         "description": "Are focus points distinct and not repetitive?",
     },
 ]
@@ -333,3 +328,4 @@ def run_annotation_server(
         print("\nAnnotation server stopped.")
     finally:
         server.server_close()
+

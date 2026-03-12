@@ -8,10 +8,9 @@ from ..schemas import JudgeResult
 
 RUBRIC_DIMS = [
     "relevance",
-    "actionability",
-    "evidence_grounding",
-    "contradiction_handling",
-    "non_redundancy",
+    "contradiction",
+    "coverage",
+    "distinctiveness",
 ]
 
 
@@ -71,8 +70,8 @@ def summarize_metric_deltas(pairs: list[tuple[JudgeResult, JudgeResult]]) -> lis
             )
         )
 
-    overall_baseline = _avg([getattr(baseline.scores, dim) for baseline, _ in pairs for dim in RUBRIC_DIMS])
-    overall_pipeline = _avg([getattr(pipeline.scores, dim) for _, pipeline in pairs for dim in RUBRIC_DIMS])
+    overall_baseline = _avg([baseline.scores.overall_preference for baseline, _ in pairs])
+    overall_pipeline = _avg([pipeline.scores.overall_preference for _, pipeline in pairs])
     deltas.append(
         MetricDelta(
             metric="overall",
@@ -104,3 +103,4 @@ def find_critical_metric_regressions(
                 )
             )
     return violations
+

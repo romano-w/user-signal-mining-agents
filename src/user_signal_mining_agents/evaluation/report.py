@@ -15,10 +15,9 @@ from ..schemas import (
 
 RUBRIC_DIMS = [
     "relevance",
-    "actionability",
-    "evidence_grounding",
-    "contradiction_handling",
-    "non_redundancy",
+    "contradiction",
+    "coverage",
+    "distinctiveness",
 ]
 
 
@@ -27,8 +26,8 @@ def _avg(values: list[float]) -> float:
 
 
 def _metric_label(metric: str) -> str:
-    if metric == "overall_avg":
-        return "Overall"
+    if metric == "overall_preference":
+        return "Overall Preference"
     return metric.replace("_", " ").title()
 
 
@@ -63,8 +62,10 @@ def _avg_by_dim(pairs: list[PromptEvaluationPair], *, variant: str) -> dict[str,
     return scores
 
 
-def _overall_from_dim_scores(dim_scores: dict[str, float]) -> float:
-    return _avg(list(dim_scores.values()))
+def _avg_overall_preference(pairs: list[PromptEvaluationPair], *, variant: str) -> float:
+    if variant == "baseline":
+        return _avg([pair.baseline_scores.scores.overall_preference for pair in pairs])
+    return _avg([pair.pipeline_scores.scores.overall_preference for pair in pairs])
 
 
 def _group_pairs_by_domain(summary: EvaluationSummary) -> dict[str, list[PromptEvaluationPair]]:
@@ -102,7 +103,7 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
     lines.append("| Dimension | Baseline Avg | Pipeline Avg | Delta |")
     lines.append("|-----------|:------------:|:------------:|:-:|")
 
-    for dim in RUBRIC_DIMS:
+    for dim in [*RUBRIC_DIMS, "overall_preference"]:
         b_vals = [getattr(p.baseline_scores.scores, dim) for p in summary.pairs]
         p_vals = [getattr(p.pipeline_scores.scores, dim) for p in summary.pairs]
         b_avg = _avg(b_vals)
@@ -110,16 +111,6 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
         delta = p_avg - b_avg
         sign = "+" if delta > 0 else ""
         lines.append(f"| {_metric_label(dim)} | {b_avg:.2f} | {p_avg:.2f} | {sign}{delta:.2f} |")
-
-    b_overall = _avg([
-        getattr(p.baseline_scores.scores, dim) for p in summary.pairs for dim in RUBRIC_DIMS
-    ])
-    p_overall = _avg([
-        getattr(p.pipeline_scores.scores, dim) for p in summary.pairs for dim in RUBRIC_DIMS
-    ])
-    delta_overall = p_overall - b_overall
-    sign_overall = "+" if delta_overall > 0 else ""
-    lines.append(f"| **Overall** | **{b_overall:.2f}** | **{p_overall:.2f}** | **{sign_overall}{delta_overall:.2f}** |")
     lines.append("")
 
     domain_groups = _group_pairs_by_domain(summary)
@@ -130,23 +121,24 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
         domain_pairs = domain_groups[domain]
         b_scores = _avg_by_dim(domain_pairs, variant="baseline")
         p_scores = _avg_by_dim(domain_pairs, variant="pipeline")
-        b_domain_overall = _overall_from_dim_scores(b_scores)
-        p_domain_overall = _overall_from_dim_scores(p_scores)
+        b_domain_overall = _avg_overall_preference(domain_pairs, variant="baseline")
+        p_domain_overall = _avg_overall_preference(domain_pairs, variant="pipeline")
         domain_delta = p_domain_overall - b_domain_overall
         sign_domain = "+" if domain_delta > 0 else ""
 
         lines.append(f"### `{domain}` ({len(domain_pairs)} prompt(s))")
         lines.append("| Dimension | Baseline Avg | Pipeline Avg | Delta |")
         lines.append("|-----------|:------------:|:------------:|:-:|")
-        for dim in RUBRIC_DIMS:
-            b_val = b_scores[dim]
-            p_val = p_scores[dim]
+        for dim in [*RUBRIC_DIMS, "overall_preference"]:
+            if dim == "overall_preference":
+                b_val = b_domain_overall
+                p_val = p_domain_overall
+            else:
+                b_val = b_scores[dim]
+                p_val = p_scores[dim]
             delta = p_val - b_val
             sign = "+" if delta > 0 else ""
             lines.append(f"| {_metric_label(dim)} | {b_val:.2f} | {p_val:.2f} | {sign}{delta:.2f} |")
-        lines.append(
-            f"| **Overall** | **{b_domain_overall:.2f}** | **{p_domain_overall:.2f}** | **{sign_domain}{domain_delta:.2f}** |"
-        )
         lines.append("")
 
     lines.append("## Domain Transfer Deltas\n")
@@ -155,8 +147,8 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
     else:
         reference_domain = domain_order[0]
         ref_pairs = domain_groups[reference_domain]
-        ref_b = _overall_from_dim_scores(_avg_by_dim(ref_pairs, variant="baseline"))
-        ref_p = _overall_from_dim_scores(_avg_by_dim(ref_pairs, variant="pipeline"))
+        ref_b = _avg_overall_preference(ref_pairs, variant="baseline")
+        ref_p = _avg_overall_preference(ref_pairs, variant="pipeline")
         ref_gain = ref_p - ref_b
 
         lines.append(f"Reference domain: `{reference_domain}`\n")
@@ -168,8 +160,8 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
 
         for domain in domain_order:
             domain_pairs = domain_groups[domain]
-            b_overall_domain = _overall_from_dim_scores(_avg_by_dim(domain_pairs, variant="baseline"))
-            p_overall_domain = _overall_from_dim_scores(_avg_by_dim(domain_pairs, variant="pipeline"))
+            b_overall_domain = _avg_overall_preference(domain_pairs, variant="baseline")
+            p_overall_domain = _avg_overall_preference(domain_pairs, variant="pipeline")
             gain = p_overall_domain - b_overall_domain
             pipeline_transfer = p_overall_domain - ref_p
             gain_transfer = gain - ref_gain
@@ -191,7 +183,7 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
 
         lines.append("| Dimension | Baseline | Pipeline |")
         lines.append("|-----------|:--------:|:--------:|")
-        for dim in RUBRIC_DIMS:
+        for dim in [*RUBRIC_DIMS, "overall_preference"]:
             b = getattr(pair.baseline_scores.scores, dim)
             p = getattr(pair.pipeline_scores.scores, dim)
             lines.append(f"| {_metric_label(dim)} | {b:.1f} | {p:.1f} |")
@@ -203,7 +195,7 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
             lines.append("| Metric | Baseline Mean [95% CI] | Pipeline Mean [95% CI] | p-value (Pipeline vs Baseline) |")
             lines.append("|--------|------------------------|------------------------|:------------------------------:|")
 
-            for metric in [*RUBRIC_DIMS, "overall_avg"]:
+            for metric in [*RUBRIC_DIMS, "overall_preference"]:
                 baseline_ci = _find_ci(pair.baseline_panel, metric)
                 pipeline_ci = _find_ci(pair.pipeline_panel, metric)
                 sig = _find_significance(pair.pipeline_panel, metric)
@@ -219,3 +211,4 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
 
     report_path.write_text("\n".join(lines), encoding="utf-8")
     return report_path
+

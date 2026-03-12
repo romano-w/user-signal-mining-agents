@@ -49,7 +49,7 @@ def sample_for_annotation(
             # Skip invalid/corrupt JSON
             continue
 
-        diff = judge_p.scores.overall_avg - judge_b.scores.overall_avg
+        diff = judge_p.scores.overall_preference - judge_b.scores.overall_preference
         if diff > 0:
             category = "pipeline_win"
         elif diff < 0:
@@ -139,3 +139,4 @@ if __name__ == "__main__":
     parser.add_argument("--num", type=int, default=30, help="Number of samples to generate")
     args = parser.parse_args()
     sample_for_annotation(num_samples=args.num)
+

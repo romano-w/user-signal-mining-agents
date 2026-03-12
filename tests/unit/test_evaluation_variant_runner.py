@@ -53,10 +53,10 @@ def _synthesis(prompt: FounderPrompt, variant: str) -> SynthesisResult:
 def _scores(value: float) -> JudgeScores:
     return JudgeScores(
         relevance=value,
-        actionability=value,
-        evidence_grounding=value,
-        contradiction_handling=value,
-        non_redundancy=value,
+        overall_preference=value,
+        coverage=value,
+        contradiction=value,
+        distinctiveness=value,
         rationale=f"score {value}",
     )
 
@@ -162,3 +162,4 @@ def test_generate_variant_report_writes_markdown(tmp_path: Path) -> None:
     assert "# Variant Evaluation Report" in text
     assert "Aggregate Ranking" in text
     assert "Variant: `full_hybrid`" in text
+

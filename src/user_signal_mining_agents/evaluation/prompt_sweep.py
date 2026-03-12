@@ -148,10 +148,9 @@ def run_sweep(
             # Collect scores
             dims = [
                 "relevance",
-                "actionability",
-                "evidence_grounding",
-                "contradiction_handling",
-                "non_redundancy",
+                "contradiction",
+                "coverage",
+                "distinctiveness",
             ]
             dim_scores: dict[str, float] = {}
             for dim in dims:
@@ -161,7 +160,10 @@ def run_sweep(
                 )
                 dim_scores[dim] = avg
 
-            overall = sum(dim_scores.values()) / len(dim_scores)
+            overall = sum(pair.pipeline_scores.scores.overall_preference for pair in summary.pairs) / max(
+                len(summary.pairs),
+                1,
+            )
             results.append(SweepResult(
                 variant=variant.name,
                 description=variant.description,
@@ -182,3 +184,4 @@ def run_sweep(
         shutil.rmtree(backup_dir)
 
     return results
+

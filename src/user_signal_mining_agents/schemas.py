@@ -69,21 +69,11 @@ class JudgeScores(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     relevance: float = Field(ge=1, le=5)
-    actionability: float = Field(ge=1, le=5)
-    evidence_grounding: float = Field(ge=1, le=5)
-    contradiction_handling: float = Field(ge=1, le=5)
-    non_redundancy: float = Field(ge=1, le=5)
+    contradiction: float = Field(ge=1, le=5)
+    coverage: float = Field(ge=1, le=5)
+    distinctiveness: float = Field(ge=1, le=5)
+    overall_preference: float = Field(ge=1, le=5)
     rationale: str
-
-    @property
-    def overall_avg(self) -> float:
-        return (
-            self.relevance
-            + self.actionability
-            + self.evidence_grounding
-            + self.contradiction_handling
-            + self.non_redundancy
-        ) / 5
 
 
 class JudgeResult(BaseModel):
@@ -129,10 +119,9 @@ class HumanAnnotationScores(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     relevance: int = Field(ge=1, le=5)
-    actionability: int = Field(ge=1, le=5)
-    evidence_grounding: int = Field(ge=1, le=5)
-    contradiction_handling: int = Field(ge=1, le=5)
-    non_redundancy: int = Field(ge=1, le=5)
+    contradiction: int = Field(ge=1, le=5)
+    coverage: int = Field(ge=1, le=5)
+    distinctiveness: int = Field(ge=1, le=5)
     rationale: str | None = None
 
 
@@ -270,5 +259,6 @@ class DomainPack(BaseModel):
     founder_prompts_path: str
     evaluation_notes: str | None = None
     enabled: bool = True
+
 
 

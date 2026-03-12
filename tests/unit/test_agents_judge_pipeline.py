@@ -21,10 +21,10 @@ def _judge_payload(a_value: float, b_value: float) -> dict[str, dict[str, object
     def _scores(v: float) -> dict[str, object]:
         return {
             "relevance": v,
-            "actionability": v,
-            "evidence_grounding": v,
-            "contradiction_handling": v,
-            "non_redundancy": v,
+            "overall_preference": v,
+            "coverage": v,
+            "contradiction": v,
+            "distinctiveness": v,
             "rationale": f"score {v}",
         }
 
@@ -212,10 +212,10 @@ def test_judge_panel_named_pair_aggregates_scores_with_deterministic_mapping(
     assert control_panel.aggregate_scores.relevance == pytest.approx(3.5)
     assert hybrid_panel.aggregate_scores.relevance == pytest.approx(2.5)
 
-    overall_ci = next(m for m in control_panel.metrics_with_ci if m.metric == "overall_avg")
+    overall_ci = next(m for m in control_panel.metrics_with_ci if m.metric == "overall_preference")
     assert overall_ci.sample_size == 2
 
-    overall_sig = next(m for m in hybrid_panel.significance if m.metric == "overall_avg")
+    overall_sig = next(m for m in hybrid_panel.significance if m.metric == "overall_preference")
     assert 0.0 <= overall_sig.p_value <= 1.0
 
 
@@ -237,3 +237,4 @@ def test_judge_panel_named_pair_rejects_invalid_panel_size(
             panel_size=0,
             settings=tmp_settings,
         )
+

@@ -20,10 +20,10 @@ from user_signal_mining_agents.schemas import (
 def _judge_scores(value: float) -> JudgeScores:
     return JudgeScores(
         relevance=value,
-        actionability=value,
-        evidence_grounding=value,
-        contradiction_handling=value,
-        non_redundancy=value,
+        overall_preference=value,
+        coverage=value,
+        contradiction=value,
+        distinctiveness=value,
         rationale="consistent",
     )
 
@@ -113,4 +113,5 @@ def test_failure_tag_robustness_case_and_domain_pack_contracts() -> None:
     assert tag.severity == 4
     assert case.family == "negation"
     assert domain.enabled is True
+
 

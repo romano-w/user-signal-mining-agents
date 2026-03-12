@@ -44,18 +44,16 @@ def _payload(task_id: str, annotator_id: str) -> dict[str, object]:
         "annotator_id": annotator_id,
         "system_a_scores": {
             "relevance": 4,
-            "actionability": 4,
-            "evidence_grounding": 5,
-            "contradiction_handling": 3,
-            "non_redundancy": 4,
+            "coverage": 5,
+            "contradiction": 3,
+            "distinctiveness": 4,
             "rationale": "A was generally tighter.",
         },
         "system_b_scores": {
             "relevance": 3,
-            "actionability": 3,
-            "evidence_grounding": 4,
-            "contradiction_handling": 3,
-            "non_redundancy": 3,
+            "coverage": 4,
+            "contradiction": 3,
+            "distinctiveness": 3,
             "rationale": "B repeated one theme.",
         },
         "overall_preference": "system_a",
@@ -126,3 +124,4 @@ def test_annotation_workspace_rejects_invalid_annotator_id() -> None:
 
     with pytest.raises(ValueError, match="annotator_id"):
         AnnotationWorkspace.normalize_annotator_id("invalid id")
+

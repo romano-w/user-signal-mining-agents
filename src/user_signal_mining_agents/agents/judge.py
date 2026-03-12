@@ -23,12 +23,11 @@ from ..schemas import (
 
 RUBRIC_DIMS = (
     "relevance",
-    "actionability",
-    "evidence_grounding",
-    "contradiction_handling",
-    "non_redundancy",
+    "contradiction",
+    "coverage",
+    "distinctiveness",
 )
-PANEL_METRICS = (*RUBRIC_DIMS, "overall_avg")
+PANEL_METRICS = (*RUBRIC_DIMS, "overall_preference")
 
 
 def _load_prompt_template(settings: Settings) -> str:
@@ -48,8 +47,8 @@ def _format_focus_points(label: str, points: list[FocusPoint]) -> str:
 
 
 def _metric_value(scores: JudgeScores, metric: str) -> float:
-    if metric == "overall_avg":
-        return scores.overall_avg
+    if metric == "overall_preference":
+        return scores.overall_preference
     return float(getattr(scores, metric))
 
 
@@ -61,10 +60,10 @@ def _build_aggregate_scores(per_judge_scores: list[JudgeScores]) -> JudgeScores:
     panel_size = len(per_judge_scores)
     return JudgeScores(
         relevance=_mean([s.relevance for s in per_judge_scores]),
-        actionability=_mean([s.actionability for s in per_judge_scores]),
-        evidence_grounding=_mean([s.evidence_grounding for s in per_judge_scores]),
-        contradiction_handling=_mean([s.contradiction_handling for s in per_judge_scores]),
-        non_redundancy=_mean([s.non_redundancy for s in per_judge_scores]),
+        contradiction=_mean([s.contradiction for s in per_judge_scores]),
+        coverage=_mean([s.coverage for s in per_judge_scores]),
+        distinctiveness=_mean([s.distinctiveness for s in per_judge_scores]),
+        overall_preference=_mean([s.overall_preference for s in per_judge_scores]),
         rationale=f"Panel aggregate across {panel_size} judge(s).",
     )
 
@@ -241,8 +240,8 @@ def _judge_once(
         f"{a_block}\n\n"
         f"{b_block}\n\n"
         "Score both systems. Return JSON with keys \"system_a\" and \"system_b\", "
-        "each containing: relevance, actionability, evidence_grounding, "
-        "contradiction_handling, non_redundancy (all 1-5), and rationale."
+        "each containing: relevance, contradiction, coverage, distinctiveness, "
+        "overall_preference (all 1-5), and rationale."
     )
 
     raw = call_llm_json(system_prompt=system_prompt, user_prompt=user_prompt, settings=settings)
@@ -374,7 +373,7 @@ def judge_pair(
     pipeline_result: SynthesisResult,
     settings: Settings | None = None,
 ) -> tuple[JudgeResult, JudgeResult]:
-    """Backward-compatible baseline vs pipeline scorer."""
+    """Score baseline vs pipeline for one founder prompt."""
 
     return judge_named_pair(
         prompt,
@@ -405,3 +404,4 @@ def judge_panel_pair(
         panel_size=panel_size,
         settings=settings,
     )
+

@@ -145,7 +145,7 @@ def run_evaluation(
 
             b = baseline_judge.scores
             p = pipeline_judge.scores
-            con.step("scores", f"B={b.overall_avg:.1f} vs P={p.overall_avg:.1f} | panel={panel_size}")
+            con.step("scores", f"B={b.overall_preference:.1f} vs P={p.overall_preference:.1f} | panel={panel_size}")
 
             pairs.append(
                 PromptEvaluationPair(
@@ -171,7 +171,7 @@ def run_evaluation(
 
         b = baseline_judge.scores
         p = pipeline_judge.scores
-        con.step("scores", f"B={b.overall_avg:.1f} vs P={p.overall_avg:.1f}")
+        con.step("scores", f"B={b.overall_preference:.1f} vs P={p.overall_preference:.1f}")
 
         pairs.append(
             PromptEvaluationPair(
@@ -182,3 +182,4 @@ def run_evaluation(
         )
 
     return EvaluationSummary(pairs=pairs)
+

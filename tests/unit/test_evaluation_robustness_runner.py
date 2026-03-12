@@ -54,10 +54,10 @@ def _synthesis(prompt: FounderPrompt, variant: str) -> SynthesisResult:
 def _scores(value: float) -> JudgeScores:
     return JudgeScores(
         relevance=value,
-        actionability=value,
-        evidence_grounding=value,
-        contradiction_handling=value,
-        non_redundancy=value,
+        overall_preference=value,
+        coverage=value,
+        contradiction=value,
+        distinctiveness=value,
         rationale=f"score {value}",
     )
 
@@ -129,10 +129,10 @@ def test_evaluate_case_thresholds_flags_drops() -> None:
 
     failing_scores = JudgeScores(
         relevance=2.8,
-        actionability=2.9,
-        evidence_grounding=2.8,
-        contradiction_handling=2.8,
-        non_redundancy=2.8,
+        overall_preference=2.9,
+        coverage=2.8,
+        contradiction=2.8,
+        distinctiveness=2.8,
         rationale="drop",
     )
     passing, _, delta_overall, failures = robustness_runner.evaluate_case_thresholds(
@@ -232,3 +232,4 @@ def test_generate_robustness_report_writes_markdown(tmp_path: Path) -> None:
     assert "# Robustness Evaluation Report" in text
     assert "Case Outcomes" in text
     assert "rb_noise_injection" in text
+

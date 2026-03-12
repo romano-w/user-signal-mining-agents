@@ -15,20 +15,20 @@ def _judge(
     variant: str,
     *,
     relevance: float,
-    actionability: float,
-    evidence_grounding: float,
-    contradiction_handling: float,
-    non_redundancy: float,
+    overall_preference: float,
+    coverage: float,
+    contradiction: float,
+    distinctiveness: float,
 ) -> JudgeResult:
     return JudgeResult(
         prompt_id=prompt_id,
         system_variant=variant,
         scores=JudgeScores(
             relevance=relevance,
-            actionability=actionability,
-            evidence_grounding=evidence_grounding,
-            contradiction_handling=contradiction_handling,
-            non_redundancy=non_redundancy,
+            overall_preference=overall_preference,
+            coverage=coverage,
+            contradiction=contradiction,
+            distinctiveness=distinctiveness,
             rationale=f"{variant} rationale",
         ),
     )
@@ -39,21 +39,22 @@ def test_classify_judge_result_flags_low_dimensions_deterministically() -> None:
         "p1",
         "pipeline",
         relevance=2.5,
-        actionability=4.4,
-        evidence_grounding=3.2,
-        contradiction_handling=2.0,
-        non_redundancy=4.0,
+        overall_preference=3.4,
+        coverage=3.2,
+        contradiction=2.0,
+        distinctiveness=4.0,
     )
 
     tags = classify_judge_result("p1", "pipeline", judge)
 
     assert [tag.tag_id for tag in tags] == [
         "ft_p1_pipeline_relevance_miss",
-        "ft_p1_pipeline_evidence_gap",
         "ft_p1_pipeline_contradiction_blindness",
+        "ft_p1_pipeline_coverage_gap",
+        "ft_p1_pipeline_overall_preference_gap",
         "ft_p1_pipeline_overall_quality_drop",
     ]
-    assert [tag.severity for tag in tags] == [4, 3, 5, 3]
+    assert [tag.severity for tag in tags] == [4, 5, 3, 3, 3]
     assert tags[0].evidence_refs[0] == "p1/judge_pipeline.json#scores.relevance"
 
 
@@ -69,10 +70,10 @@ def test_generate_failure_taxonomy_writes_artifacts_from_run_files(tmp_path: Pat
             "p1",
             "baseline",
             relevance=4.8,
-            actionability=4.7,
-            evidence_grounding=4.9,
-            contradiction_handling=4.6,
-            non_redundancy=4.8,
+            overall_preference=4.7,
+            coverage=4.9,
+            contradiction=4.6,
+            distinctiveness=4.8,
         ).model_dump_json(indent=2),
         encoding="utf-8",
     )
@@ -81,10 +82,10 @@ def test_generate_failure_taxonomy_writes_artifacts_from_run_files(tmp_path: Pat
             "p1",
             "pipeline",
             relevance=2.5,
-            actionability=4.4,
-            evidence_grounding=3.2,
-            contradiction_handling=2.0,
-            non_redundancy=4.0,
+            overall_preference=3.4,
+            coverage=3.2,
+            contradiction=2.0,
+            distinctiveness=4.0,
         ).model_dump_json(indent=2),
         encoding="utf-8",
     )
@@ -94,10 +95,10 @@ def test_generate_failure_taxonomy_writes_artifacts_from_run_files(tmp_path: Pat
             "p2",
             "baseline",
             relevance=4.5,
-            actionability=4.6,
-            evidence_grounding=4.4,
-            contradiction_handling=4.7,
-            non_redundancy=4.6,
+            overall_preference=4.6,
+            coverage=4.4,
+            contradiction=4.7,
+            distinctiveness=4.6,
         ).model_dump_json(indent=2),
         encoding="utf-8",
     )
@@ -106,10 +107,10 @@ def test_generate_failure_taxonomy_writes_artifacts_from_run_files(tmp_path: Pat
             "p2",
             "pipeline",
             relevance=4.7,
-            actionability=4.5,
-            evidence_grounding=4.6,
-            contradiction_handling=4.8,
-            non_redundancy=4.7,
+            overall_preference=4.5,
+            coverage=4.6,
+            contradiction=4.8,
+            distinctiveness=4.7,
         ).model_dump_json(indent=2),
         encoding="utf-8",
     )
@@ -118,8 +119,9 @@ def test_generate_failure_taxonomy_writes_artifacts_from_run_files(tmp_path: Pat
 
     assert [tag.tag_id for tag in tags] == [
         "ft_p1_pipeline_relevance_miss",
-        "ft_p1_pipeline_evidence_gap",
         "ft_p1_pipeline_contradiction_blindness",
+        "ft_p1_pipeline_coverage_gap",
+        "ft_p1_pipeline_overall_preference_gap",
         "ft_p1_pipeline_overall_quality_drop",
     ]
     assert tags_path.exists()
@@ -144,4 +146,5 @@ def test_generate_root_cause_report_handles_no_tags(tmp_path: Path) -> None:
 
     assert "Failure tags generated" in text
     assert "No low-quality outputs were tagged" in text
+
 

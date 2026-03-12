@@ -430,10 +430,10 @@ def test_cmd_evaluate_generates_failure_taxonomy(
         system_variant="baseline",
         scores=JudgeScores(
             relevance=3.0,
-            actionability=3.0,
-            evidence_grounding=3.0,
-            contradiction_handling=3.0,
-            non_redundancy=3.0,
+            overall_preference=3.0,
+            coverage=3.0,
+            contradiction=3.0,
+            distinctiveness=3.0,
             rationale="baseline rationale",
         ),
     )
@@ -442,10 +442,10 @@ def test_cmd_evaluate_generates_failure_taxonomy(
         system_variant="pipeline",
         scores=JudgeScores(
             relevance=4.0,
-            actionability=4.0,
-            evidence_grounding=4.0,
-            contradiction_handling=4.0,
-            non_redundancy=4.0,
+            overall_preference=4.0,
+            coverage=4.0,
+            contradiction=4.0,
+            distinctiveness=4.0,
             rationale="pipeline rationale",
         ),
     )
@@ -498,18 +498,18 @@ def test_cmd_eval_robustness_returns_non_zero_on_gate_failure(
 
     control = JudgeScores(
         relevance=4.0,
-        actionability=4.0,
-        evidence_grounding=4.0,
-        contradiction_handling=4.0,
-        non_redundancy=4.0,
+        overall_preference=4.0,
+        coverage=4.0,
+        contradiction=4.0,
+        distinctiveness=4.0,
         rationale="control",
     )
     perturbed = JudgeScores(
         relevance=3.0,
-        actionability=3.0,
-        evidence_grounding=3.0,
-        contradiction_handling=3.0,
-        non_redundancy=3.0,
+        overall_preference=3.0,
+        coverage=3.0,
+        contradiction=3.0,
+        distinctiveness=3.0,
         rationale="perturbed",
     )
 
@@ -542,10 +542,10 @@ def test_cmd_eval_robustness_returns_non_zero_on_gate_failure(
                 perturbed_scores=perturbed,
                 dimension_deltas={
                     "relevance": -1.0,
-                    "actionability": -1.0,
-                    "evidence_grounding": -1.0,
-                    "contradiction_handling": -1.0,
-                    "non_redundancy": -1.0,
+                    "overall_preference": -1.0,
+                    "coverage": -1.0,
+                    "contradiction": -1.0,
+                    "distinctiveness": -1.0,
                 },
                 delta_overall=-1.0,
                 passed=False,
@@ -567,6 +567,7 @@ def test_cmd_eval_robustness_returns_non_zero_on_gate_failure(
         / "robustness_summary.json"
     )
     assert summary_path.exists()
+
 
 
 

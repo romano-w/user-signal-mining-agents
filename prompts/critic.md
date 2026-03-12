@@ -8,7 +8,7 @@ Input:
 
 Tasks:
 - Identify up to 6 concrete weaknesses in the draft focus points.
-- Focus on relevance, evidence grounding, contradiction handling, and non-redundancy.
+- Focus on relevance, contradiction, coverage, and distinctiveness.
 - Write feedback as actionable revision notes.
 
 Rules:

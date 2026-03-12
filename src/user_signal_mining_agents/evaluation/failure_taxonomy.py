@@ -18,24 +18,24 @@ _DIMENSION_RULES: list[tuple[str, str, str]] = [
         "Refocus each focus point on the founder prompt and remove tangential themes.",
     ),
     (
-        "actionability",
-        "actionability_gap",
-        "Add concrete next-step hypotheses and clearly scoped follow-up checks.",
-    ),
-    (
-        "evidence_grounding",
-        "evidence_gap",
-        "Tie claims to explicit quoted evidence and verify snippet-level traceability.",
-    ),
-    (
-        "contradiction_handling",
+        "contradiction",
         "contradiction_blindness",
         "Surface counter-signals and state how they change confidence in each claim.",
     ),
     (
-        "non_redundancy",
-        "redundancy",
+        "coverage",
+        "coverage_gap",
+        "Cover missing high-signal themes from the evidence set and anchor each to concrete snippets.",
+    ),
+    (
+        "distinctiveness",
+        "distinctiveness_gap",
         "Deduplicate overlapping points and preserve only distinct user-signal clusters.",
+    ),
+    (
+        "overall_preference",
+        "overall_preference_gap",
+        "Strengthen synthesis quality across all dimensions so this output is clearly preferable overall.",
     ),
 ]
 
@@ -96,7 +96,7 @@ def classify_judge_result(
             )
         )
 
-    overall = judge.scores.overall_avg
+    overall = judge.scores.overall_preference
     if len(low_score_categories) >= 2 and overall < score_threshold:
         tags.append(
             FailureTag(
@@ -250,3 +250,4 @@ def generate_failure_taxonomy(
     tags_path = write_failure_tags(tags, run_artifacts_dir)
     report_path = generate_root_cause_report(tags, run_artifacts_dir)
     return tags, tags_path, report_path
+

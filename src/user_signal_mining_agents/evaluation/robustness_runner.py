@@ -19,10 +19,9 @@ from ..schemas import FounderPrompt, JudgeResult, JudgeScores, RobustnessCase, S
 
 RUBRIC_DIMS = [
     "relevance",
-    "actionability",
-    "evidence_grounding",
-    "contradiction_handling",
-    "non_redundancy",
+    "contradiction",
+    "coverage",
+    "distinctiveness",
 ]
 
 DEFAULT_PROMPT_SAMPLE_SIZE = 3
@@ -373,7 +372,7 @@ def evaluate_case_thresholds(
         dim: getattr(perturbed_scores, dim) - getattr(control_scores, dim)
         for dim in RUBRIC_DIMS
     }
-    delta_overall = perturbed_scores.overall_avg - control_scores.overall_avg
+    delta_overall = perturbed_scores.overall_preference - control_scores.overall_preference
 
     failures: list[str] = []
     if delta_overall < -thresholds.max_overall_drop:
@@ -507,3 +506,4 @@ def run_robustness_suite(
         gate_failure_reasons=gate_failure_reasons,
         outcomes=outcomes,
     )
+

@@ -62,10 +62,11 @@ def generate_robustness_report(summary: RobustnessSuiteSummary, output_dir: Path
             lines.append(f"- **Perturbed statement:** {outcome.perturbed_statement}")
             lines.append(
                 f"- **Control vs perturbed overall:** "
-                f"{outcome.control_scores.overall_avg:.2f} -> {outcome.perturbed_scores.overall_avg:.2f}"
+                f"{outcome.control_scores.overall_preference:.2f} -> {outcome.perturbed_scores.overall_preference:.2f}"
             )
             lines.append(f"- **Failures:** {'; '.join(outcome.failure_reasons)}")
             lines.append("")
 
     report_path.write_text("\n".join(lines), encoding="utf-8")
     return report_path
+

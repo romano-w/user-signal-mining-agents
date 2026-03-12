@@ -126,10 +126,10 @@ def test_offline_evaluation_and_report_artifacts(
             system_variant=variant,
             scores=JudgeScores(
                 relevance=value,
-                actionability=value,
-                evidence_grounding=value,
-                contradiction_handling=value,
-                non_redundancy=value,
+                overall_preference=value,
+                coverage=value,
+                contradiction=value,
+                distinctiveness=value,
                 rationale=f"rationale {variant}",
             ),
         )
@@ -150,3 +150,4 @@ def test_offline_evaluation_and_report_artifacts(
     assert "Aggregate Scores" in report_path.read_text(encoding="utf-8")
     assert (tmp_settings.run_artifacts_dir / "fp-1" / "judge_baseline.json").exists()
     assert (tmp_settings.run_artifacts_dir / "fp-2" / "judge_pipeline.json").exists()
+
