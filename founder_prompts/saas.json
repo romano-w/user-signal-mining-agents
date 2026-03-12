@@ -1,0 +1,32 @@
+[
+  {
+    "id": "saas-onboarding-dropoff",
+    "statement": "Why are trial users dropping off before completing onboarding?",
+    "domain": "saas",
+    "notes": "Look for friction in setup, integration, and first-session guidance."
+  },
+  {
+    "id": "saas-time-to-value",
+    "statement": "Why do new accounts say they cannot see value quickly enough?",
+    "domain": "saas",
+    "notes": "Track mentions of delayed outcomes, unclear workflows, and missing templates."
+  },
+  {
+    "id": "saas-pricing-confusion",
+    "statement": "What product and messaging issues make our pricing tiers feel confusing?",
+    "domain": "saas",
+    "notes": "Focus on feature gating confusion and unclear upgrade rationale."
+  },
+  {
+    "id": "saas-support-trust",
+    "statement": "Why do customers escalate support tickets instead of self-serving in product?",
+    "domain": "saas",
+    "notes": "Look for broken help links, poor docs discoverability, and low confidence in AI support."
+  },
+  {
+    "id": "saas-upgrade-conversion",
+    "statement": "What prevents high-usage free users from converting to paid plans?",
+    "domain": "saas",
+    "notes": "Watch for limits that feel arbitrary or missing premium feature clarity."
+  }
+]

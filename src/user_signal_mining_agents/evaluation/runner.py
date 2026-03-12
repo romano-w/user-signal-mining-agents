@@ -2,28 +2,20 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-
-from pydantic import TypeAdapter
 
 from ..agents.baseline import run_baseline
 from ..agents.judge import judge_pair
 from ..agents.pipeline import run_pipeline
 from ..config import Settings, get_settings
+from ..domain_packs import load_founder_prompts
 from .. import console as con
 from ..schemas import (
     EvaluationSummary,
-    FounderPrompt,
     JudgeResult,
     PromptEvaluationPair,
     SynthesisResult,
 )
-
-
-def _load_founder_prompts(settings: Settings) -> list[FounderPrompt]:
-    data = json.loads(settings.founder_prompts_path.read_text(encoding="utf-8"))
-    return TypeAdapter(list[FounderPrompt]).validate_python(data)
 
 
 def _try_load_synthesis(path: Path) -> SynthesisResult | None:
@@ -42,12 +34,13 @@ def run_evaluation(
     settings: Settings | None = None,
     *,
     prompt_ids: list[str] | None = None,
+    domain_ids: list[str] | None = None,
     skip_cached: bool = True,
 ) -> EvaluationSummary:
     """Run baseline + pipeline + judge for each founder prompt."""
 
     s = settings or get_settings()
-    prompts = _load_founder_prompts(s)
+    prompts = load_founder_prompts(s, domain_ids=domain_ids)
 
     if prompt_ids:
         allowed = set(prompt_ids)
@@ -87,14 +80,14 @@ def run_evaluation(
         # Baseline
         baseline_result = _try_load_synthesis(baseline_path) if skip_cached else None
         if baseline_result:
-            con.cached("baseline", f"Using cached result")
+            con.cached("baseline", "Using cached result")
         else:
             baseline_result = run_baseline(prompt, s)
 
         # Pipeline
         pipeline_result = _try_load_synthesis(pipeline_path) if skip_cached else None
         if pipeline_result:
-            con.cached("pipeline", f"Using cached result")
+            con.cached("pipeline", "Using cached result")
         else:
             pipeline_result = run_pipeline(prompt, s)
 

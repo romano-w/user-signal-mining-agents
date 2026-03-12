@@ -14,6 +14,7 @@ from .runner import run_evaluation
 @dataclass
 class SweepVariant:
     """A named variant with prompt file overrides."""
+
     name: str
     description: str
     overrides: dict[str, str | None]  # filename -> content (None = patched later)
@@ -22,13 +23,14 @@ class SweepVariant:
 @dataclass
 class SweepResult:
     """Scores for a single variant."""
+
     variant: str
     description: str
     scores: dict[str, float]  # dimension -> avg score
     overall: float = 0.0
 
 
-# Default sweep variants — override specific prompt files
+# Default sweep variants - override specific prompt files
 SWEEP_VARIANTS: list[SweepVariant] = [
     SweepVariant(
         name="control",
@@ -39,7 +41,7 @@ SWEEP_VARIANTS: list[SweepVariant] = [
         name="evidence-budget",
         description="Each snippet may only appear in one focus point",
         overrides={
-            "synthesis.md": None,  # Marker — patched dynamically below
+            "synthesis.md": None,  # Marker - patched dynamically below
         },
     ),
     SweepVariant(
@@ -61,6 +63,7 @@ SWEEP_VARIANTS: list[SweepVariant] = [
 
 def _build_variant_prompts(base_dir: Path) -> dict[str, list[SweepVariant]]:
     """Build actual prompt content for each variant by patching the base prompts."""
+
     base_synthesis = (base_dir / "synthesis.md").read_text(encoding="utf-8")
 
     # evidence-budget: add one-snippet-per-focus-point rule
@@ -83,13 +86,13 @@ def _build_variant_prompts(base_dir: Path) -> dict[str, list[SweepVariant]]:
         "- Produce exactly 3 focus points. No more, no less.",
     )
 
-    for v in SWEEP_VARIANTS:
-        if v.name == "evidence-budget":
-            v.overrides["synthesis.md"] = budget_synthesis
-        elif v.name == "strict-quoting":
-            v.overrides["synthesis.md"] = strict_synthesis
-        elif v.name == "fewer-points":
-            v.overrides["synthesis.md"] = fewer_synthesis
+    for variant in SWEEP_VARIANTS:
+        if variant.name == "evidence-budget":
+            variant.overrides["synthesis.md"] = budget_synthesis
+        elif variant.name == "strict-quoting":
+            variant.overrides["synthesis.md"] = strict_synthesis
+        elif variant.name == "fewer-points":
+            variant.overrides["synthesis.md"] = fewer_synthesis
 
     return {}
 
@@ -99,6 +102,7 @@ def run_sweep(
     *,
     variants: list[SweepVariant] | None = None,
     prompt_ids: list[str] | None = None,
+    domain_ids: list[str] | None = None,
 ) -> list[SweepResult]:
     """Run evaluation across multiple prompt variants."""
 
@@ -121,7 +125,7 @@ def run_sweep(
     try:
         for vi, variant in enumerate(variants, start=1):
             con.console.rule(f"[bold cyan]Sweep {vi}/{len(variants)}: {variant.name}[/]")
-            con.step("sweep", f"{variant.description}")
+            con.step("sweep", variant.description)
 
             # Apply overrides
             for filename, content in variant.overrides.items():
@@ -133,16 +137,28 @@ def run_sweep(
             variant_runs.mkdir(parents=True, exist_ok=True)
             variant_settings = s.model_copy(update={"run_artifacts_dir": variant_runs})
 
-            # Run evaluation (no cache — we want fresh results for each variant)
-            summary = run_evaluation(variant_settings, prompt_ids=prompt_ids, skip_cached=False)
+            # Run evaluation (no cache - we want fresh results for each variant)
+            summary = run_evaluation(
+                variant_settings,
+                prompt_ids=prompt_ids,
+                domain_ids=domain_ids,
+                skip_cached=False,
+            )
 
             # Collect scores
-            dims = ["relevance", "actionability", "evidence_grounding",
-                    "contradiction_handling", "non_redundancy"]
+            dims = [
+                "relevance",
+                "actionability",
+                "evidence_grounding",
+                "contradiction_handling",
+                "non_redundancy",
+            ]
             dim_scores: dict[str, float] = {}
             for dim in dims:
-                avg = sum(getattr(p.pipeline_scores.scores, dim)
-                         for p in summary.pairs) / max(len(summary.pairs), 1)
+                avg = sum(getattr(pair.pipeline_scores.scores, dim) for pair in summary.pairs) / max(
+                    len(summary.pairs),
+                    1,
+                )
                 dim_scores[dim] = avg
 
             overall = sum(dim_scores.values()) / len(dim_scores)
@@ -155,14 +171,14 @@ def run_sweep(
 
             # Restore original prompts for next variant
             for filename in variant.overrides:
-                orig = backup_dir / filename
-                if orig.exists():
-                    shutil.copy2(orig, prompts_dir / filename)
+                original = backup_dir / filename
+                if original.exists():
+                    shutil.copy2(original, prompts_dir / filename)
 
     finally:
         # Always restore original prompts
-        for f in backup_dir.iterdir():
-            shutil.copy2(f, prompts_dir / f.name)
+        for source in backup_dir.iterdir():
+            shutil.copy2(source, prompts_dir / source.name)
         shutil.rmtree(backup_dir)
 
     return results

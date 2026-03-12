@@ -12,6 +12,7 @@ DATA_DIR = ROOT_DIR / "data"
 ARTIFACTS_DIR = ROOT_DIR / "artifacts"
 PROMPTS_DIR = ROOT_DIR / "prompts"
 FOUNDER_PROMPTS_DIR = ROOT_DIR / "founder_prompts"
+DOMAIN_PACKS_PATH = FOUNDER_PROMPTS_DIR / "domain_packs.json"
 YELP_DATASET_DIR = DATA_DIR / "raw" / "Yelp-JSON"
 
 
@@ -49,6 +50,8 @@ class Settings(BaseSettings):
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     founder_prompts_path: Path = Field(default=FOUNDER_PROMPTS_DIR / "restaurants.json")
+    domain_packs_path: Path = Field(default=DOMAIN_PACKS_PATH)
+    active_domains: str = ""
     yelp_download_url: str = "https://business.yelp.com/external-assets/files/Yelp-JSON.zip"
     yelp_dataset_dir: Path = Field(default=YELP_DATASET_DIR)
     yelp_download_zip_path: Path = Field(default=YELP_DATASET_DIR / "Yelp-JSON.zip")

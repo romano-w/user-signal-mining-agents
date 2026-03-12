@@ -14,6 +14,7 @@ from pydantic import TypeAdapter
 from .config import ROOT_DIR, ensure_scaffold_directories, get_settings
 from .data.fetch_yelp import EXPECTED_YELP_FILES, ensure_yelp_dataset
 from .data.ingestion import build_snapshot, list_adapter_ids, run_ingest
+from .domain_packs import load_domain_packs, load_founder_prompts, parse_domain_ids
 from .retrieval.index import search_retrieval_index
 from .schemas import FounderPrompt
 
@@ -94,6 +95,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run only this prompt. Omit to run all.",
     )
 
+    run_baseline_parser.add_argument(
+        "--domain",
+        type=str,
+        default=None,
+        help="Comma-separated domain ids. Omit to use enabled domain packs.",
+    )
+
     run_pipeline_parser = subparsers.add_parser(
         "run-pipeline",
         help="Run the multi-step grounded pipeline for one or all founder prompts.",
@@ -103,6 +111,13 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Run only this prompt. Omit to run all.",
+    )
+
+    run_pipeline_parser.add_argument(
+        "--domain",
+        type=str,
+        default=None,
+        help="Comma-separated domain ids. Omit to use enabled domain packs.",
     )
 
     list_variants_parser = subparsers.add_parser(
@@ -132,6 +147,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run only this prompt. Omit to run all.",
     )
 
+    run_variant_parser.add_argument(
+        "--domain",
+        type=str,
+        default=None,
+        help="Comma-separated domain ids. Omit to use enabled domain packs.",
+    )
+
     evaluate_parser = subparsers.add_parser(
         "evaluate",
         help="Run baseline + pipeline + judge for all prompts, then generate a report.",
@@ -146,6 +168,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-cache",
         action="store_true",
         help="Re-run both systems even if cached results exist.",
+    )
+
+    evaluate_parser.add_argument(
+        "--domain",
+        type=str,
+        default=None,
+        help="Comma-separated domain ids. Omit to use enabled domain packs.",
     )
 
     evaluate_variants_parser = subparsers.add_parser(
@@ -168,6 +197,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-cache",
         action="store_true",
         help="Re-run variants and judge even if cached results exist.",
+    )
+
+    evaluate_variants_parser.add_argument(
+        "--domain",
+        type=str,
+        default=None,
+        help="Comma-separated domain ids. Omit to use enabled domain packs.",
     )
 
     ingest_parser = subparsers.add_parser(
@@ -291,6 +327,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Sweep only this prompt. Omit to sweep all.",
     )
 
+    sweep_parser.add_argument(
+        "--domain",
+        type=str,
+        default=None,
+        help="Comma-separated domain ids. Omit to use enabled domain packs.",
+    )
+
     annotate_parser = subparsers.add_parser(
         "annotate-human",
         help="Launch a local web GUI for scoring blinded human-annotation tasks.",
@@ -344,12 +387,24 @@ def cmd_bootstrap() -> int:
 
 def cmd_validate_founder_prompts(path: Path | None) -> int:
     settings = get_settings()
-    prompt_path = path or settings.founder_prompts_path
-    if not prompt_path.exists():
-        raise FileNotFoundError(f"Founder prompt file not found: {prompt_path}")
-    data = json.loads(prompt_path.read_text(encoding="utf-8"))
-    prompts = TypeAdapter(list[FounderPrompt]).validate_python(data)
-    print(f"Validated {len(prompts)} founder prompts from {prompt_path}.")
+
+    if path is not None:
+        prompt_path = path
+        if not prompt_path.exists():
+            raise FileNotFoundError(f"Founder prompt file not found: {prompt_path}")
+        data = json.loads(prompt_path.read_text(encoding="utf-8"))
+        prompts = TypeAdapter(list[FounderPrompt]).validate_python(data)
+        print(f"Validated {len(prompts)} founder prompts from {prompt_path}.")
+        return 0
+
+    packs = load_domain_packs(settings)
+    prompts = load_founder_prompts(settings)
+    enabled_domains = [pack.domain_id for pack in packs if pack.enabled]
+    print(
+        "Validated "
+        f"{len(packs)} domain pack(s) from {settings.domain_packs_path} and "
+        f"{len(prompts)} founder prompt(s) across {len(enabled_domains)} enabled domain(s)."
+    )
     return 0
 
 
@@ -403,15 +458,25 @@ def cmd_search(query: str, top_k: int) -> int:
         print()
     return 0
 
-def _load_prompts(prompt_id: str | None = None) -> list[FounderPrompt]:
+`r`ndef _load_prompts(prompt_id: str | None = None, domain_arg: str | None = None) -> list[FounderPrompt]:
     settings = get_settings()
-    data = json.loads(settings.founder_prompts_path.read_text(encoding="utf-8"))
-    prompts = TypeAdapter(list[FounderPrompt]).validate_python(data)
+    domain_ids = _parse_domain_ids(domain_arg)
+    prompts = load_founder_prompts(settings, domain_ids=domain_ids)
     if prompt_id:
-        prompts = [p for p in prompts if p.id == prompt_id]
+        prompts = [prompt for prompt in prompts if prompt.id == prompt_id]
         if not prompts:
             raise ValueError(f"No founder prompt found with id={prompt_id!r}")
     return prompts
+
+
+def _parse_domain_ids(domains_arg: str | None) -> list[str] | None:
+    if domains_arg is None:
+        return None
+
+    domain_ids = parse_domain_ids(domains_arg)
+    if not domain_ids:
+        raise ValueError("--domain was provided but no domain ids were parsed")
+    return domain_ids
 
 
 def _parse_variant_ids(variants_arg: str | None) -> list[str] | None:
@@ -443,20 +508,20 @@ def _print_placeholder_contract_response(command: str, **payload: object) -> int
     print(json.dumps(response, indent=2, sort_keys=True, default=str))
     return 0
 
-def cmd_run_baseline(prompt_id: str | None) -> int:
+def cmd_run_baseline(prompt_id: str | None, domain_arg: str | None) -> int:
     from .agents.baseline import run_baseline
 
-    prompts = _load_prompts(prompt_id)
+    prompts = _load_prompts(prompt_id, domain_arg)
     for prompt in prompts:
         run_baseline(prompt)
     print(f"Baseline complete for {len(prompts)} prompt(s).")
     return 0
 
 
-def cmd_run_pipeline(prompt_id: str | None) -> int:
+def cmd_run_pipeline(prompt_id: str | None, domain_arg: str | None) -> int:
     from .agents.pipeline import run_pipeline
 
-    prompts = _load_prompts(prompt_id)
+    prompts = _load_prompts(prompt_id, domain_arg)
     for prompt in prompts:
         run_pipeline(prompt)
     print(f"Pipeline complete for {len(prompts)} prompt(s).")
@@ -477,17 +542,17 @@ def cmd_list_variants(*, verbose: bool = False) -> int:
     return 0
 
 
-def cmd_run_variant(variant: str, prompt_id: str | None) -> int:
+def cmd_run_variant(variant: str, prompt_id: str | None, domain_arg: str | None) -> int:
     from .agents.variant_pipeline import run_variant_pipeline
 
-    prompts = _load_prompts(prompt_id)
+    prompts = _load_prompts(prompt_id, domain_arg)
     for prompt in prompts:
         run_variant_pipeline(prompt, variant)
     print(f"Variant {variant!r} complete for {len(prompts)} prompt(s).")
     return 0
 
 
-def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
+def cmd_evaluate(prompt_id: str | None, domain_arg: str | None, *, no_cache: bool) -> int:
     from .evaluation.failure_taxonomy import generate_failure_taxonomy
     from .evaluation.report import generate_report
     from .evaluation.runner import run_evaluation
@@ -495,7 +560,13 @@ def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
 
     settings = get_settings()
     prompt_ids = [prompt_id] if prompt_id else None
-    summary = run_evaluation(settings, prompt_ids=prompt_ids, skip_cached=not no_cache)
+    domain_ids = _parse_domain_ids(domain_arg)
+    summary = run_evaluation(
+        settings,
+        prompt_ids=prompt_ids,
+        domain_ids=domain_ids,
+        skip_cached=not no_cache,
+    )
     report_path = generate_report(summary, settings.run_artifacts_dir)
     failure_tags, failure_tags_path, failure_report_path = generate_failure_taxonomy(
         settings.run_artifacts_dir,
@@ -520,12 +591,12 @@ def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
         }
         scores: dict[str, tuple[float, float]] = {}
         for dim in dims:
-            b_avg = sum(getattr(p.baseline_scores.scores, dim) for p in summary.pairs) / len(summary.pairs)
-            p_avg = sum(getattr(p.pipeline_scores.scores, dim) for p in summary.pairs) / len(summary.pairs)
+            b_avg = sum(getattr(pair.baseline_scores.scores, dim) for pair in summary.pairs) / len(summary.pairs)
+            p_avg = sum(getattr(pair.pipeline_scores.scores, dim) for pair in summary.pairs) / len(summary.pairs)
             scores[dim_labels[dim]] = (b_avg, p_avg)
 
-        b_overall = sum(v[0] for v in scores.values()) / len(scores)
-        p_overall = sum(v[1] for v in scores.values()) / len(scores)
+        b_overall = sum(value[0] for value in scores.values()) / len(scores)
+        p_overall = sum(value[1] for value in scores.values()) / len(scores)
 
         con.console.print()
         con.results_table(scores, b_overall, p_overall)
@@ -539,6 +610,7 @@ def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
 def cmd_evaluate_variants(
     variants_arg: str | None,
     prompt_id: str | None,
+    domain_arg: str | None,
     *,
     no_cache: bool,
 ) -> int:
@@ -550,11 +622,13 @@ def cmd_evaluate_variants(
     settings = get_settings()
     prompt_ids = [prompt_id] if prompt_id else None
     variant_ids = _parse_variant_ids(variants_arg)
+    domain_ids = _parse_domain_ids(domain_arg)
 
     summary = run_variant_evaluation(
         settings,
         variant_ids=variant_ids,
         prompt_ids=prompt_ids,
+        domain_ids=domain_ids,
         skip_cached=not no_cache,
     )
     report_path = generate_variant_report(summary, settings.run_artifacts_dir.parent / "variant_runs")
@@ -577,7 +651,6 @@ def cmd_evaluate_variants(
     con.console.print(table)
     con.success("variant-report", f"Saved to {report_path}")
     return 0
-
 
 def cmd_ingest(adapter: str, input_path: Path | None) -> int:
     settings = get_settings()
@@ -755,20 +828,21 @@ def cmd_compare_runs(run_a: str, run_b: str) -> int:
     )
 
 
-def cmd_sweep(prompt_id: str | None) -> int:
+def cmd_sweep(prompt_id: str | None, domain_arg: str | None) -> int:
     from .evaluation.prompt_sweep import run_sweep
     from . import console as con
     from rich.table import Table
 
     settings = get_settings()
     prompt_ids = [prompt_id] if prompt_id else None
+    domain_ids = _parse_domain_ids(domain_arg)
 
     con.header(
         "Prompt Variant Sweep",
         f"model: {settings.llm_model} | provider: {settings.llm_provider}",
     )
 
-    results = run_sweep(settings, prompt_ids=prompt_ids)
+    results = run_sweep(settings, prompt_ids=prompt_ids, domain_ids=domain_ids)
 
     # Build comparison table
     table = Table(title="Sweep Results", show_lines=True)
@@ -836,17 +910,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "search":
         return cmd_search(args.query, args.top_k)
     if args.command == "run-baseline":
-        return cmd_run_baseline(args.prompt_id)
+        return cmd_run_baseline(args.prompt_id, args.domain)
     if args.command == "run-pipeline":
-        return cmd_run_pipeline(args.prompt_id)
+        return cmd_run_pipeline(args.prompt_id, args.domain)
     if args.command == "list-variants":
         return cmd_list_variants(verbose=args.verbose)
     if args.command == "run-variant":
-        return cmd_run_variant(args.variant, args.prompt_id)
+        return cmd_run_variant(args.variant, args.prompt_id, args.domain)
     if args.command == "evaluate":
-        return cmd_evaluate(args.prompt_id, no_cache=args.no_cache)
+        return cmd_evaluate(args.prompt_id, args.domain, no_cache=args.no_cache)
     if args.command == "evaluate-variants":
-        return cmd_evaluate_variants(args.variants, args.prompt_id, no_cache=args.no_cache)
+        return cmd_evaluate_variants(args.variants, args.prompt_id, args.domain, no_cache=args.no_cache)
     if args.command == "ingest":
         return cmd_ingest(args.adapter, args.input_path)
     if args.command == "snapshot-data":
@@ -866,7 +940,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return cmd_compare_runs(args.run_a, args.run_b)
 
     if args.command == "sweep":
-        return cmd_sweep(args.prompt_id)
+        return cmd_sweep(args.prompt_id, args.domain)
 
     if args.command == "annotate-human":
         return cmd_annotate_human(
@@ -878,5 +952,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     parser.error(f"Unknown command: {args.command}")
     return 2
+
+
+
+
 
 
