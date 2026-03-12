@@ -38,6 +38,27 @@ def test_build_parser_supports_domain_filters() -> None:
     assert baseline_args.domain == "saas"
 
 
+
+def test_build_parser_supports_integration_gate_command() -> None:
+    parser = cli.build_parser()
+
+    args = parser.parse_args(
+        [
+            "integration-gate",
+            "--reports-dir",
+            "reports/research_upgrade",
+            "--severity-threshold",
+            "5",
+            "--summary-out",
+            "artifacts/research_upgrade/integration_gate_summary.json",
+        ]
+    )
+
+    assert args.command == "integration-gate"
+    assert args.reports_dir == Path("reports/research_upgrade")
+    assert args.severity_threshold == 5
+    assert args.summary_out == Path("artifacts/research_upgrade/integration_gate_summary.json")
+
 def test_load_prompts_filters_by_id(monkeypatch: pytest.MonkeyPatch, tmp_settings) -> None:
     prompts = [
         {"id": "a", "statement": "A", "domain": "restaurants"},

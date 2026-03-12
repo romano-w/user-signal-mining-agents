@@ -90,6 +90,7 @@ class Settings(BaseSettings):
     embedding_batch_size: int = 128
     min_focus_points: int = 3
     max_focus_points: int = 5
+    judge_panel_size: int = 1
 
 
 def ensure_scaffold_directories(settings: Settings) -> list[Path]:
@@ -115,5 +116,7 @@ def ensure_scaffold_directories(settings: Settings) -> list[Path]:
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
 
 

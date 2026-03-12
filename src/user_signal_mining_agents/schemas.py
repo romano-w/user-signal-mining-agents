@@ -100,6 +100,8 @@ class PromptEvaluationPair(BaseModel):
     prompt: FounderPrompt
     baseline_scores: JudgeResult
     pipeline_scores: JudgeResult
+    baseline_panel: JudgePanelResult | None = None
+    pipeline_panel: JudgePanelResult | None = None
 
 
 class EvaluationSummary(BaseModel):
@@ -268,4 +270,5 @@ class DomainPack(BaseModel):
     founder_prompts_path: str
     evaluation_notes: str | None = None
     enabled: bool = True
+
 

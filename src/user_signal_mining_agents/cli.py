@@ -316,6 +316,59 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Run id B.",
     )
+    integration_gate_parser = subparsers.add_parser(
+        "integration-gate",
+        help="Run integration-ready report gates for research-upgrade branches.",
+    )
+    integration_gate_parser.add_argument(
+        "--reports-dir",
+        type=Path,
+        default=Path("reports/research_upgrade"),
+        help="Directory containing report JSON inputs.",
+    )
+    integration_gate_parser.add_argument(
+        "--schema-report",
+        type=Path,
+        default=None,
+        help="Override path for schema_compatibility.json.",
+    )
+    integration_gate_parser.add_argument(
+        "--retrieval-report",
+        type=Path,
+        default=None,
+        help="Override path for retrieval_report.json.",
+    )
+    integration_gate_parser.add_argument(
+        "--robustness-report",
+        type=Path,
+        default=None,
+        help="Override path for robustness_report.json.",
+    )
+    integration_gate_parser.add_argument(
+        "--domain-transfer-report",
+        type=Path,
+        default=None,
+        help="Override path for domain_transfer_report.json.",
+    )
+    integration_gate_parser.add_argument(
+        "--failure-tags-report",
+        type=Path,
+        default=None,
+        help="Override path for failure_tags_report.json.",
+    )
+    integration_gate_parser.add_argument(
+        "--severity-threshold",
+        type=int,
+        default=4,
+        help="Block when a failure tag severity is at or above this threshold.",
+    )
+    integration_gate_parser.add_argument(
+        "--summary-out",
+        type=Path,
+        default=None,
+        help="Optional file path where the gate summary JSON will also be written.",
+    )
+
     sweep_parser = subparsers.add_parser(
         "sweep",
         help="Run prompt variant sweep and compare pipeline scores.",
@@ -552,13 +605,26 @@ def cmd_run_variant(variant: str, prompt_id: str | None, domain_arg: str | None)
     return 0
 
 
-def cmd_evaluate(prompt_id: str | None, domain_arg: str | None = None, *, no_cache: bool = False) -> int:
+def cmd_evaluate(
+    prompt_id: str | None,
+    domain_arg: str | None = None,
+    *,
+    no_cache: bool = False,
+    judge_panel_size: int | None = None,
+) -> int:
     from .evaluation.failure_taxonomy import generate_failure_taxonomy
     from .evaluation.report import generate_report
     from .evaluation.runner import run_evaluation
     from . import console as con
 
-    settings = get_settings()
+    base_settings = get_settings()
+    if judge_panel_size is not None and judge_panel_size < 1:
+        raise ValueError("--judge-panel-size must be >= 1")
+    settings = (
+        base_settings.model_copy(update={"judge_panel_size": judge_panel_size})
+        if judge_panel_size is not None
+        else base_settings
+    )
     prompt_ids = [prompt_id] if prompt_id else None
     domain_ids = _parse_domain_ids(domain_arg)
     summary = run_evaluation(
@@ -828,6 +894,45 @@ def cmd_compare_runs(run_a: str, run_b: str) -> int:
     )
 
 
+def cmd_integration_gate(
+    reports_dir: Path,
+    *,
+    schema_report: Path | None,
+    retrieval_report: Path | None,
+    robustness_report: Path | None,
+    domain_transfer_report: Path | None,
+    failure_tags_report: Path | None,
+    severity_threshold: int,
+    summary_out: Path | None,
+) -> int:
+    from .integration.gates import default_gate_inputs, run_integration_gates
+
+    inputs = default_gate_inputs(reports_dir, high_severity_threshold=severity_threshold)
+    if schema_report is not None:
+        inputs.schema_compatibility_path = schema_report
+    if retrieval_report is not None:
+        inputs.retrieval_report_path = retrieval_report
+    if robustness_report is not None:
+        inputs.robustness_report_path = robustness_report
+    if domain_transfer_report is not None:
+        inputs.domain_transfer_report_path = domain_transfer_report
+    if failure_tags_report is not None:
+        inputs.failure_tags_report_path = failure_tags_report
+
+    summary = run_integration_gates(inputs)
+    payload = summary.model_dump(mode="json")
+    print(json.dumps(payload, indent=2, sort_keys=True))
+
+    if summary_out is not None:
+        summary_out.parent.mkdir(parents=True, exist_ok=True)
+        summary_out.write_text(
+            json.dumps(payload, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+
+    return 0 if summary.overall_status == "pass" else 1
+
+
 def cmd_sweep(prompt_id: str | None, domain_arg: str | None) -> int:
     from .evaluation.prompt_sweep import run_sweep
     from . import console as con
@@ -918,7 +1023,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "run-variant":
         return cmd_run_variant(args.variant, args.prompt_id, args.domain)
     if args.command == "evaluate":
-        return cmd_evaluate(args.prompt_id, args.domain, no_cache=args.no_cache)
+        return cmd_evaluate(args.prompt_id, args.domain, no_cache=args.no_cache, judge_panel_size=args.judge_panel_size)
     if args.command == "evaluate-variants":
         return cmd_evaluate_variants(args.variants, args.prompt_id, args.domain, no_cache=args.no_cache)
     if args.command == "ingest":
@@ -939,6 +1044,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "compare-runs":
         return cmd_compare_runs(args.run_a, args.run_b)
 
+    if args.command == "integration-gate":
+        return cmd_integration_gate(
+            reports_dir=args.reports_dir,
+            schema_report=args.schema_report,
+            retrieval_report=args.retrieval_report,
+            robustness_report=args.robustness_report,
+            domain_transfer_report=args.domain_transfer_report,
+            failure_tags_report=args.failure_tags_report,
+            severity_threshold=args.severity_threshold,
+            summary_out=args.summary_out,
+        )
+
     if args.command == "sweep":
         return cmd_sweep(args.prompt_id, args.domain)
 
@@ -952,6 +1069,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     parser.error(f"Unknown command: {args.command}")
     return 2
+
+
+
+
 
 
 

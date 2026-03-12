@@ -90,6 +90,7 @@ uv run usm evaluate
 | `uv run usm evaluate --no-cache` | Re-run everything from scratch (ignores cached results) |
 | `uv run usm evaluate --prompt-id <id>` | Evaluate a single prompt |
 | `uv run usm evaluate --domain <id,id>` | Evaluate selected domains from the domain-pack registry |
+| `uv run usm evaluate --judge-panel-size 3` | Run evaluation with deterministic 3-judge panel aggregation + confidence stats |
 | `uv run usm sweep` | Run sweep of prompt variants (A/B testing) |
 | `uv run usm sweep --prompt-id <id>` | Run sweep on a single prompt |
 | `uv run usm run-baseline --prompt-id <id>` | Run baseline only for one prompt |
@@ -117,6 +118,7 @@ uv run usm evaluate
 | `uv run usm search --query "slow service"` | Search the dense index and print top-K results |
 | `uv run usm fetch-yelp-dataset` | Download and extract the Yelp dataset |
 | `uv run usm annotate-human` | Launch the local human-annotation GUI for blinded A/B scoring |
+| `uv run usm integration-gate --reports-dir reports/research_upgrade` | Evaluate integration readiness report artifacts and return pass/fail exit code |
 
 ### Data preparation scripts
 

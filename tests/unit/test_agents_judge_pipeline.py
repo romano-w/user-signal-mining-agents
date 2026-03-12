@@ -173,3 +173,67 @@ def test_judge_named_pair_supports_custom_variant_labels(
     assert hybrid_judge.system_variant == "full_hybrid"
     assert control_judge.scores.relevance == 5.0
     assert hybrid_judge.scores.relevance == 3.0
+
+
+def test_judge_panel_named_pair_aggregates_scores_with_deterministic_mapping(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+    founder_prompt,
+    focus_point_factory,
+) -> None:
+    control_result = _make_result("control", founder_prompt, focus_point_factory)
+    hybrid_result = _make_result("hybrid", founder_prompt, focus_point_factory)
+
+    payloads = iter([
+        _judge_payload(5.0, 1.0),
+        _judge_payload(4.0, 2.0),
+    ])
+
+    monkeypatch.setattr(judge, "call_llm_json", lambda **_kwargs: next(payloads))
+    monkeypatch.setattr(
+        judge,
+        "_deterministic_left_first",
+        lambda _prompt_id, _left_variant, _right_variant, judge_index: judge_index == 0,
+    )
+
+    control_panel, hybrid_panel = judge.judge_panel_named_pair(
+        founder_prompt,
+        control_result,
+        hybrid_result,
+        left_variant="control",
+        right_variant="hybrid",
+        panel_size=2,
+        settings=tmp_settings,
+    )
+
+    assert control_panel.panel_size == 2
+    assert [score.relevance for score in control_panel.per_judge_scores] == [5.0, 2.0]
+    assert [score.relevance for score in hybrid_panel.per_judge_scores] == [1.0, 4.0]
+    assert control_panel.aggregate_scores.relevance == pytest.approx(3.5)
+    assert hybrid_panel.aggregate_scores.relevance == pytest.approx(2.5)
+
+    overall_ci = next(m for m in control_panel.metrics_with_ci if m.metric == "overall_avg")
+    assert overall_ci.sample_size == 2
+
+    overall_sig = next(m for m in hybrid_panel.significance if m.metric == "overall_avg")
+    assert 0.0 <= overall_sig.p_value <= 1.0
+
+
+def test_judge_panel_named_pair_rejects_invalid_panel_size(
+    tmp_settings,
+    founder_prompt,
+    focus_point_factory,
+) -> None:
+    control_result = _make_result("control", founder_prompt, focus_point_factory)
+    hybrid_result = _make_result("hybrid", founder_prompt, focus_point_factory)
+
+    with pytest.raises(ValueError, match="panel_size"):
+        judge.judge_panel_named_pair(
+            founder_prompt,
+            control_result,
+            hybrid_result,
+            left_variant="control",
+            right_variant="hybrid",
+            panel_size=0,
+            settings=tmp_settings,
+        )

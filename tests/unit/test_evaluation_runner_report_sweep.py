@@ -10,9 +10,12 @@ from user_signal_mining_agents.schemas import (
     EvaluationSummary,
     FocusPoint,
     FounderPrompt,
+    JudgePanelResult,
     JudgeResult,
     JudgeScores,
+    MetricWithCI,
     PromptEvaluationPair,
+    SignificanceResult,
     SynthesisResult,
 )
 
@@ -250,3 +253,93 @@ def test_run_sweep_restores_prompts_on_failure(
 
     assert (tmp_settings.prompts_dir / "synthesis.md").read_text(encoding="utf-8") == original
     assert not (tmp_settings.prompts_dir.parent / "prompts_backup").exists()
+
+
+def _panel(prompt_id: str, variant: str, values: list[float], *, p_value: float) -> JudgePanelResult:
+    per_judge = [_scores(value, rationale=f"judge-{idx}") for idx, value in enumerate(values, start=1)]
+    mean_value = sum(values) / len(values)
+    return JudgePanelResult(
+        prompt_id=prompt_id,
+        system_variant=variant,
+        panel_size=len(values),
+        per_judge_scores=per_judge,
+        aggregate_scores=_scores(mean_value, rationale=f"panel-{variant}"),
+        metrics_with_ci=[
+            MetricWithCI(
+                metric="overall_avg",
+                mean=mean_value,
+                ci95_lower=mean_value - 0.1,
+                ci95_upper=mean_value + 0.1,
+                sample_size=len(values),
+            )
+        ],
+        significance=[
+            SignificanceResult(
+                metric="overall_avg",
+                p_value=p_value,
+                is_significant=p_value < 0.05,
+                effect_size=0.3,
+            )
+        ],
+    )
+
+
+def test_run_evaluation_panel_mode_persists_panel_artifacts(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+) -> None:
+    prompt = FounderPrompt(id="p1", statement="Question", domain="restaurants")
+    tmp_settings.founder_prompts_path.write_text(json.dumps([prompt.model_dump()]), encoding="utf-8")
+    panel_settings = tmp_settings.model_copy(update={"judge_panel_size": 3})
+
+    monkeypatch.setattr(runner, "run_baseline", lambda p, _s: _synthesis(p, "baseline"))
+    monkeypatch.setattr(runner, "run_pipeline", lambda p, _s: _synthesis(p, "pipeline"))
+    monkeypatch.setattr(
+        runner,
+        "judge_panel_pair",
+        lambda p, *_args, **_kwargs: (
+            _panel(p.id, "baseline", [3.0, 3.5, 2.5], p_value=0.2),
+            _panel(p.id, "pipeline", [4.0, 4.2, 4.1], p_value=0.01),
+        ),
+    )
+
+    summary = runner.run_evaluation(panel_settings, skip_cached=False)
+
+    assert len(summary.pairs) == 1
+    pair = summary.pairs[0]
+    assert pair.baseline_panel is not None
+    assert pair.pipeline_panel is not None
+    assert pair.pipeline_scores.scores.relevance == pytest.approx(4.1)
+
+    run_dir = panel_settings.run_artifacts_dir / prompt.id
+    assert (run_dir / "judge_baseline.json").exists()
+    assert (run_dir / "judge_pipeline.json").exists()
+    assert (run_dir / "judge_panel_baseline.json").exists()
+    assert (run_dir / "judge_panel_pipeline.json").exists()
+
+
+def test_generate_report_includes_panel_confidence_context(tmp_path: Path) -> None:
+    prompt = FounderPrompt(id="p1", statement="Question", domain="restaurants")
+    baseline_panel = _panel("p1", "baseline", [3.0, 3.2, 2.8], p_value=0.4)
+    pipeline_panel = _panel("p1", "pipeline", [4.1, 4.0, 4.2], p_value=0.01)
+
+    summary = EvaluationSummary(
+        pairs=[
+            PromptEvaluationPair(
+                prompt=prompt,
+                baseline_scores=_judge("p1", "baseline", 3.0),
+                pipeline_scores=_judge("p1", "pipeline", 4.0),
+                baseline_panel=baseline_panel,
+                pipeline_panel=pipeline_panel,
+            )
+        ]
+    )
+
+    path = report.generate_report(summary, tmp_path)
+    text = path.read_text(encoding="utf-8")
+
+    assert "Judge panel mode:** enabled" in text
+    assert "Confidence context" in text
+    assert "Panel Confidence (3 judges)" in text
+    assert "p-value (Pipeline vs Baseline)" in text
+

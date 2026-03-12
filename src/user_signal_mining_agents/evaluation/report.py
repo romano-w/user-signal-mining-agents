@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..schemas import EvaluationSummary, PromptEvaluationPair
+from ..schemas import (
+    EvaluationSummary,
+    JudgePanelResult,
+    MetricWithCI,
+    PromptEvaluationPair,
+    SignificanceResult,
+)
 
 
 RUBRIC_DIMS = [
@@ -20,8 +26,34 @@ def _avg(values: list[float]) -> float:
     return sum(values) / len(values) if values else 0.0
 
 
+def _metric_label(metric: str) -> str:
+    if metric == "overall_avg":
+        return "Overall"
+    return metric.replace("_", " ").title()
+
+
+def _find_ci(panel: JudgePanelResult, metric: str) -> MetricWithCI | None:
+    for entry in panel.metrics_with_ci:
+        if entry.metric == metric:
+            return entry
+    return None
+
+
+def _find_significance(panel: JudgePanelResult, metric: str) -> SignificanceResult | None:
+    for entry in panel.significance:
+        if entry.metric == metric:
+            return entry
+    return None
+
+
+def _format_ci(entry: MetricWithCI | None) -> str:
+    if entry is None:
+        return "n/a"
+    return f"{entry.mean:.2f} [{entry.ci95_lower:.2f}, {entry.ci95_upper:.2f}]"
+
+
 def _avg_by_dim(pairs: list[PromptEvaluationPair], *, variant: str) -> dict[str, float]:
-    scores = {}
+    scores: dict[str, float] = {}
     for dim in RUBRIC_DIMS:
         if variant == "baseline":
             values = [getattr(pair.baseline_scores.scores, dim) for pair in pairs]
@@ -48,12 +80,24 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path = output_dir / "evaluation_report.md"
 
+    panel_pairs = [pair for pair in summary.pairs if pair.baseline_panel and pair.pipeline_panel]
+
     lines: list[str] = [
         "# Evaluation Report - Baseline vs Pipeline\n",
         f"**Prompts evaluated:** {len(summary.pairs)}\n",
     ]
 
-    # Aggregate table
+    if panel_pairs:
+        panel_sizes = sorted({pair.baseline_panel.panel_size for pair in panel_pairs})
+        if len(panel_sizes) == 1:
+            lines.append(f"**Judge panel mode:** enabled ({panel_sizes[0]} judges per prompt)\n")
+        else:
+            labels = ", ".join(str(size) for size in panel_sizes)
+            lines.append(f"**Judge panel mode:** enabled (sizes: {labels})\n")
+        lines.append("**Confidence context:** 95% confidence intervals and paired significance are included per prompt.\n")
+    else:
+        lines.append("**Judge panel mode:** disabled (single judge).\n")
+
     lines.append("## Aggregate Scores\n")
     lines.append("| Dimension | Baseline Avg | Pipeline Avg | Delta |")
     lines.append("|-----------|:------------:|:------------:|:-:|")
@@ -65,20 +109,19 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
         p_avg = _avg(p_vals)
         delta = p_avg - b_avg
         sign = "+" if delta > 0 else ""
-        lines.append(f"| {dim.replace('_', ' ').title()} | {b_avg:.2f} | {p_avg:.2f} | {sign}{delta:.2f} |")
+        lines.append(f"| {_metric_label(dim)} | {b_avg:.2f} | {p_avg:.2f} | {sign}{delta:.2f} |")
 
     b_overall = _avg([
-        getattr(p.baseline_scores.scores, d) for p in summary.pairs for d in RUBRIC_DIMS
+        getattr(p.baseline_scores.scores, dim) for p in summary.pairs for dim in RUBRIC_DIMS
     ])
     p_overall = _avg([
-        getattr(p.pipeline_scores.scores, d) for p in summary.pairs for d in RUBRIC_DIMS
+        getattr(p.pipeline_scores.scores, dim) for p in summary.pairs for dim in RUBRIC_DIMS
     ])
     delta_overall = p_overall - b_overall
     sign_overall = "+" if delta_overall > 0 else ""
     lines.append(f"| **Overall** | **{b_overall:.2f}** | **{p_overall:.2f}** | **{sign_overall}{delta_overall:.2f}** |")
     lines.append("")
 
-    # Domain quality breakdown
     domain_groups = _group_pairs_by_domain(summary)
     domain_order = list(domain_groups.keys())
 
@@ -100,13 +143,12 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
             p_val = p_scores[dim]
             delta = p_val - b_val
             sign = "+" if delta > 0 else ""
-            lines.append(f"| {dim.replace('_', ' ').title()} | {b_val:.2f} | {p_val:.2f} | {sign}{delta:.2f} |")
+            lines.append(f"| {_metric_label(dim)} | {b_val:.2f} | {p_val:.2f} | {sign}{delta:.2f} |")
         lines.append(
             f"| **Overall** | **{b_domain_overall:.2f}** | **{p_domain_overall:.2f}** | **{sign_domain}{domain_delta:.2f}** |"
         )
         lines.append("")
 
-    # Domain transfer deltas
     lines.append("## Domain Transfer Deltas\n")
     if len(domain_order) <= 1:
         lines.append("Only one domain evaluated; transfer deltas require at least two domains.\n")
@@ -141,7 +183,6 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
             )
         lines.append("")
 
-    # Per-prompt breakdown
     lines.append("## Per-Prompt Breakdown\n")
     for pair in summary.pairs:
         pid = pair.prompt.id
@@ -153,14 +194,28 @@ def generate_report(summary: EvaluationSummary, output_dir: Path) -> Path:
         for dim in RUBRIC_DIMS:
             b = getattr(pair.baseline_scores.scores, dim)
             p = getattr(pair.pipeline_scores.scores, dim)
-            lines.append(f"| {dim.replace('_', ' ').title()} | {b:.1f} | {p:.1f} |")
+            lines.append(f"| {_metric_label(dim)} | {b:.1f} | {p:.1f} |")
         lines.append("")
+
+        if pair.baseline_panel and pair.pipeline_panel:
+            panel_size = pair.pipeline_panel.panel_size
+            lines.append(f"#### Panel Confidence ({panel_size} judges)\n")
+            lines.append("| Metric | Baseline Mean [95% CI] | Pipeline Mean [95% CI] | p-value (Pipeline vs Baseline) |")
+            lines.append("|--------|------------------------|------------------------|:------------------------------:|")
+
+            for metric in [*RUBRIC_DIMS, "overall_avg"]:
+                baseline_ci = _find_ci(pair.baseline_panel, metric)
+                pipeline_ci = _find_ci(pair.pipeline_panel, metric)
+                sig = _find_significance(pair.pipeline_panel, metric)
+                p_value = f"{sig.p_value:.4f}" if sig is not None else "n/a"
+                lines.append(
+                    f"| {_metric_label(metric)} | {_format_ci(baseline_ci)} | {_format_ci(pipeline_ci)} | {p_value} |"
+                )
+            lines.append("")
 
         lines.append(f"**Baseline rationale:** {pair.baseline_scores.scores.rationale}\n")
         lines.append(f"**Pipeline rationale:** {pair.pipeline_scores.scores.rationale}\n")
         lines.append("---\n")
 
-    report_text = "\n".join(lines)
-    report_path.write_text(report_text, encoding="utf-8")
+    report_path.write_text("\n".join(lines), encoding="utf-8")
     return report_path
-
