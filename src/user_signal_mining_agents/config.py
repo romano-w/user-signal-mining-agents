@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     max_chunks_per_review: int = 3
 
     retrieval_top_k: int = 50
-    synthesis_evidence_k: int = 15
+    synthesis_evidence_k: int = 20
     embedding_batch_size: int = 128
     min_focus_points: int = 3
     max_focus_points: int = 5

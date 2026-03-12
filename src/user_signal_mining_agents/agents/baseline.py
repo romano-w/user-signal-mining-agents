@@ -77,7 +77,7 @@ def run_baseline(
     hits = search_dense_index(
         prompt.statement,
         index_dir=s.index_dir,
-        top_k=s.retrieval_top_k,
+        top_k=s.synthesis_evidence_k,
     )
     evidence = [hit.snippet for hit in hits]
 
