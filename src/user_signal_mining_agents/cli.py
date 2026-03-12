@@ -336,7 +336,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--retrieval-report",
         type=Path,
         default=None,
-        help="Override path for retrieval_report.json.",
+        help="Override path for retrieval_eval_summary.json.",
     )
     integration_gate_parser.add_argument(
         "--robustness-report",

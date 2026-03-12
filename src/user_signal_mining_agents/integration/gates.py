@@ -64,6 +64,9 @@ class _FailureTagReport(BaseModel):
     tags: list[FailureTag] = Field(default_factory=list)
 
 
+RETRIEVAL_BENCHMARK_METRICS = ("recall_at_k", "mrr_at_k", "ndcg_at_k")
+
+
 def default_gate_inputs(
     reports_dir: Path,
     *,
@@ -73,7 +76,7 @@ def default_gate_inputs(
 
     return GateInputs(
         schema_compatibility_path=reports_dir / "schema_compatibility.json",
-        retrieval_report_path=reports_dir / "retrieval_report.json",
+        retrieval_report_path=reports_dir / "retrieval_eval_summary.json",
         robustness_report_path=reports_dir / "robustness_report.json",
         domain_transfer_report_path=reports_dir / "domain_transfer_report.json",
         failure_tags_report_path=reports_dir / "failure_tags_report.json",
@@ -157,6 +160,116 @@ def _status_report_check(
     )
 
 
+def _is_number(value: object) -> bool:
+    return isinstance(value, int | float) and not isinstance(value, bool)
+
+
+def _retrieval_report_check(path: Path) -> GateCheck:
+    check_name = "retrieval"
+    if not path.exists():
+        return _report_missing(check_name, path)
+
+    try:
+        payload = _load_json(path)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return GateCheck(
+            check=check_name,
+            status="fail",
+            path=str(path),
+            details=f"unable to read report JSON: {exc}",
+        )
+
+    if "report_type" in payload or "status" in payload:
+        return _status_report_check(
+            check_name=check_name,
+            expected_type="retrieval",
+            path=path,
+        )
+
+    query_count = payload.get("query_count")
+    if not isinstance(query_count, int) or query_count < 1:
+        return GateCheck(
+            check=check_name,
+            status="fail",
+            path=str(path),
+            details="retrieval benchmark must contain query_count >= 1",
+        )
+
+    k_values_raw = payload.get("k_values")
+    if not isinstance(k_values_raw, list) or not k_values_raw:
+        return GateCheck(
+            check=check_name,
+            status="fail",
+            path=str(path),
+            details="retrieval benchmark must include non-empty k_values list",
+        )
+    if any(not isinstance(k, int) or k <= 0 for k in k_values_raw):
+        return GateCheck(
+            check=check_name,
+            status="fail",
+            path=str(path),
+            details="retrieval benchmark k_values entries must be positive integers",
+        )
+    expected_k_keys = {str(k) for k in k_values_raw}
+
+    aggregates = payload.get("aggregates")
+    if not isinstance(aggregates, dict):
+        return GateCheck(
+            check=check_name,
+            status="fail",
+            path=str(path),
+            details="retrieval benchmark must include an aggregates object",
+        )
+
+    missing_metrics = [metric for metric in RETRIEVAL_BENCHMARK_METRICS if metric not in aggregates]
+    if missing_metrics:
+        return GateCheck(
+            check=check_name,
+            status="fail",
+            path=str(path),
+            details=f"retrieval benchmark missing aggregate metrics: {', '.join(missing_metrics)}",
+        )
+
+    for metric in RETRIEVAL_BENCHMARK_METRICS:
+        metric_values = aggregates.get(metric)
+        if not isinstance(metric_values, dict) or not metric_values:
+            return GateCheck(
+                check=check_name,
+                status="fail",
+                path=str(path),
+                details=f"aggregate metric {metric!r} must be a non-empty object",
+            )
+
+        missing_k = sorted(expected_k_keys - set(metric_values.keys()), key=int)
+        if missing_k:
+            return GateCheck(
+                check=check_name,
+                status="fail",
+                path=str(path),
+                details=f"aggregate metric {metric!r} missing K entries: {', '.join(missing_k)}",
+            )
+
+        for k in expected_k_keys:
+            score = metric_values.get(k)
+            if not _is_number(score):
+                return GateCheck(
+                    check=check_name,
+                    status="fail",
+                    path=str(path),
+                    details=f"aggregate metric {metric!r} at K={k} must be numeric",
+                )
+
+    return GateCheck(
+        check=check_name,
+        status="pass",
+        path=str(path),
+        details=(
+            "retrieval benchmark present with aggregate metrics "
+            f"({', '.join(RETRIEVAL_BENCHMARK_METRICS)}) across K={k_values_raw}"
+        ),
+    )
+
+
 def _failure_tag_check(path: Path, severity_threshold: int) -> GateCheck:
     check_name = "failure_tags"
     if not path.exists():
@@ -223,11 +336,7 @@ def run_integration_gates(inputs: GateInputs) -> IntegrationGateSummary:
             expected_type="schema_compatibility",
             path=inputs.schema_compatibility_path,
         ),
-        _status_report_check(
-            check_name="retrieval",
-            expected_type="retrieval",
-            path=inputs.retrieval_report_path,
-        ),
+        _retrieval_report_check(inputs.retrieval_report_path),
         _status_report_check(
             check_name="robustness",
             expected_type="robustness",

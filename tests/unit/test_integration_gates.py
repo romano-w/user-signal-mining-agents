@@ -28,11 +28,26 @@ def _write_required_reports(
         },
     )
     _write_json(
-        report_dir / "retrieval_report.json",
+        report_dir / "retrieval_eval_summary.json",
         {
-            "report_type": "retrieval",
-            "status": "pass",
-            "metrics": {"recall_at_10": 0.8},
+            "generated_at": "2026-03-12T00:00:00+00:00",
+            "label_set_path": "artifacts/retrieval_labels.jsonl",
+            "retrieval_mode": "hybrid",
+            "reranker": "token_overlap",
+            "top_k": 10,
+            "k_values": [1, 3, 5, 10],
+            "query_count": 2,
+            "dense_weight": 1.0,
+            "lexical_weight": 1.0,
+            "fusion_k": 60,
+            "reranker_weight": 0.25,
+            "candidate_pool": 200,
+            "aggregates": {
+                "recall_at_k": {"1": 0.50, "3": 1.0, "5": 1.0, "10": 1.0},
+                "mrr_at_k": {"1": 0.50, "3": 0.67, "5": 0.67, "10": 0.67},
+                "ndcg_at_k": {"1": 0.50, "3": 0.75, "5": 0.75, "10": 0.75},
+            },
+            "queries": [],
         },
     )
     _write_json(
@@ -74,7 +89,7 @@ def test_default_gate_inputs_uses_expected_filenames(tmp_path: Path) -> None:
     inputs = default_gate_inputs(tmp_path)
 
     assert inputs.schema_compatibility_path == tmp_path / "schema_compatibility.json"
-    assert inputs.retrieval_report_path == tmp_path / "retrieval_report.json"
+    assert inputs.retrieval_report_path == tmp_path / "retrieval_eval_summary.json"
     assert inputs.robustness_report_path == tmp_path / "robustness_report.json"
     assert inputs.domain_transfer_report_path == tmp_path / "domain_transfer_report.json"
     assert inputs.failure_tags_report_path == tmp_path / "failure_tags_report.json"
@@ -94,7 +109,7 @@ def test_run_integration_gates_passes_with_complete_reports(tmp_path: Path) -> N
 def test_run_integration_gates_fails_when_required_report_is_missing(tmp_path: Path) -> None:
     report_dir = tmp_path / "reports"
     _write_required_reports(report_dir)
-    (report_dir / "retrieval_report.json").unlink()
+    (report_dir / "retrieval_eval_summary.json").unlink()
 
     summary = run_integration_gates(default_gate_inputs(report_dir))
 
@@ -102,6 +117,40 @@ def test_run_integration_gates_fails_when_required_report_is_missing(tmp_path: P
     retrieval_check = next(check for check in summary.checks if check.check == "retrieval")
     assert retrieval_check.status == "fail"
     assert "missing" in retrieval_check.details
+
+
+def test_run_integration_gates_fails_when_retrieval_metrics_are_missing(tmp_path: Path) -> None:
+    report_dir = tmp_path / "reports"
+    _write_required_reports(report_dir)
+    _write_json(
+        report_dir / "retrieval_eval_summary.json",
+        {
+            "generated_at": "2026-03-12T00:00:00+00:00",
+            "label_set_path": "artifacts/retrieval_labels.jsonl",
+            "retrieval_mode": "hybrid",
+            "reranker": "none",
+            "top_k": 10,
+            "k_values": [1, 3, 5, 10],
+            "query_count": 2,
+            "dense_weight": 1.0,
+            "lexical_weight": 1.0,
+            "fusion_k": 60,
+            "reranker_weight": 0.0,
+            "candidate_pool": 200,
+            "aggregates": {
+                "recall_at_k": {"1": 0.5, "3": 0.8, "5": 1.0, "10": 1.0},
+                "mrr_at_k": {"1": 0.5, "3": 0.6, "5": 0.6, "10": 0.6},
+            },
+            "queries": [],
+        },
+    )
+
+    summary = run_integration_gates(default_gate_inputs(report_dir))
+
+    assert summary.overall_status == "fail"
+    retrieval_check = next(check for check in summary.checks if check.check == "retrieval")
+    assert retrieval_check.status == "fail"
+    assert "missing aggregate metrics" in retrieval_check.details
 
 
 def test_run_integration_gates_blocks_on_high_severity_failure_tags(tmp_path: Path) -> None:

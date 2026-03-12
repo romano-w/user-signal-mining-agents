@@ -3,7 +3,7 @@
 Place integration-gate input JSON files here:
 
 - `schema_compatibility.json`
-- `retrieval_report.json`
+- `retrieval_eval_summary.json`
 - `robustness_report.json`
 - `domain_transfer_report.json`
 - `failure_tags_report.json`
