@@ -13,6 +13,7 @@ from pydantic import TypeAdapter
 
 from .config import ROOT_DIR, ensure_scaffold_directories, get_settings
 from .data.fetch_yelp import EXPECTED_YELP_FILES, ensure_yelp_dataset
+from .data.ingestion import build_snapshot, list_adapter_ids, run_ingest
 from .retrieval.index import search_dense_index
 from .schemas import FounderPrompt
 
@@ -171,13 +172,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     ingest_parser = subparsers.add_parser(
         "ingest",
-        help="[Foundation placeholder] Run adapter-based source ingestion.",
+        help="Run adapter-based source ingestion and normalize into DatasetRecord JSONL.",
     )
     ingest_parser.add_argument(
         "--adapter",
         type=str,
+        choices=list_adapter_ids(),
         default="yelp",
-        help="Adapter id to run (for example: yelp, app_reviews, support_tickets).",
+        help="Adapter id to run.",
     )
     ingest_parser.add_argument(
         "--input-path",
@@ -188,7 +190,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     snapshot_parser = subparsers.add_parser(
         "snapshot-data",
-        help="[Foundation placeholder] Create immutable dataset snapshot manifests.",
+        help="Create an immutable DatasetSnapshotManifest from ingested datasets.",
     )
     snapshot_parser.add_argument(
         "--dataset-id",
@@ -512,18 +514,49 @@ def cmd_evaluate_variants(
 
 
 def cmd_ingest(adapter: str, input_path: Path | None) -> int:
-    return _print_placeholder_contract_response(
-        "ingest",
-        adapter=adapter,
+    settings = get_settings()
+    result = run_ingest(
+        settings=settings,
+        adapter_id=adapter,
         input_path=input_path,
     )
+    response = {
+        "status": "ok",
+        "command": "ingest",
+        "payload": {
+            "adapter": result.adapter_id,
+            "dataset_id": result.dataset_id,
+            "record_count": result.record_count,
+            "records_path": str(result.records_path),
+            "manifest_path": str(result.manifest_path),
+            "checksum_sha256": result.checksum_sha256,
+            "source_manifests": result.source_manifests,
+        },
+    }
+    print(json.dumps(response, indent=2, sort_keys=True, default=str))
+    return 0
 
 
 def cmd_snapshot_data(dataset_id: str) -> int:
-    return _print_placeholder_contract_response(
-        "snapshot-data",
+    settings = get_settings()
+    result = build_snapshot(
+        settings=settings,
         dataset_id=dataset_id,
     )
+    response = {
+        "status": "ok",
+        "command": "snapshot-data",
+        "payload": {
+            "snapshot_id": result.manifest.snapshot_id,
+            "dataset_ids": result.manifest.dataset_ids,
+            "record_count": result.manifest.record_count,
+            "checksum_sha256": result.manifest.checksum_sha256,
+            "source_manifests": result.manifest.source_manifests,
+            "manifest_path": str(result.manifest_path),
+        },
+    }
+    print(json.dumps(response, indent=2, sort_keys=True, default=str))
+    return 0
 
 
 def cmd_eval_retrieval(label_set: Path | None) -> int:
@@ -664,4 +697,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     parser.error(f"Unknown command: {args.command}")
     return 2
-

@@ -6,6 +6,8 @@ from pathlib import Path
 import pytest
 
 from user_signal_mining_agents import cli
+from user_signal_mining_agents.data.ingestion import IngestionResult, SnapshotResult
+from user_signal_mining_agents.schemas import DatasetSnapshotManifest
 
 
 def test_build_parser_supports_expected_commands() -> None:
@@ -154,6 +156,9 @@ def test_build_parser_supports_foundation_contract_commands() -> None:
     assert ingest_args.adapter == "app_reviews"
     assert ingest_args.input_path == Path("data/input.jsonl")
 
+    with pytest.raises(SystemExit):
+        parser.parse_args(["ingest", "--adapter", "unknown"])
+
     snapshot_args = parser.parse_args(["snapshot-data", "--dataset-id", "restaurants_v1"])
     assert snapshot_args.command == "snapshot-data"
     assert snapshot_args.dataset_id == "restaurants_v1"
@@ -172,17 +177,68 @@ def test_build_parser_supports_foundation_contract_commands() -> None:
     assert compare_args.run_b == "run_002"
 
 
-def test_foundation_placeholder_commands_emit_contract_payload(capsys) -> None:
-    code = cli.cmd_ingest("support_tickets", Path("tickets.jsonl"))
+def test_ingest_and_snapshot_commands_emit_real_payload(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+    capsys,
+) -> None:
+    records_path = tmp_settings.run_artifacts_dir / "datasets" / "app_reviews.jsonl"
+    ingest_manifest_path = tmp_settings.run_artifacts_dir / "datasets" / "app_reviews.manifest.json"
+    snapshot_path = tmp_settings.run_artifacts_dir / "datasets" / "snapshots" / "default_20260311T100000Z.json"
+
+    def _fake_run_ingest(*, settings, adapter_id: str, input_path: Path | None) -> IngestionResult:
+        assert settings == tmp_settings
+        assert adapter_id == "app_reviews"
+        assert input_path == Path("tickets.jsonl")
+        return IngestionResult(
+            adapter_id=adapter_id,
+            dataset_id="app_reviews",
+            record_count=2,
+            records_path=records_path,
+            checksum_sha256="abc123",
+            source_manifests={"app_reviews": "src999"},
+            manifest_path=ingest_manifest_path,
+        )
+
+    def _fake_build_snapshot(*, settings, dataset_id: str) -> SnapshotResult:
+        assert settings == tmp_settings
+        assert dataset_id == "default"
+        return SnapshotResult(
+            manifest=DatasetSnapshotManifest(
+                snapshot_id="default_20260311T100000Z",
+                dataset_ids=["app_reviews"],
+                record_count=2,
+                checksum_sha256="snap456",
+                source_manifests={"app_reviews::app_reviews": "src999"},
+            ),
+            manifest_path=snapshot_path,
+        )
+
+    monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
+    monkeypatch.setattr(cli, "run_ingest", _fake_run_ingest)
+    monkeypatch.setattr(cli, "build_snapshot", _fake_build_snapshot)
+
+    code = cli.cmd_ingest("app_reviews", Path("tickets.jsonl"))
     assert code == 0
     payload = json.loads(capsys.readouterr().out)
-    assert payload["status"] == "foundation-placeholder"
+    assert payload["status"] == "ok"
     assert payload["command"] == "ingest"
-    assert payload["payload"]["adapter"] == "support_tickets"
+    assert payload["payload"]["record_count"] == 2
+    assert payload["payload"]["source_manifests"] == {"app_reviews": "src999"}
 
+    code = cli.cmd_snapshot_data("default")
+    assert code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "ok"
+    assert payload["command"] == "snapshot-data"
+    assert payload["payload"]["record_count"] == 2
+    assert payload["payload"]["source_manifests"] == {"app_reviews::app_reviews": "src999"}
+
+
+def test_compare_runs_still_emits_foundation_placeholder(capsys) -> None:
     code = cli.cmd_compare_runs("run_a", "run_b")
     assert code == 0
     payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "foundation-placeholder"
     assert payload["command"] == "compare-runs"
     assert payload["payload"] == {"run_a": "run_a", "run_b": "run_b"}
-
