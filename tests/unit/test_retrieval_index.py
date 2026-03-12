@@ -133,6 +133,116 @@ def test_search_dense_index_returns_top_hits(monkeypatch: pytest.MonkeyPatch, tm
     assert hits[0].score >= hits[1].score
 
 
+def test_search_lexical_index_prioritizes_token_overlap(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    snippets = [
+        _snippet(1, text="slow service long wait"),
+        _snippet(2, text="friendly staff and quick seating"),
+        _snippet(3, text="service is still slow sometimes"),
+    ]
+    metadata = retrieval_index.DenseIndexMetadata(
+        embedding_model="m",
+        device="cpu",
+        snippet_count=3,
+        vector_dimension=2,
+    )
+    embeddings = np.zeros((3, 2), dtype=np.float32)
+    monkeypatch.setattr(retrieval_index, "load_dense_index", lambda _d: (metadata, embeddings, snippets))
+
+    hits = retrieval_index.search_lexical_index("slow service", index_dir=tmp_path, top_k=2)
+
+    assert [hit.snippet.snippet_id for hit in hits] == ["s1", "s3"]
+    assert hits[0].score > hits[1].score > 0
+
+
+def test_search_retrieval_index_hybrid_fuses_dense_and_lexical(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    snippets = [
+        _snippet(1, text="slow service issue"),
+        _snippet(2, text="ambience and decor"),
+        _snippet(3, text="service quality varies"),
+    ]
+    embeddings = np.array(
+        [
+            [0.1, 0.9],
+            [0.95, 0.05],
+            [0.2, 0.8],
+        ],
+        dtype=np.float32,
+    )
+    metadata = retrieval_index.DenseIndexMetadata(
+        embedding_model="m",
+        device="cpu",
+        snippet_count=3,
+        vector_dimension=2,
+    )
+    monkeypatch.setattr(retrieval_index, "load_dense_index", lambda _d: (metadata, embeddings, snippets))
+
+    class _FakeModel:
+        def encode(self, queries, **_kwargs):
+            assert queries == ["slow service"]
+            return np.array([[1.0, 0.0]], dtype=np.float32)
+
+    monkeypatch.setattr(retrieval_index, "load_embedding_model", lambda *_args, **_kwargs: _FakeModel())
+
+    hits = retrieval_index.search_retrieval_index(
+        "slow service",
+        index_dir=tmp_path,
+        top_k=2,
+        mode="hybrid",
+        candidate_pool=3,
+        fusion_k=10,
+        reranker="none",
+    )
+
+    assert hits[0].snippet.snippet_id == "s1"
+    assert hits[1].snippet.snippet_id in {"s2", "s3"}
+
+
+def test_search_retrieval_index_reranker_can_reorder_candidates(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    snippets = [
+        _snippet(1, text="slow service was awful"),
+        _snippet(2, text="excellent decor and music"),
+    ]
+    embeddings = np.array(
+        [
+            [0.4, 0.6],
+            [0.95, 0.05],
+        ],
+        dtype=np.float32,
+    )
+    metadata = retrieval_index.DenseIndexMetadata(
+        embedding_model="m",
+        device="cpu",
+        snippet_count=2,
+        vector_dimension=2,
+    )
+    monkeypatch.setattr(retrieval_index, "load_dense_index", lambda _d: (metadata, embeddings, snippets))
+
+    class _FakeModel:
+        def encode(self, queries, **_kwargs):
+            assert queries == ["slow service"]
+            return np.array([[1.0, 0.0]], dtype=np.float32)
+
+    monkeypatch.setattr(retrieval_index, "load_embedding_model", lambda *_args, **_kwargs: _FakeModel())
+
+    hits = retrieval_index.search_retrieval_index(
+        "slow service",
+        index_dir=tmp_path,
+        top_k=2,
+        mode="dense",
+        candidate_pool=2,
+        reranker="token_overlap",
+        reranker_weight=1.0,
+    )
+
+    assert [hit.snippet.snippet_id for hit in hits] == ["s1", "s2"]
+
+
 def test_dump_search_results_writes_expected_payload(tmp_path: Path) -> None:
     hits = [DenseRetrievalHit(snippet=_snippet(1), score=0.91)]
     output = tmp_path / "out" / "results.json"

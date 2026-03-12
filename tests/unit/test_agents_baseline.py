@@ -35,7 +35,7 @@ def test_run_baseline_calls_dependencies_and_persists(
         DenseRetrievalHit(snippet=evidence_factory(1, text="slow service quote"), score=0.9),
         DenseRetrievalHit(snippet=evidence_factory(2, text="another quote"), score=0.8),
     ]
-    monkeypatch.setattr(baseline, "search_dense_index", lambda *_args, **_kwargs: hits)
+    monkeypatch.setattr(baseline, "search_retrieval_index", lambda *_args, **_kwargs: hits)
 
     llm_payload = {
         "focus_points": [

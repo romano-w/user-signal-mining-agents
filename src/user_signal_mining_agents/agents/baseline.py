@@ -1,14 +1,13 @@
-"""Baseline system: single-shot founder statement → focus points."""
+"""Baseline system: single-shot founder statement -> focus points."""
 
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
-from ..config import Settings, get_settings
 from .. import console as con
+from ..config import Settings, get_settings
 from ..llm_client import call_llm_json
-from ..retrieval.index import search_dense_index
+from ..retrieval.index import search_retrieval_index
 from ..schemas import (
     EvidenceSnippet,
     FocusPoint,
@@ -26,7 +25,7 @@ def _format_evidence_block(snippets: list[EvidenceSnippet]) -> str:
     lines: list[str] = []
     for i, snippet in enumerate(snippets, start=1):
         biz = snippet.business_name or snippet.business_id
-        stars = f" ({snippet.stars}★)" if snippet.stars else ""
+        stars = f" ({snippet.stars} stars)" if snippet.stars else ""
         lines.append(f"[{i}] {biz}{stars}: {snippet.text}")
     return "\n".join(lines)
 
@@ -36,7 +35,7 @@ def _coerce_to_str(val: object) -> str:
     if isinstance(val, str):
         return val
     if isinstance(val, dict):
-        # e.g. {"id": "15", "text": "some quote"} → use the text value
+        # e.g. {"id": "15", "text": "some quote"} -> use the text value
         return str(val.get("text", val))
     if isinstance(val, list):
         return " ".join(_coerce_to_str(v) for v in val)
@@ -73,11 +72,21 @@ def run_baseline(
     s = settings or get_settings()
     system_prompt = _load_prompt_template(s)
 
-    # 1. Retrieve top-K snippets using the raw founder statement
-    hits = search_dense_index(
+    # 1. Retrieve top-K snippets using configurable retrieval strategy.
+    hits = search_retrieval_index(
         prompt.statement,
         index_dir=s.index_dir,
+        embedding_model=s.embedding_model,
         top_k=s.retrieval_top_k,
+        mode=s.retrieval_mode,
+        dense_weight=s.retrieval_dense_weight,
+        lexical_weight=s.retrieval_lexical_weight,
+        fusion_k=s.retrieval_fusion_k,
+        candidate_pool=s.retrieval_candidate_pool,
+        reranker=s.retrieval_reranker,
+        reranker_weight=s.retrieval_reranker_weight,
+        bm25_k1=s.retrieval_bm25_k1,
+        bm25_b=s.retrieval_bm25_b,
     )
     evidence = [hit.snippet for hit in hits]
 

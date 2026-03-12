@@ -13,7 +13,7 @@ from pydantic import TypeAdapter
 
 from .config import ROOT_DIR, ensure_scaffold_directories, get_settings
 from .data.fetch_yelp import EXPECTED_YELP_FILES, ensure_yelp_dataset
-from .retrieval.index import search_dense_index
+from .retrieval.index import search_retrieval_index
 from .schemas import FounderPrompt
 
 
@@ -67,7 +67,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     search_parser = subparsers.add_parser(
         "search",
-        help="Query the dense index and print top-K snippets.",
+        help="Query the retrieval stack and print top-K snippets.",
     )
     search_parser.add_argument(
         "--query",
@@ -199,13 +199,45 @@ def build_parser() -> argparse.ArgumentParser:
 
     eval_retrieval_parser = subparsers.add_parser(
         "eval-retrieval",
-        help="[Foundation placeholder] Evaluate retrieval quality metrics.",
+        help="Evaluate retrieval quality metrics and generate reports.",
     )
     eval_retrieval_parser.add_argument(
         "--label-set",
         type=Path,
         default=None,
-        help="Optional labeled query set path for retrieval metrics.",
+        help="Optional labeled query-set JSONL path for retrieval metrics.",
+    )
+    eval_retrieval_parser.add_argument(
+        "--mode",
+        type=str,
+        default=None,
+        choices=("dense", "lexical", "hybrid"),
+        help="Override retrieval mode for this run.",
+    )
+    eval_retrieval_parser.add_argument(
+        "--reranker",
+        type=str,
+        default=None,
+        choices=("none", "token_overlap"),
+        help="Override reranker stage for this run.",
+    )
+    eval_retrieval_parser.add_argument(
+        "--k-values",
+        type=str,
+        default="1,3,5,10",
+        help="Comma-separated K values used for Recall@K, MRR@K, and nDCG@K.",
+    )
+    eval_retrieval_parser.add_argument(
+        "--top-k",
+        type=int,
+        default=None,
+        help="Override retrieval top_k for this run (must be >= max K value).",
+    )
+    eval_retrieval_parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Optional output directory for retrieval evaluation artifacts.",
     )
 
     eval_robustness_parser = subparsers.add_parser(
@@ -332,13 +364,23 @@ def cmd_search(query: str, top_k: int) -> int:
     index_dir = settings.index_dir
     if not (index_dir / "metadata.json").exists():
         raise FileNotFoundError(
-            f"Dense index not found at {index_dir}. "
+            f"Retrieval index not found at {index_dir}. "
             "Run `uv run python scripts/build_index.py` first."
         )
-    hits = search_dense_index(
+    hits = search_retrieval_index(
         query,
         index_dir=index_dir,
+        embedding_model=settings.embedding_model,
         top_k=top_k,
+        mode=settings.retrieval_mode,
+        dense_weight=settings.retrieval_dense_weight,
+        lexical_weight=settings.retrieval_lexical_weight,
+        fusion_k=settings.retrieval_fusion_k,
+        candidate_pool=settings.retrieval_candidate_pool,
+        reranker=settings.retrieval_reranker,
+        reranker_weight=settings.retrieval_reranker_weight,
+        bm25_k1=settings.retrieval_bm25_k1,
+        bm25_b=settings.retrieval_bm25_b,
     )
     print(f"Top {len(hits)} results for: {query!r}\n")
     for rank, hit in enumerate(hits, start=1):
@@ -347,7 +389,6 @@ def cmd_search(query: str, top_k: int) -> int:
         print(f"       {hit.snippet.text[:200]}")
         print()
     return 0
-
 
 def _load_prompts(prompt_id: str | None = None) -> list[FounderPrompt]:
     settings = get_settings()
@@ -368,6 +409,13 @@ def _parse_variant_ids(variants_arg: str | None) -> list[str] | None:
         raise ValueError("--variants was provided but no variant ids were parsed")
     return variant_ids
 
+def _parse_k_values(k_values_arg: str) -> list[int]:
+    parsed = sorted({int(v.strip()) for v in k_values_arg.split(",") if v.strip()})
+    if not parsed:
+        raise ValueError("--k-values did not include any integers")
+    if any(v <= 0 for v in parsed):
+        raise ValueError("--k-values must be positive integers")
+    return parsed
 
 def _print_placeholder_contract_response(command: str, **payload: object) -> int:
     response = {
@@ -526,12 +574,65 @@ def cmd_snapshot_data(dataset_id: str) -> int:
     )
 
 
-def cmd_eval_retrieval(label_set: Path | None) -> int:
-    return _print_placeholder_contract_response(
-        "eval-retrieval",
-        label_set=label_set,
+def cmd_eval_retrieval(
+    label_set: Path | None,
+    *,
+    mode: str | None,
+    reranker: str | None,
+    k_values: str,
+    top_k: int | None,
+    output_dir: Path | None,
+) -> int:
+    from rich.table import Table
+
+    from . import console as con
+    from .evaluation.retrieval_report import generate_retrieval_report
+    from .evaluation.retrieval_runner import run_retrieval_evaluation
+
+    settings = get_settings()
+    target_label_set = label_set or (settings.run_artifacts_dir.parent / "retrieval_labels.jsonl")
+    if not target_label_set.exists():
+        raise FileNotFoundError(
+            f"Retrieval label set not found: {target_label_set}. "
+            "Provide --label-set or place retrieval_labels.jsonl under artifacts/."
+        )
+
+    parsed_k_values = _parse_k_values(k_values)
+    summary = run_retrieval_evaluation(
+        target_label_set,
+        settings,
+        mode=mode,
+        reranker=reranker,
+        top_k=top_k,
+        k_values=parsed_k_values,
     )
 
+    destination = output_dir or (settings.run_artifacts_dir.parent / "retrieval_eval")
+    json_path, markdown_path = generate_retrieval_report(summary, destination)
+
+    table = Table(title="Retrieval Metrics", show_lines=False)
+    table.add_column("Metric", style="cyan bold")
+    for k in summary.k_values:
+        table.add_column(f"@{k}", justify="center")
+
+    table.add_row(
+        "Recall",
+        *[f"{summary.aggregates['recall_at_k'][str(k)]:.4f}" for k in summary.k_values],
+    )
+    table.add_row(
+        "MRR",
+        *[f"{summary.aggregates['mrr_at_k'][str(k)]:.4f}" for k in summary.k_values],
+    )
+    table.add_row(
+        "nDCG",
+        *[f"{summary.aggregates['ndcg_at_k'][str(k)]:.4f}" for k in summary.k_values],
+    )
+
+    con.console.print()
+    con.console.print(table)
+    con.success("eval-retrieval", f"JSON summary -> {json_path}")
+    con.success("eval-retrieval", f"Markdown report -> {markdown_path}")
+    return 0
 
 def cmd_eval_robustness(suite: str) -> int:
     return _print_placeholder_contract_response(
@@ -645,7 +746,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "snapshot-data":
         return cmd_snapshot_data(args.dataset_id)
     if args.command == "eval-retrieval":
-        return cmd_eval_retrieval(args.label_set)
+        return cmd_eval_retrieval(
+            args.label_set,
+            mode=args.mode,
+            reranker=args.reranker,
+            k_values=args.k_values,
+            top_k=args.top_k,
+            output_dir=args.output_dir,
+        )
     if args.command == "eval-robustness":
         return cmd_eval_robustness(args.suite)
     if args.command == "compare-runs":
@@ -664,4 +772,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     parser.error(f"Unknown command: {args.command}")
     return 2
-
