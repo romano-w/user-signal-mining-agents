@@ -96,6 +96,7 @@ uv run usm evaluate
 | `uv run usm list-variants` | List available experimental pipeline variants |
 | `uv run usm run-variant --variant <id> --prompt-id <id>` | Run one experimental variant for one prompt |
 | `uv run usm evaluate-variants --variants <id,id>` | Compare selected variants against control pipeline |
+| `uv run usm eval-robustness --suite adversarial_core --prompt-id <id>` | Run perturbation robustness gates for a prompt subset |
 
 ### Setup & utilities
 
@@ -248,5 +249,4 @@ uv run python scripts/build_index.py --device cpu
 ## Data Policy
 
 The Yelp dataset is intended for educational use. Review the [official terms](https://business.yelp.com/data/resources/open-dataset/) before use. Raw data, processed outputs, and generated artifacts are excluded from git.
-
 
