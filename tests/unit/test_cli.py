@@ -6,6 +6,13 @@ from pathlib import Path
 import pytest
 
 from user_signal_mining_agents import cli
+from user_signal_mining_agents.schemas import (
+    EvaluationSummary,
+    FounderPrompt,
+    JudgeResult,
+    JudgeScores,
+    PromptEvaluationPair,
+)
 
 
 def test_build_parser_supports_expected_commands() -> None:
@@ -186,3 +193,73 @@ def test_foundation_placeholder_commands_emit_contract_payload(capsys) -> None:
     assert payload["command"] == "compare-runs"
     assert payload["payload"] == {"run_a": "run_a", "run_b": "run_b"}
 
+def test_cmd_evaluate_generates_failure_taxonomy(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+) -> None:
+    from user_signal_mining_agents.evaluation import failure_taxonomy, report, runner
+
+    prompt = FounderPrompt(id="p1", statement="Question", domain="restaurants")
+    judge_baseline = JudgeResult(
+        prompt_id="p1",
+        system_variant="baseline",
+        scores=JudgeScores(
+            relevance=3.0,
+            actionability=3.0,
+            evidence_grounding=3.0,
+            contradiction_handling=3.0,
+            non_redundancy=3.0,
+            rationale="baseline rationale",
+        ),
+    )
+    judge_pipeline = JudgeResult(
+        prompt_id="p1",
+        system_variant="pipeline",
+        scores=JudgeScores(
+            relevance=4.0,
+            actionability=4.0,
+            evidence_grounding=4.0,
+            contradiction_handling=4.0,
+            non_redundancy=4.0,
+            rationale="pipeline rationale",
+        ),
+    )
+    summary = EvaluationSummary(
+        pairs=[
+            PromptEvaluationPair(
+                prompt=prompt,
+                baseline_scores=judge_baseline,
+                pipeline_scores=judge_pipeline,
+            )
+        ]
+    )
+
+    called: dict[str, object] = {}
+
+    monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
+    monkeypatch.setattr(runner, "run_evaluation", lambda *_args, **_kwargs: summary)
+    monkeypatch.setattr(report, "generate_report", lambda *_args, **_kwargs: tmp_settings.run_artifacts_dir / "evaluation_report.md")
+
+    def _fake_failure_taxonomy(
+        run_artifacts_dir: Path,
+        *,
+        prompt_ids: list[str] | None = None,
+        score_threshold: float = 3.5,
+    ) -> tuple[list[object], Path, Path]:
+        called["run_artifacts_dir"] = run_artifacts_dir
+        called["prompt_ids"] = prompt_ids
+        called["score_threshold"] = score_threshold
+        return (
+            [],
+            run_artifacts_dir / "failure_tags.jsonl",
+            run_artifacts_dir / "failure_taxonomy_report.md",
+        )
+
+    monkeypatch.setattr(failure_taxonomy, "generate_failure_taxonomy", _fake_failure_taxonomy)
+
+    code = cli.cmd_evaluate("p1", no_cache=False)
+
+    assert code == 0
+    assert called["run_artifacts_dir"] == tmp_settings.run_artifacts_dir
+    assert called["prompt_ids"] == ["p1"]
+    assert called["score_threshold"] == 3.5

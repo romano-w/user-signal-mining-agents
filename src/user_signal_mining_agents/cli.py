@@ -427,14 +427,19 @@ def cmd_run_variant(variant: str, prompt_id: str | None) -> int:
 
 
 def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
-    from .evaluation.runner import run_evaluation
+    from .evaluation.failure_taxonomy import generate_failure_taxonomy
     from .evaluation.report import generate_report
+    from .evaluation.runner import run_evaluation
     from . import console as con
 
     settings = get_settings()
     prompt_ids = [prompt_id] if prompt_id else None
     summary = run_evaluation(settings, prompt_ids=prompt_ids, skip_cached=not no_cache)
     report_path = generate_report(summary, settings.run_artifacts_dir)
+    failure_tags, failure_tags_path, failure_report_path = generate_failure_taxonomy(
+        settings.run_artifacts_dir,
+        prompt_ids=prompt_ids,
+    )
 
     # Show aggregate scores table
     if summary.pairs:
@@ -465,6 +470,8 @@ def cmd_evaluate(prompt_id: str | None, *, no_cache: bool) -> int:
         con.results_table(scores, b_overall, p_overall)
 
     con.success("report", f"Saved to {report_path}")
+    con.success("failure-tags", f"Saved {len(failure_tags)} tag(s) to {failure_tags_path}")
+    con.success("root-cause-report", f"Saved to {failure_report_path}")
     return 0
 
 
