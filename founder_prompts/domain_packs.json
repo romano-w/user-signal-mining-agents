@@ -1,0 +1,23 @@
+[
+  {
+    "domain_id": "restaurants",
+    "title": "Restaurant Operations",
+    "founder_prompts_path": "founder_prompts/restaurants.json",
+    "evaluation_notes": "Local dining, takeout, and service reliability signals from Yelp reviews.",
+    "enabled": true
+  },
+  {
+    "domain_id": "saas",
+    "title": "SaaS Retention",
+    "founder_prompts_path": "founder_prompts/saas.json",
+    "evaluation_notes": "Subscription onboarding, activation, and churn prevention signals.",
+    "enabled": true
+  },
+  {
+    "domain_id": "ecommerce",
+    "title": "Ecommerce Growth",
+    "founder_prompts_path": "founder_prompts/ecommerce.json",
+    "evaluation_notes": "Purchase conversion, shipping confidence, and post-purchase trust signals.",
+    "enabled": true
+  }
+]

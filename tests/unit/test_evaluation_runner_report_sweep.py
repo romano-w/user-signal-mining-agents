@@ -64,14 +64,20 @@ def _synthesis(prompt: FounderPrompt, variant: str) -> SynthesisResult:
 
 
 def test_generate_report_writes_markdown(tmp_path: Path) -> None:
-    prompt = FounderPrompt(id="p1", statement="Question", domain="restaurants")
+    restaurant_prompt = FounderPrompt(id="p1", statement="Restaurant question", domain="restaurants")
+    saas_prompt = FounderPrompt(id="p2", statement="SaaS question", domain="saas")
     summary = EvaluationSummary(
         pairs=[
             PromptEvaluationPair(
-                prompt=prompt,
+                prompt=restaurant_prompt,
                 baseline_scores=_judge("p1", "baseline", 3.0),
                 pipeline_scores=_judge("p1", "pipeline", 4.0),
-            )
+            ),
+            PromptEvaluationPair(
+                prompt=saas_prompt,
+                baseline_scores=_judge("p2", "baseline", 3.5),
+                pipeline_scores=_judge("p2", "pipeline", 4.2),
+            ),
         ]
     )
 
@@ -80,6 +86,8 @@ def test_generate_report_writes_markdown(tmp_path: Path) -> None:
 
     assert "# Evaluation Report" in text
     assert "Aggregate Scores" in text
+    assert "Domain Quality Breakdown" in text
+    assert "Domain Transfer Deltas" in text
     assert "Per-Prompt Breakdown" in text
 
 
@@ -112,7 +120,7 @@ def test_run_evaluation_filters_prompt_ids(
         FounderPrompt(id="p1", statement="Question1", domain="restaurants"),
         FounderPrompt(id="p2", statement="Question2", domain="restaurants"),
     ]
-    tmp_settings.founder_prompts_path.write_text(json.dumps([p.model_dump() for p in prompts]), encoding="utf-8")
+    tmp_settings.founder_prompts_path.write_text(json.dumps([prompt.model_dump() for prompt in prompts]), encoding="utf-8")
 
     monkeypatch.setattr(runner, "run_baseline", lambda prompt, _settings: _synthesis(prompt, "baseline"))
     monkeypatch.setattr(runner, "run_pipeline", lambda prompt, _settings: _synthesis(prompt, "pipeline"))
@@ -124,6 +132,56 @@ def test_run_evaluation_filters_prompt_ids(
     assert summary.pairs[0].prompt.id == "p2"
 
 
+def test_run_evaluation_filters_domain_ids(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+    tmp_path: Path,
+) -> None:
+    restaurant_prompts = [
+        FounderPrompt(id="p1", statement="Restaurant question", domain="restaurants"),
+    ]
+    saas_prompts = [
+        FounderPrompt(id="s1", statement="SaaS question", domain="saas"),
+    ]
+
+    restaurants_path = tmp_path / "restaurants.json"
+    saas_path = tmp_path / "saas.json"
+    restaurants_path.write_text(json.dumps([prompt.model_dump() for prompt in restaurant_prompts]), encoding="utf-8")
+    saas_path.write_text(json.dumps([prompt.model_dump() for prompt in saas_prompts]), encoding="utf-8")
+
+    domain_packs_path = tmp_path / "domain_packs.json"
+    domain_packs_path.write_text(
+        json.dumps(
+            [
+                {
+                    "domain_id": "restaurants",
+                    "title": "Restaurants",
+                    "founder_prompts_path": str(restaurants_path),
+                    "enabled": True,
+                },
+                {
+                    "domain_id": "saas",
+                    "title": "SaaS",
+                    "founder_prompts_path": str(saas_path),
+                    "enabled": True,
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+    settings = tmp_settings.model_copy(update={"domain_packs_path": domain_packs_path})
+
+    monkeypatch.setattr(runner, "run_baseline", lambda prompt, _settings: _synthesis(prompt, "baseline"))
+    monkeypatch.setattr(runner, "run_pipeline", lambda prompt, _settings: _synthesis(prompt, "pipeline"))
+    monkeypatch.setattr(runner, "judge_pair", lambda prompt, *_args: (_judge(prompt.id, "baseline", 3.0), _judge(prompt.id, "pipeline", 4.0)))
+
+    summary = runner.run_evaluation(settings, domain_ids=["saas"], skip_cached=False)
+
+    assert len(summary.pairs) == 1
+    assert summary.pairs[0].prompt.id == "s1"
+    assert summary.pairs[0].prompt.domain == "saas"
+
+
 def test_run_evaluation_runs_uncached_and_persists_judge_files(
     monkeypatch: pytest.MonkeyPatch,
     tmp_settings,
@@ -131,9 +189,9 @@ def test_run_evaluation_runs_uncached_and_persists_judge_files(
     prompt = FounderPrompt(id="p1", statement="Question", domain="restaurants")
     tmp_settings.founder_prompts_path.write_text(json.dumps([prompt.model_dump()]), encoding="utf-8")
 
-    monkeypatch.setattr(runner, "run_baseline", lambda p, _s: _synthesis(p, "baseline"))
-    monkeypatch.setattr(runner, "run_pipeline", lambda p, _s: _synthesis(p, "pipeline"))
-    monkeypatch.setattr(runner, "judge_pair", lambda p, *_args: (_judge(p.id, "baseline", 3.0), _judge(p.id, "pipeline", 4.0)))
+    monkeypatch.setattr(runner, "run_baseline", lambda prompt, _settings: _synthesis(prompt, "baseline"))
+    monkeypatch.setattr(runner, "run_pipeline", lambda prompt, _settings: _synthesis(prompt, "pipeline"))
+    monkeypatch.setattr(runner, "judge_pair", lambda prompt, *_args: (_judge(prompt.id, "baseline", 3.0), _judge(prompt.id, "pipeline", 4.0)))
 
     summary = runner.run_evaluation(tmp_settings, skip_cached=False)
 

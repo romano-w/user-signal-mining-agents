@@ -89,13 +89,18 @@ uv run usm evaluate
 | `uv run usm evaluate` | Run full evaluation: baseline + pipeline + judge for all prompts |
 | `uv run usm evaluate --no-cache` | Re-run everything from scratch (ignores cached results) |
 | `uv run usm evaluate --prompt-id <id>` | Evaluate a single prompt |
+| `uv run usm evaluate --domain <id,id>` | Evaluate selected domains from the domain-pack registry |
 | `uv run usm sweep` | Run sweep of prompt variants (A/B testing) |
 | `uv run usm sweep --prompt-id <id>` | Run sweep on a single prompt |
 | `uv run usm run-baseline --prompt-id <id>` | Run baseline only for one prompt |
+| `uv run usm run-baseline --domain <id,id>` | Run baseline for selected domains |
 | `uv run usm run-pipeline --prompt-id <id>` | Run pipeline only for one prompt |
+| `uv run usm run-pipeline --domain <id,id>` | Run pipeline for selected domains |
 | `uv run usm list-variants` | List available experimental pipeline variants |
 | `uv run usm run-variant --variant <id> --prompt-id <id>` | Run one experimental variant for one prompt |
+| `uv run usm run-variant --variant <id> --domain <id,id>` | Run one variant across selected domains |
 | `uv run usm evaluate-variants --variants <id,id>` | Compare selected variants against control pipeline |
+| `uv run usm evaluate-variants --variants <id,id> --domain <id,id>` | Variant comparison on selected domains |
 
 ### Setup & utilities
 
@@ -103,7 +108,7 @@ uv run usm evaluate
 |---|---|
 | `uv run usm bootstrap` | Create required local directories |
 | `uv run usm show-config` | Print resolved settings |
-| `uv run usm validate-founder-prompts` | Validate the founder prompt benchmark file |
+| `uv run usm validate-founder-prompts` | Validate domain packs + enabled founder prompt files (or one file with `--path`) |
 | `uv run usm search --query "slow service"` | Search the dense index and print top-K results |
 | `uv run usm fetch-yelp-dataset` | Download and extract the Yelp dataset |
 | `uv run usm annotate-human` | Launch the local human-annotation GUI for blinded A/B scoring |
@@ -158,6 +163,13 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 | `USM_RETRIEVAL_TOP_K` | `10` | Top-K results per query |
 | `USM_SYNTHESIS_EVIDENCE_K` | `15` | Evidence snippets for synthesis |
 
+### Domain Settings
+
+| Variable | Default | Description |
+|---|---|---|
+| `USM_DOMAIN_PACKS_PATH` | `founder_prompts/domain_packs.json` | Domain pack registry file (list of `DomainPack`) |
+| `USM_ACTIVE_DOMAINS` | `` (empty) | Optional comma-separated default domains (`restaurants,saas`) |
+
 ### Data Settings
 
 | Variable | Default | Description |
@@ -180,7 +192,10 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 │   ├── processed/              # Chunked review subsets
 │   └── raw/Yelp-JSON/          # Raw Yelp dataset files
 ├── founder_prompts/
-│   └── restaurants.json        # 10 restaurant founder prompt benchmark
+│   ├── domain_packs.json       # DomainPack registry for transfer evaluation
+│   ├── restaurants.json        # Restaurant founder prompts
+│   ├── saas.json               # SaaS founder prompts
+│   └── ecommerce.json          # Ecommerce founder prompts
 ├── prompts/                    # LLM prompt templates
 │   ├── baseline.md             # Zero-shot baseline prompt
 │   ├── intent.md               # Intent decomposition prompt
@@ -248,5 +263,7 @@ uv run python scripts/build_index.py --device cpu
 ## Data Policy
 
 The Yelp dataset is intended for educational use. Review the [official terms](https://business.yelp.com/data/resources/open-dataset/) before use. Raw data, processed outputs, and generated artifacts are excluded from git.
+
+
 
 

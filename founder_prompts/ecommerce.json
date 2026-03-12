@@ -1,0 +1,32 @@
+[
+  {
+    "id": "ecommerce-cart-abandonment",
+    "statement": "Why do shoppers abandon carts after adding items they clearly want?",
+    "domain": "ecommerce",
+    "notes": "Look for checkout surprise costs, promo confusion, and payment failures."
+  },
+  {
+    "id": "ecommerce-shipping-trust",
+    "statement": "What shipping and delivery issues are reducing customer trust after purchase?",
+    "domain": "ecommerce",
+    "notes": "Capture delays, inaccurate delivery promises, and poor tracking communication."
+  },
+  {
+    "id": "ecommerce-return-friction",
+    "statement": "Why do customers describe returns as stressful or not worth the effort?",
+    "domain": "ecommerce",
+    "notes": "Identify policy ambiguity, slow refunds, and support handoff failures."
+  },
+  {
+    "id": "ecommerce-product-fit",
+    "statement": "Why are first-time buyers disappointed when products arrive?",
+    "domain": "ecommerce",
+    "notes": "Look for sizing mismatches, misleading photos, and poor quality consistency."
+  },
+  {
+    "id": "ecommerce-repeat-rate",
+    "statement": "What keeps satisfied one-time buyers from coming back for a second purchase?",
+    "domain": "ecommerce",
+    "notes": "Find loyalty, assortment, and re-engagement frictions after first delivery."
+  }
+]

@@ -16,6 +16,18 @@ def test_build_parser_supports_expected_commands() -> None:
     assert args.top_k == 3
 
 
+def test_build_parser_supports_domain_filters() -> None:
+    parser = cli.build_parser()
+
+    evaluate_args = parser.parse_args(["evaluate", "--domain", "restaurants,saas"])
+    assert evaluate_args.command == "evaluate"
+    assert evaluate_args.domain == "restaurants,saas"
+
+    baseline_args = parser.parse_args(["run-baseline", "--domain", "saas"])
+    assert baseline_args.command == "run-baseline"
+    assert baseline_args.domain == "saas"
+
+
 def test_load_prompts_filters_by_id(monkeypatch: pytest.MonkeyPatch, tmp_settings) -> None:
     prompts = [
         {"id": "a", "statement": "A", "domain": "restaurants"},
@@ -26,7 +38,7 @@ def test_load_prompts_filters_by_id(monkeypatch: pytest.MonkeyPatch, tmp_setting
     monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
     selected = cli._load_prompts("b")
 
-    assert [p.id for p in selected] == ["b"]
+    assert [prompt.id for prompt in selected] == ["b"]
 
 
 def test_load_prompts_raises_for_unknown_id(monkeypatch: pytest.MonkeyPatch, tmp_settings) -> None:
@@ -55,11 +67,26 @@ def test_cmd_validate_founder_prompts_validates_file(monkeypatch: pytest.MonkeyP
     )
     monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
 
-    code = cli.cmd_validate_founder_prompts(None)
+    code = cli.cmd_validate_founder_prompts(prompt_path)
     output = capsys.readouterr().out
 
     assert code == 0
     assert "Validated 1 founder prompts" in output
+
+
+def test_cmd_validate_founder_prompts_validates_domain_packs_by_default(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+    capsys,
+) -> None:
+    monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
+
+    code = cli.cmd_validate_founder_prompts(None)
+    output = capsys.readouterr().out
+
+    assert code == 0
+    assert "Validated 1 domain pack(s)" in output
+    assert "founder prompt(s)" in output
 
 
 def test_main_dispatches_to_command_handler(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -128,14 +155,16 @@ def test_build_parser_supports_variant_commands() -> None:
     list_args = parser.parse_args(["list-variants"])
     assert list_args.command == "list-variants"
 
-    run_args = parser.parse_args(["run-variant", "--variant", "full_hybrid", "--prompt-id", "p1"])
+    run_args = parser.parse_args(["run-variant", "--variant", "full_hybrid", "--prompt-id", "p1", "--domain", "saas"])
     assert run_args.command == "run-variant"
     assert run_args.variant == "full_hybrid"
     assert run_args.prompt_id == "p1"
+    assert run_args.domain == "saas"
 
-    eval_args = parser.parse_args(["evaluate-variants", "--variants", "critic_loop,full_hybrid"])
+    eval_args = parser.parse_args(["evaluate-variants", "--variants", "critic_loop,full_hybrid", "--domain", "restaurants,saas"])
     assert eval_args.command == "evaluate-variants"
     assert eval_args.variants == "critic_loop,full_hybrid"
+    assert eval_args.domain == "restaurants,saas"
 
 
 def test_parse_variant_ids() -> None:
@@ -144,6 +173,14 @@ def test_parse_variant_ids() -> None:
 
     with pytest.raises(ValueError, match="no variant ids"):
         cli._parse_variant_ids("  , ")
+
+
+def test_parse_domain_ids() -> None:
+    assert cli._parse_domain_ids("restaurants, saas") == ["restaurants", "saas"]
+    assert cli._parse_domain_ids(None) is None
+
+    with pytest.raises(ValueError, match="no domain ids"):
+        cli._parse_domain_ids(" , ")
 
 
 def test_build_parser_supports_foundation_contract_commands() -> None:
@@ -185,4 +222,3 @@ def test_foundation_placeholder_commands_emit_contract_payload(capsys) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert payload["command"] == "compare-runs"
     assert payload["payload"] == {"run_a": "run_a", "run_b": "run_b"}
-
