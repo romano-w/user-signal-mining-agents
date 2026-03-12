@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  test:
+  branch-ready-gate:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,21 +25,15 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev
 
-      - name: Run fast offline test gate
-        run: |
-          uv run pytest \
-            -m "not integration and not live" \
-            --cov=user_signal_mining_agents \
-            --cov-report=term-missing \
-            --cov-report=xml \
-            --cov-fail-under=80 \
-            --junitxml=artifacts/test-results/pr-junit.xml
+      - name: Run branch-ready gate
+        run: uv run python scripts/ci/run_research_gate.py --level branch-ready
 
       - name: Upload coverage and test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pr-test-artifacts
+          if-no-files-found: ignore
           path: |
             coverage.xml
-            artifacts/test-results/pr-junit.xml
+            artifacts/test-results/branch-ready-junit.xml
