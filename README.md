@@ -100,7 +100,12 @@ uv run usm evaluate
 | `uv run usm run-variant --variant <id> --prompt-id <id>` | Run one experimental variant for one prompt |
 | `uv run usm run-variant --variant <id> --domain <id,id>` | Run one variant across selected domains |
 | `uv run usm evaluate-variants --variants <id,id>` | Compare selected variants against control pipeline |
-| `uv run usm evaluate-variants --variants <id,id> --domain <id,id>` | Variant comparison on selected domains |`r`n| `uv run usm eval-robustness --suite adversarial_core --prompt-id <id>` | Run perturbation robustness gates for a prompt subset |
+| `uv run usm evaluate-variants --variants <id,id> --domain <id,id>` | Variant comparison on selected domains |
+| `uv run usm ingest --adapter yelp` | Ingest one source adapter and emit normalized records |
+| `uv run usm snapshot-data --dataset-id default` | Create an immutable dataset snapshot manifest from ingested records |
+| `uv run usm eval-retrieval --label-set <path>` | Run retrieval metrics and produce JSON/Markdown retrieval reports |
+| `uv run usm eval-robustness --suite adversarial_core --prompt-id <id>` | Run perturbation robustness gates for a prompt subset |
+| `uv run usm compare-runs --run-a <id> --run-b <id>` | Compare two experiment manifests (foundation contract surface) |
 
 ### Setup & utilities
 
@@ -160,7 +165,16 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 | Variable | Default | Description |
 |---|---|---|
 | `USM_EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | Sentence Transformer model |
-| `USM_RETRIEVAL_TOP_K` | `10` | Top-K results per query |
+| `USM_RETRIEVAL_TOP_K` | `50` | Top-K results per query |
+| `USM_RETRIEVAL_MODE` | `hybrid` | Retrieval mode: `dense`, `lexical`, or `hybrid` |
+| `USM_RETRIEVAL_DENSE_WEIGHT` | `1.0` | Dense reciprocal-rank-fusion weight |
+| `USM_RETRIEVAL_LEXICAL_WEIGHT` | `1.0` | Lexical reciprocal-rank-fusion weight |
+| `USM_RETRIEVAL_FUSION_K` | `60` | RRF smoothing constant |
+| `USM_RETRIEVAL_CANDIDATE_POOL` | `200` | Candidate pool size before final top-k cut |
+| `USM_RETRIEVAL_RERANKER` | `none` | Optional reranker stage (`none`, `token_overlap`) |
+| `USM_RETRIEVAL_RERANKER_WEIGHT` | `0.25` | Blend weight for reranker contribution |
+| `USM_RETRIEVAL_BM25_K1` | `1.5` | BM25 term-frequency saturation |
+| `USM_RETRIEVAL_BM25_B` | `0.75` | BM25 length normalization factor |
 | `USM_SYNTHESIS_EVIDENCE_K` | `15` | Evidence snippets for synthesis |
 
 ### Domain Settings
@@ -238,6 +252,13 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 - **Singleton Model Cache**: The embedding model and dense index are loaded once and reused across all search calls, avoiding redundant IO and model initialization.
 - **Gemini Key Rotation**: Multiple API keys are automatically rotated when rate limits are hit.
 - **Rich CLI**: All terminal output uses the `rich` library with consistent theming and status indicators.
+
+## Stability Notes
+
+- Default run path remains `uv run usm evaluate` (baseline + main pipeline). Variant and concurrent-agent flows are optional.
+- Retrieval default is `USM_RETRIEVAL_MODE=hybrid`; use `dense` only as a debugging fallback, not as a release default.
+- Concurrent-agent process docs under `docs/concurrent_agents/` are integration playbooks and are treated as experimental operations guidance.
+- Running limitations and first-iteration follow-ups are tracked in `docs/KNOWN_LIMITATIONS.md`.
 
 ## Troubleshooting
 

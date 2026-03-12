@@ -2,6 +2,8 @@
 
 This directory contains handoff packets for concurrent agent execution across the research-upgrade branches.
 
+> **Status**: Experimental integration workflow. Default day-to-day development and release flow remains `uv run usm evaluate` + standard CI gates.
+
 ## Branches
 
 - `codex/foundation-contracts-gates`
