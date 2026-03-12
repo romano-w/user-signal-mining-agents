@@ -244,13 +244,24 @@ def build_parser() -> argparse.ArgumentParser:
 
     eval_robustness_parser = subparsers.add_parser(
         "eval-robustness",
-        help="[Foundation placeholder] Run robustness stress-case evaluation.",
+        help="Run robustness stress-case evaluation and release gates.",
     )
     eval_robustness_parser.add_argument(
         "--suite",
         type=str,
         default="default",
         help="Robustness suite id.",
+    )
+    eval_robustness_parser.add_argument(
+        "--prompt-id",
+        type=str,
+        default=None,
+        help="Evaluate only this prompt. Omit for staged prompt subset.",
+    )
+    eval_robustness_parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Re-run robustness suites even if cached artifacts exist.",
     )
 
     compare_runs_parser = subparsers.add_parser(
@@ -674,11 +685,66 @@ def cmd_eval_retrieval(
     con.success("eval-retrieval", f"Markdown report -> {markdown_path}")
     return 0
 
-def cmd_eval_robustness(suite: str) -> int:
-    return _print_placeholder_contract_response(
-        "eval-robustness",
-        suite=suite,
+def cmd_eval_robustness(
+    suite: str,
+    prompt_id: str | None,
+    *,
+    no_cache: bool,
+) -> int:
+    from .evaluation.robustness_report import generate_robustness_report
+    from .evaluation.robustness_runner import run_robustness_suite, suite_output_dir
+    from . import console as con
+    from rich.table import Table
+
+    settings = get_settings()
+    prompt_ids = [prompt_id] if prompt_id else None
+
+    summary = run_robustness_suite(
+        settings,
+        suite_id=suite,
+        prompt_ids=prompt_ids,
+        skip_cached=not no_cache,
     )
+    output_dir = suite_output_dir(settings, summary.suite_id)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    summary_path = output_dir / "robustness_summary.json"
+    summary_path.write_text(summary.model_dump_json(indent=2), encoding="utf-8")
+
+    report_path = generate_robustness_report(summary, output_dir)
+
+    table = Table(title=f"Robustness Results ({summary.suite_id})", show_lines=True)
+    table.add_column("Prompt", style="cyan bold")
+    table.add_column("Case")
+    table.add_column("Family")
+    table.add_column("Delta", justify="center")
+    table.add_column("Status", justify="center")
+
+    for outcome in summary.outcomes:
+        status = "[green]PASS[/green]" if outcome.passed else "[red]FAIL[/red]"
+        table.add_row(
+            outcome.prompt_id,
+            outcome.case_id,
+            outcome.family,
+            f"{outcome.delta_overall:+.2f}",
+            status,
+        )
+
+    con.console.print()
+    con.console.print(table)
+    con.success("robustness", f"Summary JSON: {summary_path}")
+    con.success("robustness", f"Report: {report_path}")
+
+    if summary.gate_passed:
+        con.success(
+            "robustness",
+            f"Gate passed ({summary.passed_cases}/{summary.total_cases}, {summary.pass_rate:.2%})",
+        )
+        return 0
+
+    for reason in summary.gate_failure_reasons:
+        con.error(reason)
+    return 2
 
 
 def cmd_compare_runs(run_a: str, run_b: str) -> int:
@@ -795,7 +861,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_dir=args.output_dir,
         )
     if args.command == "eval-robustness":
-        return cmd_eval_robustness(args.suite)
+        return cmd_eval_robustness(args.suite, args.prompt_id, no_cache=args.no_cache)
     if args.command == "compare-runs":
         return cmd_compare_runs(args.run_a, args.run_b)
 

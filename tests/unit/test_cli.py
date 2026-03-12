@@ -204,9 +204,13 @@ def test_build_parser_supports_foundation_contract_commands() -> None:
     assert retrieval_args.top_k == 25
     assert retrieval_args.output_dir == Path("artifacts/retrieval_eval")
 
-    robustness_args = parser.parse_args(["eval-robustness", "--suite", "adversarial_core"])
+    robustness_args = parser.parse_args(
+        ["eval-robustness", "--suite", "adversarial_core", "--prompt-id", "p1", "--no-cache"]
+    )
     assert robustness_args.command == "eval-robustness"
     assert robustness_args.suite == "adversarial_core"
+    assert robustness_args.prompt_id == "p1"
+    assert robustness_args.no_cache is True
 
     compare_args = parser.parse_args(["compare-runs", "--run-a", "run_001", "--run-b", "run_002"])
     assert compare_args.command == "compare-runs"
@@ -428,3 +432,86 @@ def test_cmd_evaluate_generates_failure_taxonomy(
     assert called["run_artifacts_dir"] == tmp_settings.run_artifacts_dir
     assert called["prompt_ids"] == ["p1"]
     assert called["score_threshold"] == 3.5
+
+def test_cmd_eval_robustness_returns_non_zero_on_gate_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+) -> None:
+    from user_signal_mining_agents.evaluation import robustness_runner
+    from user_signal_mining_agents.schemas import JudgeScores
+
+    control = JudgeScores(
+        relevance=4.0,
+        actionability=4.0,
+        evidence_grounding=4.0,
+        contradiction_handling=4.0,
+        non_redundancy=4.0,
+        rationale="control",
+    )
+    perturbed = JudgeScores(
+        relevance=3.0,
+        actionability=3.0,
+        evidence_grounding=3.0,
+        contradiction_handling=3.0,
+        non_redundancy=3.0,
+        rationale="perturbed",
+    )
+
+    summary = robustness_runner.RobustnessSuiteSummary(
+        suite_id="adversarial_core",
+        suite_description="core",
+        prompt_ids=["p1"],
+        thresholds=robustness_runner.RobustnessGateThresholds(
+            max_overall_drop=0.5,
+            max_dimension_drop=1.0,
+            min_case_pass_rate=1.0,
+        ),
+        total_cases=1,
+        passed_cases=0,
+        failed_cases=1,
+        pass_rate=0.0,
+        gate_passed=False,
+        failed_case_keys=["p1:rb_negation_flip"],
+        gate_failure_reasons=["Case pass rate 0.00% is below required 100.00%."],
+        outcomes=[
+            robustness_runner.RobustnessCaseOutcome(
+                prompt_id="p1",
+                case_id="rb_negation_flip",
+                family="negation",
+                description="flip",
+                expected_behavior="remain stable",
+                perturbed_prompt_id="p1__rb_negation_flip",
+                perturbed_statement="not Why are diners returning?",
+                control_scores=control,
+                perturbed_scores=perturbed,
+                dimension_deltas={
+                    "relevance": -1.0,
+                    "actionability": -1.0,
+                    "evidence_grounding": -1.0,
+                    "contradiction_handling": -1.0,
+                    "non_redundancy": -1.0,
+                },
+                delta_overall=-1.0,
+                passed=False,
+                failure_reasons=["overall drop -1.00 exceeded max -0.50"],
+            )
+        ],
+    )
+
+    monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
+    monkeypatch.setattr(robustness_runner, "run_robustness_suite", lambda *_args, **_kwargs: summary)
+
+    code = cli.cmd_eval_robustness("adversarial_core", "p1", no_cache=True)
+
+    assert code == 2
+    summary_path = (
+        tmp_settings.run_artifacts_dir.parent
+        / "robustness_runs"
+        / "adversarial_core"
+        / "robustness_summary.json"
+    )
+    assert summary_path.exists()
+
+
+
+
