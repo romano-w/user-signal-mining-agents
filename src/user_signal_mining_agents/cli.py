@@ -169,6 +169,72 @@ def build_parser() -> argparse.ArgumentParser:
         help="Re-run variants and judge even if cached results exist.",
     )
 
+    ingest_parser = subparsers.add_parser(
+        "ingest",
+        help="[Foundation placeholder] Run adapter-based source ingestion.",
+    )
+    ingest_parser.add_argument(
+        "--adapter",
+        type=str,
+        default="yelp",
+        help="Adapter id to run (for example: yelp, app_reviews, support_tickets).",
+    )
+    ingest_parser.add_argument(
+        "--input-path",
+        type=Path,
+        default=None,
+        help="Optional path consumed by the adapter.",
+    )
+
+    snapshot_parser = subparsers.add_parser(
+        "snapshot-data",
+        help="[Foundation placeholder] Create immutable dataset snapshot manifests.",
+    )
+    snapshot_parser.add_argument(
+        "--dataset-id",
+        type=str,
+        default="default",
+        help="Logical dataset id included in the snapshot manifest.",
+    )
+
+    eval_retrieval_parser = subparsers.add_parser(
+        "eval-retrieval",
+        help="[Foundation placeholder] Evaluate retrieval quality metrics.",
+    )
+    eval_retrieval_parser.add_argument(
+        "--label-set",
+        type=Path,
+        default=None,
+        help="Optional labeled query set path for retrieval metrics.",
+    )
+
+    eval_robustness_parser = subparsers.add_parser(
+        "eval-robustness",
+        help="[Foundation placeholder] Run robustness stress-case evaluation.",
+    )
+    eval_robustness_parser.add_argument(
+        "--suite",
+        type=str,
+        default="default",
+        help="Robustness suite id.",
+    )
+
+    compare_runs_parser = subparsers.add_parser(
+        "compare-runs",
+        help="[Foundation placeholder] Compare two experiment manifests.",
+    )
+    compare_runs_parser.add_argument(
+        "--run-a",
+        type=str,
+        required=True,
+        help="Run id A.",
+    )
+    compare_runs_parser.add_argument(
+        "--run-b",
+        type=str,
+        required=True,
+        help="Run id B.",
+    )
     sweep_parser = subparsers.add_parser(
         "sweep",
         help="Run prompt variant sweep and compare pipeline scores.",
@@ -303,6 +369,19 @@ def _parse_variant_ids(variants_arg: str | None) -> list[str] | None:
     return variant_ids
 
 
+def _print_placeholder_contract_response(command: str, **payload: object) -> int:
+    response = {
+        "status": "foundation-placeholder",
+        "command": command,
+        "notes": (
+            "This command surface is intentionally scaffolded in the foundation branch. "
+            "Program-specific agent branches should replace this placeholder implementation."
+        ),
+        "payload": payload,
+    }
+    print(json.dumps(response, indent=2, sort_keys=True, default=str))
+    return 0
+
 def cmd_run_baseline(prompt_id: str | None) -> int:
     from .agents.baseline import run_baseline
 
@@ -432,6 +511,43 @@ def cmd_evaluate_variants(
     return 0
 
 
+def cmd_ingest(adapter: str, input_path: Path | None) -> int:
+    return _print_placeholder_contract_response(
+        "ingest",
+        adapter=adapter,
+        input_path=input_path,
+    )
+
+
+def cmd_snapshot_data(dataset_id: str) -> int:
+    return _print_placeholder_contract_response(
+        "snapshot-data",
+        dataset_id=dataset_id,
+    )
+
+
+def cmd_eval_retrieval(label_set: Path | None) -> int:
+    return _print_placeholder_contract_response(
+        "eval-retrieval",
+        label_set=label_set,
+    )
+
+
+def cmd_eval_robustness(suite: str) -> int:
+    return _print_placeholder_contract_response(
+        "eval-robustness",
+        suite=suite,
+    )
+
+
+def cmd_compare_runs(run_a: str, run_b: str) -> int:
+    return _print_placeholder_contract_response(
+        "compare-runs",
+        run_a=run_a,
+        run_b=run_b,
+    )
+
+
 def cmd_sweep(prompt_id: str | None) -> int:
     from .evaluation.prompt_sweep import run_sweep
     from . import console as con
@@ -524,6 +640,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         return cmd_evaluate(args.prompt_id, no_cache=args.no_cache)
     if args.command == "evaluate-variants":
         return cmd_evaluate_variants(args.variants, args.prompt_id, no_cache=args.no_cache)
+    if args.command == "ingest":
+        return cmd_ingest(args.adapter, args.input_path)
+    if args.command == "snapshot-data":
+        return cmd_snapshot_data(args.dataset_id)
+    if args.command == "eval-retrieval":
+        return cmd_eval_retrieval(args.label_set)
+    if args.command == "eval-robustness":
+        return cmd_eval_robustness(args.suite)
+    if args.command == "compare-runs":
+        return cmd_compare_runs(args.run_a, args.run_b)
+
     if args.command == "sweep":
         return cmd_sweep(args.prompt_id)
 

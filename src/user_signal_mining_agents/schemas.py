@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -146,4 +146,126 @@ class HumanAnnotationResult(BaseModel):
     difficulty_rating: int = Field(ge=1, le=5, description="How subjective or difficult was this to grade?")
     annotated_at: datetime = Field(default_factory=datetime.utcnow)
 
+
+
+
+class SnippetProvenance(BaseModel):
+    """Traceability metadata for evidence snippets and cited quote spans."""
+    model_config = ConfigDict(extra="forbid")
+
+    source_dataset_id: str
+    source_record_id: str
+    source_type: str
+    start_char: int | None = Field(default=None, ge=0)
+    end_char: int | None = Field(default=None, ge=0)
+    extracted_at: datetime | None = None
+
+
+class DatasetRecord(BaseModel):
+    """Normalized ingest record produced by any source adapter."""
+    model_config = ConfigDict(extra="forbid")
+
+    record_id: str
+    dataset_id: str
+    source_type: str
+    text: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    provenance: SnippetProvenance | None = None
+
+
+class DatasetSnapshotManifest(BaseModel):
+    """Immutable manifest tying an ingest snapshot to source checksums."""
+    model_config = ConfigDict(extra="forbid")
+
+    snapshot_id: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    dataset_ids: list[str] = Field(default_factory=list)
+    record_count: int = Field(ge=0)
+    checksum_sha256: str
+    source_manifests: dict[str, str] = Field(default_factory=dict)
+
+
+class ExperimentManifest(BaseModel):
+    """Run-level manifest for reproducibility and cross-run comparison."""
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    dataset_snapshot_id: str
+    prompt_bundle_id: str
+    embedding_index_id: str
+    system_variants: list[str] = Field(default_factory=list)
+    llm_provider: str
+    llm_model: str
+    git_commit: str
+    parameters: dict[str, Any] = Field(default_factory=dict)
+
+
+class MetricWithCI(BaseModel):
+    """Metric summary including 95% confidence interval."""
+    model_config = ConfigDict(extra="forbid")
+
+    metric: str
+    mean: float
+    ci95_lower: float
+    ci95_upper: float
+    sample_size: int = Field(ge=1)
+
+
+class SignificanceResult(BaseModel):
+    """Statistical comparison result between two systems."""
+    model_config = ConfigDict(extra="forbid")
+
+    metric: str
+    p_value: float = Field(ge=0.0, le=1.0)
+    is_significant: bool
+    effect_size: float | None = None
+    notes: str | None = None
+
+
+class JudgePanelResult(BaseModel):
+    """Aggregated output from a multi-judge evaluation panel."""
+    model_config = ConfigDict(extra="forbid")
+
+    prompt_id: str
+    system_variant: str
+    panel_size: int = Field(ge=1)
+    per_judge_scores: list[JudgeScores] = Field(default_factory=list)
+    aggregate_scores: JudgeScores
+    metrics_with_ci: list[MetricWithCI] = Field(default_factory=list)
+    significance: list[SignificanceResult] = Field(default_factory=list)
+
+
+class FailureTag(BaseModel):
+    """Taxonomy tag applied to low-quality generations."""
+    model_config = ConfigDict(extra="forbid")
+
+    tag_id: str
+    category: str
+    severity: int = Field(ge=1, le=5)
+    prompt_id: str | None = None
+    description: str
+    evidence_refs: list[str] = Field(default_factory=list)
+
+
+class RobustnessCase(BaseModel):
+    """One robustness stress case used during adversarial evaluation."""
+    model_config = ConfigDict(extra="forbid")
+
+    case_id: str
+    family: str
+    description: str
+    transform_spec: dict[str, Any] = Field(default_factory=dict)
+    expected_behavior: str
+
+
+class DomainPack(BaseModel):
+    """Declarative domain package for transfer evaluations."""
+    model_config = ConfigDict(extra="forbid")
+
+    domain_id: str
+    title: str
+    founder_prompts_path: str
+    evaluation_notes: str | None = None
+    enabled: bool = True
 

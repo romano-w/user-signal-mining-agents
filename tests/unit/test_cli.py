@@ -144,3 +144,45 @@ def test_parse_variant_ids() -> None:
 
     with pytest.raises(ValueError, match="no variant ids"):
         cli._parse_variant_ids("  , ")
+
+
+def test_build_parser_supports_foundation_contract_commands() -> None:
+    parser = cli.build_parser()
+
+    ingest_args = parser.parse_args(["ingest", "--adapter", "app_reviews", "--input-path", "data/input.jsonl"])
+    assert ingest_args.command == "ingest"
+    assert ingest_args.adapter == "app_reviews"
+    assert ingest_args.input_path == Path("data/input.jsonl")
+
+    snapshot_args = parser.parse_args(["snapshot-data", "--dataset-id", "restaurants_v1"])
+    assert snapshot_args.command == "snapshot-data"
+    assert snapshot_args.dataset_id == "restaurants_v1"
+
+    retrieval_args = parser.parse_args(["eval-retrieval", "--label-set", "artifacts/retrieval_labels.jsonl"])
+    assert retrieval_args.command == "eval-retrieval"
+    assert retrieval_args.label_set == Path("artifacts/retrieval_labels.jsonl")
+
+    robustness_args = parser.parse_args(["eval-robustness", "--suite", "adversarial_core"])
+    assert robustness_args.command == "eval-robustness"
+    assert robustness_args.suite == "adversarial_core"
+
+    compare_args = parser.parse_args(["compare-runs", "--run-a", "run_001", "--run-b", "run_002"])
+    assert compare_args.command == "compare-runs"
+    assert compare_args.run_a == "run_001"
+    assert compare_args.run_b == "run_002"
+
+
+def test_foundation_placeholder_commands_emit_contract_payload(capsys) -> None:
+    code = cli.cmd_ingest("support_tickets", Path("tickets.jsonl"))
+    assert code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "foundation-placeholder"
+    assert payload["command"] == "ingest"
+    assert payload["payload"]["adapter"] == "support_tickets"
+
+    code = cli.cmd_compare_runs("run_a", "run_b")
+    assert code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["command"] == "compare-runs"
+    assert payload["payload"] == {"run_a": "run_a", "run_b": "run_b"}
+
