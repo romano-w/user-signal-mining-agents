@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -45,7 +46,7 @@ def test_load_prompts_raises_for_unknown_id(monkeypatch: pytest.MonkeyPatch, tmp
 def test_cmd_search_requires_existing_index(monkeypatch: pytest.MonkeyPatch, tmp_settings) -> None:
     monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
 
-    with pytest.raises(FileNotFoundError, match="Dense index not found"):
+    with pytest.raises(FileNotFoundError, match="Retrieval index not found"):
         cli.cmd_search("slow", 3)
 
 
@@ -148,6 +149,16 @@ def test_parse_variant_ids() -> None:
         cli._parse_variant_ids("  , ")
 
 
+def test_parse_k_values() -> None:
+    assert cli._parse_k_values("10, 3,1,3") == [1, 3, 10]
+
+    with pytest.raises(ValueError, match="did not include any integers"):
+        cli._parse_k_values(" , ")
+
+    with pytest.raises(ValueError, match="positive integers"):
+        cli._parse_k_values("0,2")
+
+
 def test_build_parser_supports_foundation_contract_commands() -> None:
     parser = cli.build_parser()
 
@@ -163,9 +174,28 @@ def test_build_parser_supports_foundation_contract_commands() -> None:
     assert snapshot_args.command == "snapshot-data"
     assert snapshot_args.dataset_id == "restaurants_v1"
 
-    retrieval_args = parser.parse_args(["eval-retrieval", "--label-set", "artifacts/retrieval_labels.jsonl"])
+    retrieval_args = parser.parse_args([
+        "eval-retrieval",
+        "--label-set",
+        "artifacts/retrieval_labels.jsonl",
+        "--mode",
+        "hybrid",
+        "--reranker",
+        "token_overlap",
+        "--k-values",
+        "1,5,10",
+        "--top-k",
+        "25",
+        "--output-dir",
+        "artifacts/retrieval_eval",
+    ])
     assert retrieval_args.command == "eval-retrieval"
     assert retrieval_args.label_set == Path("artifacts/retrieval_labels.jsonl")
+    assert retrieval_args.mode == "hybrid"
+    assert retrieval_args.reranker == "token_overlap"
+    assert retrieval_args.k_values == "1,5,10"
+    assert retrieval_args.top_k == 25
+    assert retrieval_args.output_dir == Path("artifacts/retrieval_eval")
 
     robustness_args = parser.parse_args(["eval-robustness", "--suite", "adversarial_core"])
     assert robustness_args.command == "eval-robustness"
@@ -233,6 +263,84 @@ def test_ingest_and_snapshot_commands_emit_real_payload(
     assert payload["command"] == "snapshot-data"
     assert payload["payload"]["record_count"] == 2
     assert payload["payload"]["source_manifests"] == {"app_reviews::app_reviews": "src999"}
+
+
+def test_cmd_eval_retrieval_dispatches_runner_and_report(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+    tmp_path,
+) -> None:
+    from user_signal_mining_agents.evaluation import retrieval_report, retrieval_runner
+
+    label_set = tmp_path / "labels.jsonl"
+    label_set.write_text(
+        json.dumps({"query": "slow service", "relevant_snippet_ids": ["s1"]}) + "\n",
+        encoding="utf-8",
+    )
+
+    summary = retrieval_runner.RetrievalEvaluationSummary(
+        generated_at=datetime(2026, 3, 11, 12, 0, tzinfo=timezone.utc),
+        label_set_path=str(label_set),
+        retrieval_mode="hybrid",
+        reranker="none",
+        top_k=5,
+        k_values=[1, 3],
+        query_count=1,
+        dense_weight=1.0,
+        lexical_weight=1.0,
+        fusion_k=60,
+        reranker_weight=0.25,
+        candidate_pool=20,
+        aggregates={
+            "recall_at_k": {"1": 1.0, "3": 1.0},
+            "mrr_at_k": {"1": 1.0, "3": 1.0},
+            "ndcg_at_k": {"1": 1.0, "3": 1.0},
+        },
+        queries=[],
+    )
+
+    calls: dict[str, object] = {}
+
+    def _fake_run_retrieval_evaluation(label_set_path, settings, **kwargs):
+        calls["label_set_path"] = label_set_path
+        calls["kwargs"] = kwargs
+        assert settings is tmp_settings
+        return summary
+
+    def _fake_generate_report(summary_obj, output_dir):
+        calls["summary_obj"] = summary_obj
+        calls["output_dir"] = output_dir
+        output_dir.mkdir(parents=True, exist_ok=True)
+        json_path = output_dir / "retrieval_eval_summary.json"
+        md_path = output_dir / "retrieval_eval_report.md"
+        json_path.write_text("{}", encoding="utf-8")
+        md_path.write_text("# report", encoding="utf-8")
+        return json_path, md_path
+
+    monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
+    monkeypatch.setattr(retrieval_runner, "run_retrieval_evaluation", _fake_run_retrieval_evaluation)
+    monkeypatch.setattr(retrieval_report, "generate_retrieval_report", _fake_generate_report)
+
+    out_dir = tmp_path / "out"
+    code = cli.cmd_eval_retrieval(
+        label_set,
+        mode="hybrid",
+        reranker="token_overlap",
+        k_values="1,3",
+        top_k=5,
+        output_dir=out_dir,
+    )
+
+    assert code == 0
+    assert calls["label_set_path"] == label_set
+    assert calls["kwargs"] == {
+        "mode": "hybrid",
+        "reranker": "token_overlap",
+        "top_k": 5,
+        "k_values": [1, 3],
+    }
+    assert calls["summary_obj"] is summary
+    assert calls["output_dir"] == out_dir
 
 
 def test_compare_runs_still_emits_foundation_placeholder(capsys) -> None:

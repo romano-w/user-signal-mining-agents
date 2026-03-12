@@ -26,3 +26,14 @@ def test_get_settings_is_cached() -> None:
     first = config.get_settings()
     second = config.get_settings()
     assert first is second
+
+
+def test_settings_include_retrieval_stack_v2_defaults() -> None:
+    settings = Settings()
+
+    assert settings.retrieval_mode == "hybrid"
+    assert settings.retrieval_dense_weight == 1.0
+    assert settings.retrieval_lexical_weight == 1.0
+    assert settings.retrieval_fusion_k == 60
+    assert settings.retrieval_reranker == "none"
+    assert settings.retrieval_reranker_weight == 0.25

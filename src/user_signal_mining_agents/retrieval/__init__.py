@@ -7,6 +7,8 @@ from .index import (
     build_dense_index_from_jsonl,
     load_dense_index,
     search_dense_index,
+    search_lexical_index,
+    search_retrieval_index,
 )
 
 __all__ = [
@@ -16,4 +18,6 @@ __all__ = [
     "build_dense_index_from_jsonl",
     "load_dense_index",
     "search_dense_index",
+    "search_lexical_index",
+    "search_retrieval_index",
 ]

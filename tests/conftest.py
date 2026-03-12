@@ -32,6 +32,7 @@ def reset_singletons() -> None:
     llm_client._gemini_key_cycle = None
     retrieval_index._MODEL_CACHE.clear()
     retrieval_index._INDEX_CACHE.clear()
+    retrieval_index._LEXICAL_CACHE.clear()
 
 
 @pytest.fixture
@@ -155,4 +156,3 @@ def synthesis_result(
         retrieved_evidence=[evidence_factory(1), evidence_factory(2)],
         focus_points=[focus_point_factory(1), focus_point_factory(2), focus_point_factory(3)],
     )
-

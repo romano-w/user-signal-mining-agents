@@ -74,6 +74,15 @@ class Settings(BaseSettings):
     max_chunks_per_review: int = 3
 
     retrieval_top_k: int = 50
+    retrieval_mode: str = "hybrid"
+    retrieval_dense_weight: float = 1.0
+    retrieval_lexical_weight: float = 1.0
+    retrieval_fusion_k: int = 60
+    retrieval_candidate_pool: int = 200
+    retrieval_reranker: str = "none"
+    retrieval_reranker_weight: float = 0.25
+    retrieval_bm25_k1: float = 1.5
+    retrieval_bm25_b: float = 0.75
     synthesis_evidence_k: int = 15
     embedding_batch_size: int = 128
     min_focus_points: int = 3
