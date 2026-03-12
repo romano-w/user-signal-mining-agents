@@ -1,12 +1,16 @@
-name: Nightly Offline Tests
+name: Integration Gates
 
 on:
-  schedule:
-    - cron: "0 6 * * *"
+  pull_request:
+    branches:
+      - codex/integration-research-upgrades
+  push:
+    branches:
+      - codex/integration-research-upgrades
   workflow_dispatch:
 
 jobs:
-  main-ready-gate:
+  integration-ready-gate:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,17 +28,16 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev
 
-      - name: Run main-ready gate
-        run: uv run python scripts/ci/run_research_gate.py --level main-ready
+      - name: Run integration-ready gate
+        run: uv run python scripts/ci/run_research_gate.py --level integration-ready
 
-      - name: Upload nightly artifacts
+      - name: Upload integration gate artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nightly-test-artifacts
+          name: integration-gate-artifacts
           if-no-files-found: ignore
           path: |
             coverage.xml
             artifacts/test-results/branch-ready-junit.xml
             artifacts/test-results/integration-ready-junit.xml
-            artifacts/test-results/main-ready-junit.xml

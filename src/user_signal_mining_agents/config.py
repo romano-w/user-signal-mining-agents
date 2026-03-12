@@ -12,6 +12,7 @@ DATA_DIR = ROOT_DIR / "data"
 ARTIFACTS_DIR = ROOT_DIR / "artifacts"
 PROMPTS_DIR = ROOT_DIR / "prompts"
 FOUNDER_PROMPTS_DIR = ROOT_DIR / "founder_prompts"
+DOMAIN_PACKS_PATH = FOUNDER_PROMPTS_DIR / "domain_packs.json"
 YELP_DATASET_DIR = DATA_DIR / "raw" / "Yelp-JSON"
 
 
@@ -49,6 +50,8 @@ class Settings(BaseSettings):
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     founder_prompts_path: Path = Field(default=FOUNDER_PROMPTS_DIR / "restaurants.json")
+    domain_packs_path: Path = Field(default=DOMAIN_PACKS_PATH)
+    active_domains: str = ""
     yelp_download_url: str = "https://business.yelp.com/external-assets/files/Yelp-JSON.zip"
     yelp_dataset_dir: Path = Field(default=YELP_DATASET_DIR)
     yelp_download_zip_path: Path = Field(default=YELP_DATASET_DIR / "Yelp-JSON.zip")
@@ -74,6 +77,15 @@ class Settings(BaseSettings):
     max_chunks_per_review: int = 3
 
     retrieval_top_k: int = 50
+    retrieval_mode: str = "hybrid"
+    retrieval_dense_weight: float = 1.0
+    retrieval_lexical_weight: float = 1.0
+    retrieval_fusion_k: int = 60
+    retrieval_candidate_pool: int = 200
+    retrieval_reranker: str = "none"
+    retrieval_reranker_weight: float = 0.25
+    retrieval_bm25_k1: float = 1.5
+    retrieval_bm25_b: float = 0.75
     synthesis_evidence_k: int = 20
     embedding_batch_size: int = 128
     min_focus_points: int = 3
@@ -103,3 +115,5 @@ def ensure_scaffold_directories(settings: Settings) -> list[Path]:
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+

@@ -32,6 +32,7 @@ def reset_singletons() -> None:
     llm_client._gemini_key_cycle = None
     retrieval_index._MODEL_CACHE.clear()
     retrieval_index._INDEX_CACHE.clear()
+    retrieval_index._LEXICAL_CACHE.clear()
 
 
 @pytest.fixture
@@ -60,6 +61,21 @@ def tmp_settings(tmp_path: Path) -> Settings:
         encoding="utf-8",
     )
 
+    domain_packs_path = tmp_path / "domain_packs.json"
+    domain_packs_path.write_text(
+        json.dumps(
+            [
+                {
+                    "domain_id": "restaurants",
+                    "title": "Restaurants",
+                    "founder_prompts_path": str(founder_prompts_path),
+                    "enabled": True,
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
     yelp_dataset_dir = tmp_path / "data" / "raw" / "Yelp-JSON"
     settings = Settings(
         llm_provider="openai",
@@ -70,6 +86,7 @@ def tmp_settings(tmp_path: Path) -> Settings:
         gemini_api_key_2="g2",
         openrouter_api_key="r1",
         founder_prompts_path=founder_prompts_path,
+        domain_packs_path=domain_packs_path,
         prompts_dir=prompts_dir,
         index_dir=tmp_path / "artifacts" / "index",
         run_artifacts_dir=tmp_path / "artifacts" / "runs",
@@ -155,4 +172,6 @@ def synthesis_result(
         retrieved_evidence=[evidence_factory(1), evidence_factory(2)],
         focus_points=[focus_point_factory(1), focus_point_factory(2), focus_point_factory(3)],
     )
+
+
 

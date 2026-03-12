@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
-
-from pydantic import TypeAdapter
 
 from ..agents.judge import judge_named_pair
 from ..agents.variant_pipeline import (
@@ -15,6 +12,7 @@ from ..agents.variant_pipeline import (
     run_variant_pipeline,
 )
 from ..config import Settings, get_settings
+from ..domain_packs import load_founder_prompts
 from .. import console as con
 from ..schemas import FounderPrompt, JudgeResult, SynthesisResult
 
@@ -58,11 +56,6 @@ class VariantEvaluationSummary:
     prompt_ids: list[str]
     aggregates: list[VariantAggregate] = field(default_factory=list)
     comparisons_by_variant: dict[str, list[VariantPromptComparison]] = field(default_factory=dict)
-
-
-def _load_founder_prompts(settings: Settings) -> list[FounderPrompt]:
-    data = json.loads(settings.founder_prompts_path.read_text(encoding="utf-8"))
-    return TypeAdapter(list[FounderPrompt]).validate_python(data)
 
 
 def _select_prompts(
@@ -162,6 +155,7 @@ def run_variant_evaluation(
     *,
     variant_ids: list[str] | None = None,
     prompt_ids: list[str] | None = None,
+    domain_ids: list[str] | None = None,
     skip_cached: bool = True,
 ) -> VariantEvaluationSummary:
     """Run control-vs-variant judge comparisons for selected prompts."""
@@ -169,7 +163,7 @@ def run_variant_evaluation(
     s = settings or get_settings()
     root = _variant_root(s)
 
-    prompts = _select_prompts(_load_founder_prompts(s), prompt_ids)
+    prompts = _select_prompts(load_founder_prompts(s, domain_ids=domain_ids), prompt_ids)
 
     selected_variants = variant_ids or default_candidate_variants()
     # Maintain stable ordering while removing duplicates.

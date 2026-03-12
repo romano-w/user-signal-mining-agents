@@ -33,7 +33,7 @@ def test_retrieve_and_filter_dedupes_and_keeps_best_score(
         seen_queries.append(query)
         return query_hits[query]
 
-    monkeypatch.setattr(evidence_filter, "search_dense_index", _search)
+    monkeypatch.setattr(evidence_filter, "search_retrieval_index", _search)
     tmp_settings.synthesis_evidence_k = 3
 
     evidence = evidence_filter.retrieve_and_filter(founder_prompt, intent_bundle, tmp_settings)
@@ -54,7 +54,7 @@ def test_retrieve_for_queries_dedupes_empty_and_duplicate_queries(
         seen_queries.append(query)
         return [DenseRetrievalHit(snippet=evidence_factory(1), score=0.5)]
 
-    monkeypatch.setattr(evidence_filter, "search_dense_index", _search)
+    monkeypatch.setattr(evidence_filter, "search_retrieval_index", _search)
 
     evidence_filter.retrieve_for_queries(
         founder_prompt,

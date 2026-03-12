@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from ..config import Settings, get_settings
-from ..retrieval.index import search_dense_index
-from ..schemas import EvidenceSnippet, FounderPrompt, IntentBundle
 from .. import console as con
+from ..config import Settings, get_settings
+from ..retrieval.index import search_retrieval_index
+from ..schemas import EvidenceSnippet, FounderPrompt, IntentBundle
 
 
 def _dedupe_queries(queries: list[str]) -> list[str]:
@@ -38,13 +38,23 @@ def retrieve_for_queries(
 
     con.step("evidence", f"Searching with {len(deduped_queries)} queries...")
 
-    # Gather all hits, tracking best score per snippet
+    # Gather all hits, tracking best score per snippet.
     best_by_id: dict[str, tuple[float, EvidenceSnippet]] = {}
     for query in deduped_queries:
-        hits = search_dense_index(
+        hits = search_retrieval_index(
             query,
             index_dir=s.index_dir,
+            embedding_model=s.embedding_model,
             top_k=s.retrieval_top_k,
+            mode=s.retrieval_mode,
+            dense_weight=s.retrieval_dense_weight,
+            lexical_weight=s.retrieval_lexical_weight,
+            fusion_k=s.retrieval_fusion_k,
+            candidate_pool=s.retrieval_candidate_pool,
+            reranker=s.retrieval_reranker,
+            reranker_weight=s.retrieval_reranker_weight,
+            bm25_k1=s.retrieval_bm25_k1,
+            bm25_b=s.retrieval_bm25_b,
         )
         for hit in hits:
             sid = hit.snippet.snippet_id
@@ -53,10 +63,10 @@ def retrieve_for_queries(
                 updated = hit.snippet.model_copy(update={"relevance_score": hit.score})
                 best_by_id[sid] = (hit.score, updated)
 
-    # Sort by best score descending
+    # Sort by best score descending.
     ranked = sorted(best_by_id.values(), key=lambda pair: pair[0], reverse=True)
 
-    # Take top synthesis_evidence_k
+    # Take top synthesis_evidence_k.
     top_k = s.synthesis_evidence_k
     evidence = [snippet for _score, snippet in ranked[:top_k]]
     con.step("evidence", f"Selected {len(evidence)} snippets from {len(best_by_id)} unique candidates")

@@ -89,13 +89,23 @@ uv run usm evaluate
 | `uv run usm evaluate` | Run full evaluation: baseline + pipeline + judge for all prompts |
 | `uv run usm evaluate --no-cache` | Re-run everything from scratch (ignores cached results) |
 | `uv run usm evaluate --prompt-id <id>` | Evaluate a single prompt |
+| `uv run usm evaluate --domain <id,id>` | Evaluate selected domains from the domain-pack registry |
 | `uv run usm sweep` | Run sweep of prompt variants (A/B testing) |
 | `uv run usm sweep --prompt-id <id>` | Run sweep on a single prompt |
 | `uv run usm run-baseline --prompt-id <id>` | Run baseline only for one prompt |
+| `uv run usm run-baseline --domain <id,id>` | Run baseline for selected domains |
 | `uv run usm run-pipeline --prompt-id <id>` | Run pipeline only for one prompt |
+| `uv run usm run-pipeline --domain <id,id>` | Run pipeline for selected domains |
 | `uv run usm list-variants` | List available experimental pipeline variants |
 | `uv run usm run-variant --variant <id> --prompt-id <id>` | Run one experimental variant for one prompt |
+| `uv run usm run-variant --variant <id> --domain <id,id>` | Run one variant across selected domains |
 | `uv run usm evaluate-variants --variants <id,id>` | Compare selected variants against control pipeline |
+| `uv run usm evaluate-variants --variants <id,id> --domain <id,id>` | Variant comparison on selected domains |
+| `uv run usm ingest --adapter yelp` | Ingest one source adapter and emit normalized records |
+| `uv run usm snapshot-data --dataset-id default` | Create an immutable dataset snapshot manifest from ingested records |
+| `uv run usm eval-retrieval --label-set <path>` | Run retrieval metrics and produce JSON/Markdown retrieval reports |
+| `uv run usm eval-robustness --suite adversarial_core --prompt-id <id>` | Run perturbation robustness gates for a prompt subset |
+| `uv run usm compare-runs --run-a <id> --run-b <id>` | Compare two experiment manifests (foundation contract surface) |
 
 ### Setup & utilities
 
@@ -103,7 +113,7 @@ uv run usm evaluate
 |---|---|
 | `uv run usm bootstrap` | Create required local directories |
 | `uv run usm show-config` | Print resolved settings |
-| `uv run usm validate-founder-prompts` | Validate the founder prompt benchmark file |
+| `uv run usm validate-founder-prompts` | Validate domain packs + enabled founder prompt files (or one file with `--path`) |
 | `uv run usm search --query "slow service"` | Search the dense index and print top-K results |
 | `uv run usm fetch-yelp-dataset` | Download and extract the Yelp dataset |
 | `uv run usm annotate-human` | Launch the local human-annotation GUI for blinded A/B scoring |
@@ -155,8 +165,24 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 | Variable | Default | Description |
 |---|---|---|
 | `USM_EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | Sentence Transformer model |
-| `USM_RETRIEVAL_TOP_K` | `10` | Top-K results per query |
-| `USM_SYNTHESIS_EVIDENCE_K` | `15` | Evidence snippets for synthesis |
+| `USM_RETRIEVAL_TOP_K` | `50` | Top-K results per query |
+| `USM_RETRIEVAL_MODE` | `hybrid` | Retrieval mode: `dense`, `lexical`, or `hybrid` |
+| `USM_RETRIEVAL_DENSE_WEIGHT` | `1.0` | Dense reciprocal-rank-fusion weight |
+| `USM_RETRIEVAL_LEXICAL_WEIGHT` | `1.0` | Lexical reciprocal-rank-fusion weight |
+| `USM_RETRIEVAL_FUSION_K` | `60` | RRF smoothing constant |
+| `USM_RETRIEVAL_CANDIDATE_POOL` | `200` | Candidate pool size before final top-k cut |
+| `USM_RETRIEVAL_RERANKER` | `none` | Optional reranker stage (`none`, `token_overlap`) |
+| `USM_RETRIEVAL_RERANKER_WEIGHT` | `0.25` | Blend weight for reranker contribution |
+| `USM_RETRIEVAL_BM25_K1` | `1.5` | BM25 term-frequency saturation |
+| `USM_RETRIEVAL_BM25_B` | `0.75` | BM25 length normalization factor |
+| `USM_SYNTHESIS_EVIDENCE_K` | `20` | Evidence snippets for synthesis |
+
+### Domain Settings
+
+| Variable | Default | Description |
+|---|---|---|
+| `USM_DOMAIN_PACKS_PATH` | `founder_prompts/domain_packs.json` | Domain pack registry file (list of `DomainPack`) |
+| `USM_ACTIVE_DOMAINS` | `` (empty) | Optional comma-separated default domains (`restaurants,saas`) |
 
 ### Data Settings
 
@@ -180,7 +206,10 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 │   ├── processed/              # Chunked review subsets
 │   └── raw/Yelp-JSON/          # Raw Yelp dataset files
 ├── founder_prompts/
-│   └── restaurants.json        # 10 restaurant founder prompt benchmark
+│   ├── domain_packs.json       # DomainPack registry for transfer evaluation
+│   ├── restaurants.json        # Restaurant founder prompts
+│   ├── saas.json               # SaaS founder prompts
+│   └── ecommerce.json          # Ecommerce founder prompts
 ├── prompts/                    # LLM prompt templates
 │   ├── baseline.md             # Zero-shot baseline prompt
 │   ├── intent.md               # Intent decomposition prompt
@@ -224,6 +253,13 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 - **Gemini Key Rotation**: Multiple API keys are automatically rotated when rate limits are hit.
 - **Rich CLI**: All terminal output uses the `rich` library with consistent theming and status indicators.
 
+## Stability Notes
+
+- Default run path remains `uv run usm evaluate` (baseline + main pipeline). Variant and concurrent-agent flows are optional.
+- Retrieval default is `USM_RETRIEVAL_MODE=hybrid`; use `dense` only as a debugging fallback, not as a release default.
+- Concurrent-agent process docs under `docs/concurrent_agents/` are integration playbooks and are treated as experimental operations guidance.
+- Running limitations and first-iteration follow-ups are tracked in `docs/KNOWN_LIMITATIONS.md`.
+
 ## Troubleshooting
 
 ### Missing Yelp JSON files
@@ -248,5 +284,7 @@ uv run python scripts/build_index.py --device cpu
 ## Data Policy
 
 The Yelp dataset is intended for educational use. Review the [official terms](https://business.yelp.com/data/resources/open-dataset/) before use. Raw data, processed outputs, and generated artifacts are excluded from git.
+
+
 
 
