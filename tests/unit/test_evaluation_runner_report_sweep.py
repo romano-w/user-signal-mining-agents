@@ -114,6 +114,53 @@ def test_run_evaluation_uses_cached_judge_results(
     assert summary.pairs[0].pipeline_scores.scores.relevance == 4.0
 
 
+
+
+def test_run_evaluation_uses_cached_legacy_judge_results(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+) -> None:
+    prompt = FounderPrompt(id="p1", statement="Question", domain="restaurants")
+    tmp_settings.founder_prompts_path.write_text(json.dumps([prompt.model_dump()]), encoding="utf-8")
+
+    run_dir = tmp_settings.run_artifacts_dir / prompt.id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    legacy_baseline = {
+        "prompt_id": "p1",
+        "system_variant": "baseline",
+        "scores": {
+            "relevance": 3.0,
+            "coverage": 3.0,
+            "contradiction": 5.0,
+            "distinctiveness": 3.0,
+            "overall_preference": 3.0,
+            "rationale": "legacy baseline",
+        },
+    }
+    legacy_pipeline = {
+        "prompt_id": "p1",
+        "system_variant": "pipeline",
+        "scores": {
+            "relevance": 4.0,
+            "coverage": 4.0,
+            "contradiction": 4.0,
+            "distinctiveness": 4.0,
+            "overall_preference": 4.0,
+            "rationale": "legacy pipeline",
+        },
+    }
+    (run_dir / "judge_baseline.json").write_text(json.dumps(legacy_baseline), encoding="utf-8")
+    (run_dir / "judge_pipeline.json").write_text(json.dumps(legacy_pipeline), encoding="utf-8")
+
+    monkeypatch.setattr(runner, "run_baseline", lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("should not run baseline")))
+    monkeypatch.setattr(runner, "run_pipeline", lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("should not run pipeline")))
+
+    summary = runner.run_evaluation(tmp_settings, skip_cached=True)
+
+    assert len(summary.pairs) == 1
+    assert summary.pairs[0].baseline_scores.scores.groundedness == pytest.approx(4.0)
+    assert summary.pairs[0].pipeline_scores.scores.groundedness == pytest.approx(4.0)
+
 def test_run_evaluation_filters_prompt_ids(
     monkeypatch: pytest.MonkeyPatch,
     tmp_settings,
@@ -341,4 +388,6 @@ def test_generate_report_includes_panel_confidence_context(tmp_path: Path) -> No
     assert "Confidence context" in text
     assert "Panel Confidence (3 judges)" in text
     assert "p-value (Pipeline vs Baseline)" in text
+
+
 

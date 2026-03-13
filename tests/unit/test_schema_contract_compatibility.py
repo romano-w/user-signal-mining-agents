@@ -12,6 +12,7 @@ from user_signal_mining_agents.schemas import (
     ExperimentManifest,
     FailureTag,
     JudgePanelResult,
+    JudgeResult,
     MetricWithCI,
     RobustnessCase,
     SignificanceResult,
@@ -197,4 +198,25 @@ def test_failure_tag_robustness_case_and_domain_pack_accept_minimal_payloads() -
     assert tag.evidence_refs == []
     assert case.transform_spec == {}
     assert pack.enabled is True
+
+
+
+def test_judge_result_accepts_legacy_groundedness_payload() -> None:
+    result = JudgeResult.model_validate(
+        {
+            "prompt_id": "p1",
+            "system_variant": "baseline",
+            "scores": {
+                "relevance": 4.0,
+                "coverage": 5.0,
+                "contradiction": 3.0,
+                "distinctiveness": 4.0,
+                "overall_preference": 4.0,
+                "rationale": "legacy payload",
+            },
+        }
+    )
+
+    assert result.scores.groundedness == pytest.approx(4.0)
+
 

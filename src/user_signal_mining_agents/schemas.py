@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class FounderPrompt(BaseModel):
@@ -73,6 +73,26 @@ class JudgeScores(BaseModel):
     distinctiveness: float = Field(ge=1, le=5)
     overall_preference: float = Field(ge=1, le=5)
     rationale: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def _upgrade_legacy_groundedness_fields(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        normalized = dict(data)
+        if "groundedness" not in normalized:
+            legacy_scores = [
+                float(value)
+                for key in ("coverage", "contradiction")
+                if isinstance((value := normalized.get(key)), int | float)
+            ]
+            if legacy_scores:
+                normalized["groundedness"] = sum(legacy_scores) / len(legacy_scores)
+
+        normalized.pop("coverage", None)
+        normalized.pop("contradiction", None)
+        return normalized
 
 
 class JudgeResult(BaseModel):
@@ -257,4 +277,5 @@ class DomainPack(BaseModel):
     founder_prompts_path: str
     evaluation_notes: str | None = None
     enabled: bool = True
+
 
