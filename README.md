@@ -107,7 +107,9 @@ uv run usm evaluate
 | `uv run usm validate-founder-prompts` | Validate domain packs + enabled founder prompt files (or one file with `--path`) |
 | `uv run usm search --query "slow service"` | Search the dense index and print top-K results |
 | `uv run usm fetch-yelp-dataset` | Download and extract the Yelp dataset |
+| `uv run usm sample-annotations --num 20 --seed 17` | Create a deterministic blinded task set for manual review |
 | `uv run usm annotate-human` | Launch the local human-annotation GUI for blinded A/B scoring |
+| `uv run usm analyze-human-annotations --export-a <path> --export-b <path>` | Compute judge alignment and interannotator agreement from exported reviewer JSON |
 | `uv run usm integration-gate --reports-dir reports/research_upgrade` | Evaluate integration readiness report artifacts and return pass/fail exit code |
 
 ### Data preparation scripts
@@ -117,24 +119,34 @@ uv run usm evaluate
 | `uv run python scripts/build_yelp_subset.py` | Build the processed review snippet JSONL |
 | `uv run python scripts/build_index.py` | Build the dense embedding index |
 
-## Human Annotation GUI
+## Human Annotation Workflow
 
-Use the built-in local web app to score sampled tasks from `artifacts/runs/_human_annotations`.
+Use the built-in local web app to score blinded tasks from `artifacts/runs/_human_annotations`, then save the exported reviewer JSON files under the tracked `reports/human_annotation/exports/` directory.
 
 ```powershell
-# Default directory: artifacts/runs/_human_annotations
-uv run usm annotate-human --annotator-id reviewer_01
+# 1. Build a deterministic 20-task batch
+uv run usm sample-annotations --num 20 --seed 17
 
-# Optional: custom folder / host / port
-uv run usm annotate-human --tasks-dir artifacts/runs/_human_annotations --host 127.0.0.1 --port 8765
+# 2. Each annotator reviews the same tasks
+uv run usm annotate-human --annotator-id reviewer_1
+uv run usm annotate-human --annotator-id reviewer_2
+
+# 3. Save the export buttons' JSON outputs to tracked files
+# reports/human_annotation/exports/reviewer_1.json
+# reports/human_annotation/exports/reviewer_2.json
+
+# 4. Compute judge alignment + interannotator agreement
+uv run usm analyze-human-annotations --export-a reports/human_annotation/exports/reviewer_1.json --export-b reports/human_annotation/exports/reviewer_2.json --output-dir reports/human_annotation/analysis
 ```
 
-What it provides:
-- Blinded side-by-side System A vs System B focus points
-- 1-5 scoring on relevance, groundedness, and distinctiveness
-- Overall preference + difficulty rating
-- Per-annotator autosave to `artifacts/runs/_human_annotations/_results/<annotator_id>/<task_id>.json`
-- One-click export of your saved annotations as a single JSON file
+Operational notes:
+- `uv run usm sample-annotations` writes blinded task files to `artifacts/runs/_human_annotations`.
+- `uv run usm annotate-human` provides side-by-side System A vs System B focus points, 1-5 scoring for relevance, groundedness, and distinctiveness, plus overall preference and difficulty rating.
+- Per-annotator autosaves live in `artifacts/runs/_human_annotations/_results/<annotator_id>/` and are gitignored.
+- The exported reviewer JSON files under `reports/human_annotation/exports/` are the artifacts you should commit for later analysis.
+- `uv run usm analyze-human-annotations` writes a tracked JSON summary and Markdown report to `reports/human_annotation/analysis/`.
+- If you only have one completed annotator export, omit `--export-b` to compute judge alignment without interannotator agreement.
+- You can still override the GUI task folder or bind address with `uv run usm annotate-human --tasks-dir <path> --host 127.0.0.1 --port 8765`.
 
 ## Configuration
 
@@ -212,6 +224,8 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 │   ├── refiner.md              # Critique-driven rewrite prompt
 │   └── judge.md                # LLM judge rubric prompt
 ├── scripts/                    # Data preparation scripts
+├── reports/
+│   └── human_annotation/       # Tracked reviewer exports + analysis reports
 ├── src/user_signal_mining_agents/
 │   ├── agents/                 # Agent implementations
 │   │   ├── baseline.py         # Zero-shot baseline agent
@@ -276,4 +290,10 @@ uv run python scripts/build_index.py --device cpu
 ## Data Policy
 
 The Yelp dataset is intended for educational use. Review the [official terms](https://business.yelp.com/data/resources/open-dataset/) before use. Raw data, processed outputs, and generated artifacts are excluded from git.
+
+
+
+
+
+
 

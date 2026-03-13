@@ -421,6 +421,63 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Optional default annotator ID pre-filled in the UI.",
     )
+    sample_annotations_parser = subparsers.add_parser(
+        "sample-annotations",
+        help="Create blinded human-annotation tasks from completed evaluation runs.",
+    )
+    sample_annotations_parser.add_argument(
+        "--num",
+        type=int,
+        default=20,
+        help="Number of annotation tasks to generate.",
+    )
+    sample_annotations_parser.add_argument(
+        "--seed",
+        type=int,
+        default=17,
+        help="Random seed for deterministic task sampling.",
+    )
+    sample_annotations_parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Optional task output directory. Defaults to artifacts/runs/_human_annotations.",
+    )
+
+    analyze_annotations_parser = subparsers.add_parser(
+        "analyze-human-annotations",
+        help="Analyze exported annotation JSON files for judge alignment and interannotator agreement.",
+    )
+    analyze_annotations_parser.add_argument(
+        "--export-a",
+        type=Path,
+        required=True,
+        help="Path to the first annotator export JSON.",
+    )
+    analyze_annotations_parser.add_argument(
+        "--export-b",
+        type=Path,
+        default=None,
+        help="Optional second annotator export JSON for interannotator agreement.",
+    )
+    analyze_annotations_parser.add_argument(
+        "--tasks-dir",
+        type=Path,
+        default=None,
+        help="Task directory used for annotation. Defaults to artifacts/runs/_human_annotations.",
+    )
+    analyze_annotations_parser.add_argument(
+        "--runs-dir",
+        type=Path,
+        default=None,
+        help="Completed evaluation run directory. Defaults to artifacts/runs.",
+    )
+    analyze_annotations_parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("reports/human_annotation/analysis"),
+        help="Tracked output directory for the analysis JSON and Markdown report.",
+    )
 
     return parser
 
@@ -994,6 +1051,73 @@ def cmd_annotate_human(
     )
     return 0
 
+def cmd_sample_annotations(
+    *,
+    num: int,
+    seed: int,
+    output_dir: Path | None,
+) -> int:
+    from .evaluation.sample_annotations import sample_for_annotation
+
+    sample_for_annotation(
+        num_samples=num,
+        output_dir=output_dir,
+        seed=seed,
+    )
+    return 0
+
+
+def cmd_analyze_human_annotations(
+    export_a: Path,
+    *,
+    export_b: Path | None,
+    tasks_dir: Path | None,
+    runs_dir: Path | None,
+    output_dir: Path,
+) -> int:
+    from .evaluation.human_annotation_analysis import analyze_and_write_human_annotation_report
+
+    settings = get_settings()
+    target_tasks_dir = tasks_dir or (settings.run_artifacts_dir / "_human_annotations")
+    target_runs_dir = runs_dir or settings.run_artifacts_dir
+
+    summary, json_path, markdown_path = analyze_and_write_human_annotation_report(
+        export_a,
+        export_b_path=export_b,
+        tasks_dir=target_tasks_dir,
+        runs_dir=target_runs_dir,
+        output_dir=output_dir,
+    )
+
+    print(
+        json.dumps(
+            {
+                "status": "ok",
+                "command": "analyze-human-annotations",
+                "payload": {
+                    "exports": [export.model_dump(mode="json") for export in summary.exports],
+                    "overlapping_task_count": len(summary.overlapping_task_ids),
+                    "judge_alignment": [row.model_dump(mode="json") for row in summary.judge_alignment],
+                    "interannotator_overall_preference": (
+                        summary.interannotator_overall_preference.model_dump(mode="json")
+                        if summary.interannotator_overall_preference is not None
+                        else None
+                    ),
+                    "interannotator_dimensions": [
+                        metric.model_dump(mode="json") for metric in summary.interannotator_dimensions
+                    ],
+                    "missing_task_ids": summary.missing_task_ids,
+                    "missing_judge_prompt_ids": summary.missing_judge_prompt_ids,
+                    "json_report_path": str(json_path),
+                    "markdown_report_path": str(markdown_path),
+                },
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -1065,6 +1189,24 @@ def main(argv: Sequence[str] | None = None) -> int:
             annotator_id=args.annotator_id,
         )
 
+    if args.command == "sample-annotations":
+        return cmd_sample_annotations(
+            num=args.num,
+            seed=args.seed,
+            output_dir=args.output_dir,
+        )
+    if args.command == "analyze-human-annotations":
+        return cmd_analyze_human_annotations(
+            args.export_a,
+            export_b=args.export_b,
+            tasks_dir=args.tasks_dir,
+            runs_dir=args.runs_dir,
+            output_dir=args.output_dir,
+        )
     parser.error(f"Unknown command: {args.command}")
     return 2
+
+
+
+
 

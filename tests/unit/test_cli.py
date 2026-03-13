@@ -185,6 +185,163 @@ def test_cmd_annotate_human_dispatches_to_server(
     }
 
 
+
+def test_build_parser_supports_human_annotation_pipeline_commands() -> None:
+    parser = cli.build_parser()
+
+    sample_args = parser.parse_args([
+        "sample-annotations",
+        "--num",
+        "15",
+        "--seed",
+        "19",
+        "--output-dir",
+        "artifacts/runs/_human_annotations",
+    ])
+    assert sample_args.command == "sample-annotations"
+    assert sample_args.num == 15
+    assert sample_args.seed == 19
+    assert sample_args.output_dir == Path("artifacts/runs/_human_annotations")
+
+    analyze_args = parser.parse_args([
+        "analyze-human-annotations",
+        "--export-a",
+        "reports/human_annotation/exports/reviewer_1.json",
+        "--export-b",
+        "reports/human_annotation/exports/reviewer_2.json",
+        "--tasks-dir",
+        "artifacts/runs/_human_annotations",
+        "--runs-dir",
+        "artifacts/runs",
+        "--output-dir",
+        "reports/human_annotation/analysis",
+    ])
+    assert analyze_args.command == "analyze-human-annotations"
+    assert analyze_args.export_a == Path("reports/human_annotation/exports/reviewer_1.json")
+    assert analyze_args.export_b == Path("reports/human_annotation/exports/reviewer_2.json")
+    assert analyze_args.tasks_dir == Path("artifacts/runs/_human_annotations")
+    assert analyze_args.runs_dir == Path("artifacts/runs")
+    assert analyze_args.output_dir == Path("reports/human_annotation/analysis")
+
+
+def test_cmd_sample_annotations_dispatches_to_sampler(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from user_signal_mining_agents.evaluation import sample_annotations
+
+    called: dict[str, object] = {}
+
+    def _fake_sample_for_annotation(*, num_samples: int, output_dir: Path | None, seed: int) -> None:
+        called["num_samples"] = num_samples
+        called["output_dir"] = output_dir
+        called["seed"] = seed
+
+    monkeypatch.setattr(sample_annotations, "sample_for_annotation", _fake_sample_for_annotation)
+
+    code = cli.cmd_sample_annotations(num=15, seed=19, output_dir=tmp_path)
+
+    assert code == 0
+    assert called == {
+        "num_samples": 15,
+        "output_dir": tmp_path,
+        "seed": 19,
+    }
+
+
+def test_cmd_analyze_human_annotations_dispatches_to_analysis(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    from user_signal_mining_agents.evaluation import human_annotation_analysis
+
+    calls: dict[str, object] = {}
+    export_a = tmp_path / "reviewer_1.json"
+    export_b = tmp_path / "reviewer_2.json"
+    json_path = tmp_path / "analysis" / "human_annotation_summary.json"
+    markdown_path = tmp_path / "analysis" / "human_annotation_report.md"
+
+    summary = human_annotation_analysis.HumanAnnotationAnalysisSummary(
+        tasks_dir=str(tmp_settings.run_artifacts_dir / "_human_annotations"),
+        runs_dir=str(tmp_settings.run_artifacts_dir),
+        exports=[
+            human_annotation_analysis.AnnotationExportInfo(
+                annotator_id="reviewer_1",
+                path=str(export_a),
+                result_count=20,
+            ),
+            human_annotation_analysis.AnnotationExportInfo(
+                annotator_id="reviewer_2",
+                path=str(export_b),
+                result_count=20,
+            ),
+        ],
+        overlapping_task_ids=["task_prompt-1"],
+        interannotator_overall_preference=human_annotation_analysis.AgreementMetric(
+            metric="overall_preference",
+            sample_size=1,
+            exact_agreement=1.0,
+            cohen_kappa=1.0,
+        ),
+        judge_alignment=[
+            human_annotation_analysis.JudgeAlignmentSummary(
+                annotator_id="reviewer_1",
+                sample_size=1,
+                exact_agreement=1.0,
+                cohen_kappa=1.0,
+                human_preference_counts={"system_a": 0, "system_b": 1, "tie": 0},
+                judge_preference_counts={"system_a": 0, "system_b": 1, "tie": 0},
+            )
+        ],
+    )
+
+    def _fake_analyze_and_write_human_annotation_report(
+        export_a_path: Path,
+        *,
+        export_b_path: Path | None,
+        tasks_dir: Path,
+        runs_dir: Path,
+        output_dir: Path,
+    ):
+        calls["export_a_path"] = export_a_path
+        calls["export_b_path"] = export_b_path
+        calls["tasks_dir"] = tasks_dir
+        calls["runs_dir"] = runs_dir
+        calls["output_dir"] = output_dir
+        return summary, json_path, markdown_path
+
+    monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
+    monkeypatch.setattr(
+        human_annotation_analysis,
+        "analyze_and_write_human_annotation_report",
+        _fake_analyze_and_write_human_annotation_report,
+    )
+
+    code = cli.cmd_analyze_human_annotations(
+        export_a,
+        export_b=export_b,
+        tasks_dir=None,
+        runs_dir=None,
+        output_dir=tmp_path / "analysis",
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert calls == {
+        "export_a_path": export_a,
+        "export_b_path": export_b,
+        "tasks_dir": tmp_settings.run_artifacts_dir / "_human_annotations",
+        "runs_dir": tmp_settings.run_artifacts_dir,
+        "output_dir": tmp_path / "analysis",
+    }
+    assert payload["status"] == "ok"
+    assert payload["command"] == "analyze-human-annotations"
+    assert payload["payload"]["overlapping_task_count"] == 1
+    assert payload["payload"]["json_report_path"] == str(json_path)
+    assert payload["payload"]["markdown_report_path"] == str(markdown_path)
+
 def test_build_parser_supports_variant_commands() -> None:
     parser = cli.build_parser()
 
@@ -566,4 +723,7 @@ def test_cmd_eval_robustness_returns_non_zero_on_gate_failure(
         / "robustness_summary.json"
     )
     assert summary_path.exists()
+
+
+
 
