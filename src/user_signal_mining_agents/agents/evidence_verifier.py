@@ -40,6 +40,19 @@ def _normalize_focus_point(raw: dict) -> dict:
     return out
 
 
+def _fallback_supporting_snippets(
+    *,
+    original_point: FocusPoint | None,
+    evidence: list[EvidenceSnippet],
+) -> list[str]:
+    if original_point is not None and original_point.supporting_snippets:
+        return original_point.supporting_snippets[:5]
+    if evidence:
+        return [_coerce_to_str(evidence[0].text)]
+    return ["See retrieved evidence."]
+
+
+
 def _format_evidence_block(snippets: list[EvidenceSnippet]) -> str:
     lines: list[str] = []
     for i, snippet in enumerate(snippets, start=1):
@@ -83,7 +96,19 @@ def verify_evidence(
     raw = call_llm_json(system_prompt=system_prompt, user_prompt=user_prompt, settings=s)
 
     focus_list = raw if isinstance(raw, list) else raw.get("focus_points", raw)
-    verified_points = [FocusPoint.model_validate(_normalize_focus_point(fp)) for fp in focus_list]
+    verified_points: list[FocusPoint] = []
+    for index, fp in enumerate(focus_list):
+        normalized = _normalize_focus_point(fp)
+        if not normalized.get("supporting_snippets"):
+            original_point = result.focus_points[index] if index < len(result.focus_points) else None
+            normalized["supporting_snippets"] = _fallback_supporting_snippets(
+                original_point=original_point,
+                evidence=evidence,
+            )
+            con.warning(
+                f"Verifier returned empty supporting_snippets for focus point {index + 1}; using fallback evidence."
+            )
+        verified_points.append(FocusPoint.model_validate(normalized))
 
     con.success("verifier", f"Verified {len(verified_points)} focus points")
 
@@ -94,3 +119,4 @@ def verify_evidence(
         retrieved_evidence=result.retrieved_evidence,
         focus_points=verified_points,
     )
+

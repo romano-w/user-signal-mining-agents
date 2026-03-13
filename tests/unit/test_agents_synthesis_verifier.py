@@ -113,3 +113,45 @@ def test_verify_evidence_rewrites_focus_points(
     assert verified.prompt == synthesis_result.prompt
     assert verified.intent_bundle == synthesis_result.intent_bundle
     assert verified.focus_points[0].supporting_snippets == ["Updated quote"]
+
+
+def test_verify_evidence_falls_back_to_original_supporting_snippets(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+    synthesis_result,
+    evidence_factory,
+) -> None:
+    evidence = [evidence_factory(1), evidence_factory(2)]
+    monkeypatch.setattr(
+        evidence_verifier,
+        "call_llm_json",
+        lambda **_kwargs: {
+            "focus_points": [
+                {
+                    "label": "Focus 1",
+                    "why_it_matters": "Reason 1",
+                    "supporting_snippets": [],
+                    "counter_signal": "Counter 1",
+                    "next_validation_question": "Question 1",
+                },
+                {
+                    "label": "Focus 2",
+                    "why_it_matters": "Reason 2",
+                    "supporting_snippets": ["Quote 2"],
+                    "counter_signal": "Counter 2",
+                    "next_validation_question": "Question 2",
+                },
+                {
+                    "label": "Focus 3",
+                    "why_it_matters": "Reason 3",
+                    "supporting_snippets": ["Quote 3"],
+                    "counter_signal": "Counter 3",
+                    "next_validation_question": "Question 3",
+                },
+            ]
+        },
+    )
+
+    verified = evidence_verifier.verify_evidence(synthesis_result, evidence, tmp_settings)
+
+    assert verified.focus_points[0].supporting_snippets == synthesis_result.focus_points[0].supporting_snippets
