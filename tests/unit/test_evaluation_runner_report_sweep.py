@@ -24,8 +24,7 @@ def _scores(value: float, rationale: str = "ok") -> JudgeScores:
     return JudgeScores(
         relevance=value,
         overall_preference=value,
-        coverage=value,
-        contradiction=value,
+        groundedness=value,
         distinctiveness=value,
         rationale=rationale,
     )
@@ -342,5 +341,4 @@ def test_generate_report_includes_panel_confidence_context(tmp_path: Path) -> No
     assert "Confidence context" in text
     assert "Panel Confidence (3 judges)" in text
     assert "p-value (Pipeline vs Baseline)" in text
-
 

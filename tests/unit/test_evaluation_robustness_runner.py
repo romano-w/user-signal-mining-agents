@@ -55,8 +55,7 @@ def _scores(value: float) -> JudgeScores:
     return JudgeScores(
         relevance=value,
         overall_preference=value,
-        coverage=value,
-        contradiction=value,
+        groundedness=value,
         distinctiveness=value,
         rationale=f"score {value}",
     )
@@ -130,8 +129,7 @@ def test_evaluate_case_thresholds_flags_drops() -> None:
     failing_scores = JudgeScores(
         relevance=2.8,
         overall_preference=2.9,
-        coverage=2.8,
-        contradiction=2.8,
+        groundedness=2.8,
         distinctiveness=2.8,
         rationale="drop",
     )

@@ -19,8 +19,7 @@ from ..schemas import FounderPrompt, JudgeResult, SynthesisResult
 
 RUBRIC_DIMS = [
     "relevance",
-    "contradiction",
-    "coverage",
+    "groundedness",
     "distinctiveness",
 ]
 

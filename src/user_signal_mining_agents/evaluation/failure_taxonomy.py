@@ -18,14 +18,9 @@ _DIMENSION_RULES: list[tuple[str, str, str]] = [
         "Refocus each focus point on the founder prompt and remove tangential themes.",
     ),
     (
-        "contradiction",
-        "contradiction_blindness",
-        "Surface counter-signals and state how they change confidence in each claim.",
-    ),
-    (
-        "coverage",
-        "coverage_gap",
-        "Cover missing high-signal themes from the evidence set and anchor each to concrete snippets.",
+        "groundedness",
+        "groundedness_gap",
+        "Anchor each focus point to specific evidence snippets and remove generic or unsupported claims.",
     ),
     (
         "distinctiveness",
@@ -35,7 +30,7 @@ _DIMENSION_RULES: list[tuple[str, str, str]] = [
     (
         "overall_preference",
         "overall_preference_gap",
-        "Strengthen synthesis quality across all dimensions so this output is clearly preferable overall.",
+        "Raise overall founder usefulness across relevance, groundedness, and distinctiveness so this output is clearly preferable overall.",
     ),
 ]
 

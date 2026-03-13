@@ -148,8 +148,7 @@ def run_sweep(
             # Collect scores
             dims = [
                 "relevance",
-                "contradiction",
-                "coverage",
+                "groundedness",
                 "distinctiveness",
             ]
             dim_scores: dict[str, float] = {}

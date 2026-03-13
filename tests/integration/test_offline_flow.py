@@ -127,8 +127,7 @@ def test_offline_evaluation_and_report_artifacts(
             scores=JudgeScores(
                 relevance=value,
                 overall_preference=value,
-                coverage=value,
-                contradiction=value,
+                groundedness=value,
                 distinctiveness=value,
                 rationale=f"rationale {variant}",
             ),

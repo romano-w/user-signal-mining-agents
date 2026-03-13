@@ -21,8 +21,7 @@ def _judge_scores(value: float) -> JudgeScores:
     return JudgeScores(
         relevance=value,
         overall_preference=value,
-        coverage=value,
-        contradiction=value,
+        groundedness=value,
         distinctiveness=value,
         rationale="consistent",
     )
@@ -67,7 +66,7 @@ def test_judge_panel_result_contract() -> None:
         aggregate_scores=_judge_scores(4.1),
         metrics_with_ci=[
             MetricWithCI(
-                metric="overall",
+                metric="overall_preference",
                 mean=4.1,
                 ci95_lower=3.9,
                 ci95_upper=4.3,
@@ -76,7 +75,7 @@ def test_judge_panel_result_contract() -> None:
         ],
         significance=[
             SignificanceResult(
-                metric="overall",
+                metric="overall_preference",
                 p_value=0.03,
                 is_significant=True,
                 effect_size=0.35,
@@ -85,7 +84,7 @@ def test_judge_panel_result_contract() -> None:
     )
 
     assert result.panel_size == 3
-    assert result.metrics_with_ci[0].metric == "overall"
+    assert result.metrics_with_ci[0].metric == "overall_preference"
     assert result.significance[0].is_significant is True
 
 
@@ -102,7 +101,7 @@ def test_failure_tag_robustness_case_and_domain_pack_contracts() -> None:
         family="negation",
         description="Flip polarity markers in founder statement.",
         transform_spec={"strategy": "negation_flip"},
-        expected_behavior="Should preserve grounding and avoid contradiction errors.",
+        expected_behavior="Should preserve grounding and avoid unsupported generic claims.",
     )
     domain = DomainPack(
         domain_id="saas",
@@ -113,5 +112,4 @@ def test_failure_tag_robustness_case_and_domain_pack_contracts() -> None:
     assert tag.severity == 4
     assert case.family == "negation"
     assert domain.enabled is True
-
 

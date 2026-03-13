@@ -8,8 +8,7 @@ from ..schemas import JudgeResult
 
 RUBRIC_DIMS = [
     "relevance",
-    "contradiction",
-    "coverage",
+    "groundedness",
     "distinctiveness",
 ]
 
@@ -74,7 +73,7 @@ def summarize_metric_deltas(pairs: list[tuple[JudgeResult, JudgeResult]]) -> lis
     overall_pipeline = _avg([pipeline.scores.overall_preference for _, pipeline in pairs])
     deltas.append(
         MetricDelta(
-            metric="overall",
+            metric="overall_preference",
             baseline_avg=overall_baseline,
             pipeline_avg=overall_pipeline,
             delta=overall_pipeline - overall_baseline,
@@ -91,7 +90,7 @@ def find_critical_metric_regressions(
 ) -> list[RegressionViolation]:
     violations: list[RegressionViolation] = []
     for metric in summarize_metric_deltas(pairs):
-        allowed_drop = max_overall_drop if metric.metric == "overall" else max_dimension_drop
+        allowed_drop = max_overall_drop if metric.metric == "overall_preference" else max_dimension_drop
         if metric.delta < -allowed_drop:
             violations.append(
                 RegressionViolation(

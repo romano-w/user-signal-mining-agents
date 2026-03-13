@@ -22,8 +22,7 @@ def _judge_payload(a_value: float, b_value: float) -> dict[str, dict[str, object
         return {
             "relevance": v,
             "overall_preference": v,
-            "coverage": v,
-            "contradiction": v,
+            "groundedness": v,
             "distinctiveness": v,
             "rationale": f"score {v}",
         }

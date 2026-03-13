@@ -16,8 +16,7 @@ def _judge(
     *,
     relevance: float,
     overall_preference: float,
-    coverage: float,
-    contradiction: float,
+    groundedness: float,
     distinctiveness: float,
 ) -> JudgeResult:
     return JudgeResult(
@@ -26,8 +25,7 @@ def _judge(
         scores=JudgeScores(
             relevance=relevance,
             overall_preference=overall_preference,
-            coverage=coverage,
-            contradiction=contradiction,
+            groundedness=groundedness,
             distinctiveness=distinctiveness,
             rationale=f"{variant} rationale",
         ),
@@ -40,8 +38,7 @@ def test_classify_judge_result_flags_low_dimensions_deterministically() -> None:
         "pipeline",
         relevance=2.5,
         overall_preference=3.4,
-        coverage=3.2,
-        contradiction=2.0,
+        groundedness=2.0,
         distinctiveness=4.0,
     )
 
@@ -49,12 +46,11 @@ def test_classify_judge_result_flags_low_dimensions_deterministically() -> None:
 
     assert [tag.tag_id for tag in tags] == [
         "ft_p1_pipeline_relevance_miss",
-        "ft_p1_pipeline_contradiction_blindness",
-        "ft_p1_pipeline_coverage_gap",
+        "ft_p1_pipeline_groundedness_gap",
         "ft_p1_pipeline_overall_preference_gap",
         "ft_p1_pipeline_overall_quality_drop",
     ]
-    assert [tag.severity for tag in tags] == [4, 5, 3, 3, 3]
+    assert [tag.severity for tag in tags] == [4, 5, 3, 3]
     assert tags[0].evidence_refs[0] == "p1/judge_pipeline.json#scores.relevance"
 
 
@@ -71,8 +67,7 @@ def test_generate_failure_taxonomy_writes_artifacts_from_run_files(tmp_path: Pat
             "baseline",
             relevance=4.8,
             overall_preference=4.7,
-            coverage=4.9,
-            contradiction=4.6,
+            groundedness=4.9,
             distinctiveness=4.8,
         ).model_dump_json(indent=2),
         encoding="utf-8",
@@ -83,8 +78,7 @@ def test_generate_failure_taxonomy_writes_artifacts_from_run_files(tmp_path: Pat
             "pipeline",
             relevance=2.5,
             overall_preference=3.4,
-            coverage=3.2,
-            contradiction=2.0,
+            groundedness=2.0,
             distinctiveness=4.0,
         ).model_dump_json(indent=2),
         encoding="utf-8",
@@ -96,8 +90,7 @@ def test_generate_failure_taxonomy_writes_artifacts_from_run_files(tmp_path: Pat
             "baseline",
             relevance=4.5,
             overall_preference=4.6,
-            coverage=4.4,
-            contradiction=4.7,
+            groundedness=4.4,
             distinctiveness=4.6,
         ).model_dump_json(indent=2),
         encoding="utf-8",
@@ -108,8 +101,7 @@ def test_generate_failure_taxonomy_writes_artifacts_from_run_files(tmp_path: Pat
             "pipeline",
             relevance=4.7,
             overall_preference=4.5,
-            coverage=4.6,
-            contradiction=4.8,
+            groundedness=4.6,
             distinctiveness=4.7,
         ).model_dump_json(indent=2),
         encoding="utf-8",
@@ -119,8 +111,7 @@ def test_generate_failure_taxonomy_writes_artifacts_from_run_files(tmp_path: Pat
 
     assert [tag.tag_id for tag in tags] == [
         "ft_p1_pipeline_relevance_miss",
-        "ft_p1_pipeline_contradiction_blindness",
-        "ft_p1_pipeline_coverage_gap",
+        "ft_p1_pipeline_groundedness_gap",
         "ft_p1_pipeline_overall_preference_gap",
         "ft_p1_pipeline_overall_quality_drop",
     ]
@@ -146,5 +137,4 @@ def test_generate_root_cause_report_handles_no_tags(tmp_path: Path) -> None:
 
     assert "Failure tags generated" in text
     assert "No low-quality outputs were tagged" in text
-
 

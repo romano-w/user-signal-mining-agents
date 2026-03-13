@@ -54,8 +54,7 @@ def _scores(value: float) -> JudgeScores:
     return JudgeScores(
         relevance=value,
         overall_preference=value,
-        coverage=value,
-        contradiction=value,
+        groundedness=value,
         distinctiveness=value,
         rationale=f"score {value}",
     )

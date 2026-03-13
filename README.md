@@ -2,7 +2,7 @@
 
 Founder-grounded review mining framework for the AI Agents W26 final project.
 
-This system compares a **zero-shot baseline** against a **multi-step grounded pipeline** for extracting actionable focus points from customer reviews, scored by an **LLM judge** across 5 rubric dimensions.
+This system compares a **zero-shot baseline** against a **multi-step grounded pipeline** for extracting actionable focus points from customer reviews, scored by an **LLM judge** across 4 rubric dimensions.
 
 ## Architecture
 
@@ -20,7 +20,7 @@ Founder Prompt ─────────────────────�
 │                                                                       │
 └─ Judge (LLM-as-judge)                                                 │
     ├─ A/B position debiasing (random system assignment)                │
-    └─ 5-dimension rubric scoring                                       │
+    └─ 4-dimension rubric scoring                                       │
 ```
 
 ### Evaluation Rubric
@@ -28,22 +28,13 @@ Founder Prompt ─────────────────────�
 | Dimension | What it measures |
 |---|---|
 | **Relevance** | Does the output address the founder's specific intent? |
-| **Contradiction** | Does the output acknowledge counter-signals? |
-| **Coverage** | Does the output cover the most important evidence-backed themes? |
+| **Groundedness** | Are focus points traceable to specific evidence snippets rather than generic claims? |
 | **Distinctiveness** | Are focus points distinct rather than repetitive? |
 | **Overall Preference** | All-things-considered, how preferable is this output for founder decision-making? |
 
-### Latest Results
+### Headline Metric
 
-| Dimension | Baseline | Pipeline | Δ |
-|---|:---:|:---:|:---:|
-| Relevance | 4.70 | 4.50 | -0.20 |
-| Contradiction | 4.30 | 4.60 | **+0.30** |
-| Coverage | 4.70 | 4.70 | +0.00 |
-| Distinctiveness | 4.30 | 4.50 | **+0.20** |
-| **Overall Preference** | **4.50** | **4.56** | **+0.06** |
-
-> Pipeline edges out baseline primarily through better contradiction handling and distinctiveness, while maintaining coverage.
+`overall_preference` is the top-line comparison metric. `relevance` is the floor, `groundedness` is the key differentiator, and `distinctiveness` guards against repetitive focus points. For run-specific numbers, see the generated evaluation artifacts under `artifacts/runs/`.
 
 ## Prerequisites
 
@@ -140,7 +131,7 @@ uv run usm annotate-human --tasks-dir artifacts/runs/_human_annotations --host 1
 
 What it provides:
 - Blinded side-by-side System A vs System B focus points
-- 1-5 scoring across all rubric dimensions
+- 1-5 scoring on relevance, groundedness, and distinctiveness
 - Overall preference + difficulty rating
 - Per-annotator autosave to `artifacts/runs/_human_annotations/_results/<annotator_id>/<task_id>.json`
 - One-click export of your saved annotations as a single JSON file
@@ -285,7 +276,4 @@ uv run python scripts/build_index.py --device cpu
 ## Data Policy
 
 The Yelp dataset is intended for educational use. Review the [official terms](https://business.yelp.com/data/resources/open-dataset/) before use. Raw data, processed outputs, and generated artifacts are excluded from git.
-
-
-
 

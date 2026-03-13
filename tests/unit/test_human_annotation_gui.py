@@ -44,15 +44,13 @@ def _payload(task_id: str, annotator_id: str) -> dict[str, object]:
         "annotator_id": annotator_id,
         "system_a_scores": {
             "relevance": 4,
-            "coverage": 5,
-            "contradiction": 3,
+            "groundedness": 5,
             "distinctiveness": 4,
             "rationale": "A was generally tighter.",
         },
         "system_b_scores": {
             "relevance": 3,
-            "coverage": 4,
-            "contradiction": 3,
+            "groundedness": 4,
             "distinctiveness": 3,
             "rationale": "B repeated one theme.",
         },
@@ -132,3 +130,4 @@ def test_annotation_html_explains_the_prestart_gate() -> None:
     assert "Tasks stay hidden until annotation begins" in html
     assert "Session not started" in html
     assert "Begin Annotation" in html
+

@@ -8,7 +8,7 @@ Input:
 
 Tasks:
 - Identify up to 6 concrete weaknesses in the draft focus points.
-- Focus on relevance, contradiction, coverage, and distinctiveness.
+- Focus on relevance, groundedness, and distinctiveness.
 - Write feedback as actionable revision notes.
 
 Rules:
@@ -27,3 +27,4 @@ or
 ```json
 {"feedback": ["Revision note 1", "Revision note 2"]}
 ```
+

@@ -69,8 +69,7 @@ class JudgeScores(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     relevance: float = Field(ge=1, le=5)
-    contradiction: float = Field(ge=1, le=5)
-    coverage: float = Field(ge=1, le=5)
+    groundedness: float = Field(ge=1, le=5)
     distinctiveness: float = Field(ge=1, le=5)
     overall_preference: float = Field(ge=1, le=5)
     rationale: str
@@ -119,8 +118,7 @@ class HumanAnnotationScores(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     relevance: int = Field(ge=1, le=5)
-    contradiction: int = Field(ge=1, le=5)
-    coverage: int = Field(ge=1, le=5)
+    groundedness: int = Field(ge=1, le=5)
     distinctiveness: int = Field(ge=1, le=5)
     rationale: str | None = None
 
@@ -259,6 +257,4 @@ class DomainPack(BaseModel):
     founder_prompts_path: str
     evaluation_notes: str | None = None
     enabled: bool = True
-
-
 

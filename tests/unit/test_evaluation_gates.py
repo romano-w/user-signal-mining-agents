@@ -12,8 +12,7 @@ def _scores(value: float) -> JudgeScores:
     return JudgeScores(
         relevance=value,
         overall_preference=value,
-        coverage=value,
-        contradiction=value,
+        groundedness=value,
         distinctiveness=value,
         rationale=f"score={value}",
     )
@@ -59,10 +58,10 @@ def test_summarize_metric_deltas_includes_all_dimensions_and_overall() -> None:
 
     summary = {item.metric: item for item in gates.summarize_metric_deltas(pairs)}
 
-    assert set(summary.keys()) == {*gates.RUBRIC_DIMS, "overall"}
+    assert set(summary.keys()) == {*gates.RUBRIC_DIMS, "overall_preference"}
     assert summary["relevance"].baseline_avg == pytest.approx(3.5)
     assert summary["relevance"].pipeline_avg == pytest.approx(4.0)
-    assert summary["overall"].delta == pytest.approx(0.5)
+    assert summary["overall_preference"].delta == pytest.approx(0.5)
 
 
 def test_find_critical_metric_regressions_returns_empty_when_within_thresholds() -> None:
@@ -87,5 +86,5 @@ def test_find_critical_metric_regressions_flags_dimension_and_overall_drops() ->
     )
 
     metrics = {violation.metric for violation in violations}
-    assert metrics == {*gates.RUBRIC_DIMS, "overall"}
+    assert metrics == {*gates.RUBRIC_DIMS, "overall_preference"}
 

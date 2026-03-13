@@ -8,10 +8,9 @@ Context:
 
 Rubric (score each 1-5):
 - `relevance`: does the output address the founder's specific intent and context?
-- `contradiction`: does the output acknowledge counter-signals or nuance?
-- `coverage`: does the output cover the most important user-signal themes in the evidence set?
+- `groundedness`: are the focus points traceable to specific evidence snippets, or are they generic claims? Reward concrete evidence linkage and penalize unsupported generalities.
 - `distinctiveness`: are the focus points distinct rather than repetitive?
-- `overall_preference`: all-things-considered, how preferable is this output for the founder?
+- `overall_preference`: all-things-considered, how useful is this for the founder?
 
 Instructions:
 - Score each metric from 1 to 5.

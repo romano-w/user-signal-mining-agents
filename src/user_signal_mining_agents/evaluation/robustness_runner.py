@@ -19,8 +19,7 @@ from ..schemas import FounderPrompt, JudgeResult, JudgeScores, RobustnessCase, S
 
 RUBRIC_DIMS = [
     "relevance",
-    "contradiction",
-    "coverage",
+    "groundedness",
     "distinctiveness",
 ]
 
@@ -84,7 +83,7 @@ _ADVERSARIAL_CORE_CASES = (
         family="negation",
         description="Flip one polarity marker in the founder prompt statement.",
         transform_spec={"strategy": "negation_flip"},
-        expected_behavior="Maintain grounded analysis while preserving contradiction awareness.",
+        expected_behavior="Maintain grounded analysis while preserving nuance and counter-signals.",
     ),
     RobustnessCase(
         case_id="rb_noise_injection",

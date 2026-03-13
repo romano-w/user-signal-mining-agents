@@ -649,14 +649,12 @@ def cmd_evaluate(
     if summary.pairs:
         dims = [
             "relevance",
-            "contradiction",
-            "coverage",
+            "groundedness",
             "distinctiveness",
         ]
         dim_labels = {
             "relevance": "Relevance",
-            "contradiction": "Contradiction",
-            "coverage": "Coverage",
+            "groundedness": "Groundedness",
             "distinctiveness": "Distinctiveness",
         }
         scores: dict[str, tuple[float, float]] = {}
@@ -958,8 +956,7 @@ def cmd_sweep(prompt_id: str | None, domain_arg: str | None) -> int:
     table.add_column("Variant", style="cyan bold")
     table.add_column("Description", style="dim")
     table.add_column("Rel", justify="center")
-    table.add_column("Con", justify="center")
-    table.add_column("Cov", justify="center")
+    table.add_column("Ground", justify="center")
     table.add_column("Dist", justify="center")
     table.add_column("Overall", justify="center", style="bold")
 
@@ -968,8 +965,7 @@ def cmd_sweep(prompt_id: str | None, domain_arg: str | None) -> int:
             r.variant,
             r.description,
             f"{r.scores.get('relevance', 0):.1f}",
-            f"{r.scores.get('contradiction', 0):.1f}",
-            f"{r.scores.get('coverage', 0):.1f}",
+            f"{r.scores.get('groundedness', 0):.1f}",
             f"{r.scores.get('distinctiveness', 0):.1f}",
             f"{r.overall:.2f}",
         )
@@ -1071,16 +1067,4 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     parser.error(f"Unknown command: {args.command}")
     return 2
-
-
-
-
-
-
-
-
-
-
-
-
 

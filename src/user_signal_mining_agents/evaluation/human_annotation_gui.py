@@ -15,22 +15,17 @@ RUBRIC_DIMENSIONS: list[dict[str, str]] = [
     {
         "key": "relevance",
         "label": "Relevance",
-        "description": "How directly does the output address the founder prompt?",
+        "description": "Does the output address the founder's specific intent?",
     },
     {
-        "key": "contradiction",
-        "label": "Contradiction",
-        "description": "Does this meaningfully account for counter-signals?",
-    },
-    {
-        "key": "coverage",
-        "label": "Coverage",
-        "description": "Does this cover the most important user-signal themes in evidence?",
+        "key": "groundedness",
+        "label": "Groundedness",
+        "description": "Are focus points traceable to specific evidence snippets rather than generic claims?",
     },
     {
         "key": "distinctiveness",
         "label": "Distinctiveness",
-        "description": "Are focus points distinct and not repetitive?",
+        "description": "Are focus points distinct rather than repetitive?",
     },
 ]
 

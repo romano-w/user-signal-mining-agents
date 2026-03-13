@@ -15,8 +15,7 @@ from ..schemas import (
 
 RUBRIC_DIMS = [
     "relevance",
-    "contradiction",
-    "coverage",
+    "groundedness",
     "distinctiveness",
 ]
 

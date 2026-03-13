@@ -1,4 +1,4 @@
-"""LLM Judge: score two system outputs on the 5-dimension rubric."""
+"""LLM Judge: score two system outputs on the 4-dimension rubric."""
 
 from __future__ import annotations
 
@@ -23,8 +23,7 @@ from ..schemas import (
 
 RUBRIC_DIMS = (
     "relevance",
-    "contradiction",
-    "coverage",
+    "groundedness",
     "distinctiveness",
 )
 PANEL_METRICS = (*RUBRIC_DIMS, "overall_preference")
@@ -60,8 +59,7 @@ def _build_aggregate_scores(per_judge_scores: list[JudgeScores]) -> JudgeScores:
     panel_size = len(per_judge_scores)
     return JudgeScores(
         relevance=_mean([s.relevance for s in per_judge_scores]),
-        contradiction=_mean([s.contradiction for s in per_judge_scores]),
-        coverage=_mean([s.coverage for s in per_judge_scores]),
+        groundedness=_mean([s.groundedness for s in per_judge_scores]),
         distinctiveness=_mean([s.distinctiveness for s in per_judge_scores]),
         overall_preference=_mean([s.overall_preference for s in per_judge_scores]),
         rationale=f"Panel aggregate across {panel_size} judge(s).",
@@ -240,7 +238,7 @@ def _judge_once(
         f"{a_block}\n\n"
         f"{b_block}\n\n"
         "Score both systems. Return JSON with keys \"system_a\" and \"system_b\", "
-        "each containing: relevance, contradiction, coverage, distinctiveness, "
+        "each containing: relevance, groundedness, distinctiveness, "
         "overall_preference (all 1-5), and rationale."
     )
 

@@ -157,8 +157,7 @@ def test_judge_panel_result_accepts_minimal_aggregate_payload() -> None:
             "aggregate_scores": {
                 "relevance": 4.2,
                 "overall_preference": 4.1,
-                "coverage": 4.3,
-                "contradiction": 4.0,
+                "groundedness": 4.3,
                 "distinctiveness": 4.0,
                 "rationale": "aggregate",
             },
