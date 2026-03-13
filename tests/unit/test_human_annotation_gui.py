@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from user_signal_mining_agents.evaluation.human_annotation_gui import AnnotationWorkspace
+from user_signal_mining_agents.evaluation.human_annotation_gui import AnnotationWorkspace, _build_index_html
 from user_signal_mining_agents.schemas import HumanAnnotationTask
 
 
@@ -125,3 +125,10 @@ def test_annotation_workspace_rejects_invalid_annotator_id() -> None:
     with pytest.raises(ValueError, match="annotator_id"):
         AnnotationWorkspace.normalize_annotator_id("invalid id")
 
+
+def test_annotation_html_explains_the_prestart_gate() -> None:
+    html = _build_index_html("")
+
+    assert "Tasks stay hidden until annotation begins" in html
+    assert "Session not started" in html
+    assert "Begin Annotation" in html

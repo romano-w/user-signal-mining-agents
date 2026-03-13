@@ -136,6 +136,42 @@
       background: var(--accent-strong);
     }
 
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: 0.46;
+      transform: none;
+    }
+
+    .button:disabled:hover {
+      border-color: var(--line);
+      transform: none;
+      background: #fff;
+    }
+
+    .button.primary:disabled:hover {
+      background: var(--accent);
+    }
+
+    .sidebar-hint {
+      margin: 0 18px 14px;
+      padding: 12px 13px;
+      border: 1px dashed #d9c5af;
+      border-radius: 12px;
+      background: #f8f1e7;
+      color: #594d40;
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .sidebar-hint strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #3f3429;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
     .task-list {
       overflow: auto;
       padding: 0 10px 12px;
@@ -243,6 +279,54 @@
       color: var(--muted);
       text-align: right;
       white-space: nowrap;
+    }
+
+    .workspace-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .start-state {
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .start-state h3 {
+      margin: 0;
+      font-size: 1.24rem;
+      font-family: "Georgia", "Times New Roman", serif;
+    }
+
+    .start-state p {
+      margin: 0;
+      line-height: 1.55;
+      color: #4f4338;
+      max-width: 72ch;
+    }
+
+    .start-list {
+      margin: 0;
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: #43382d;
+      line-height: 1.45;
+    }
+
+    .start-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .start-note {
+      color: var(--muted);
+      font-size: 0.9rem;
     }
 
     .prompt {
@@ -528,22 +612,42 @@
         <label for="annotatorInput">Annotator ID</label>
         <input id="annotatorInput" placeholder="e.g. reviewer_01" />
       </div>
-      <div class="task-toolbar">
-        <button id="loadTasksBtn" class="button primary" type="button">Load Tasks</button>
-        <button id="exportBtn" class="button" type="button">Export My JSON</button>
+      <div id="sidebarHint" class="sidebar-hint">
+        <strong>Before You Start</strong>
+        Enter your annotator ID, then click Begin Annotation. Tasks stay hidden until the session starts, and autosave is tied to that ID.
       </div>
-      <ul id="taskList" class="task-list"></ul>
+      <div class="task-toolbar">
+        <button id="loadTasksBtn" class="button primary" type="button">Begin Annotation</button>
+        <button id="exportBtn" class="button" type="button" disabled>Export My JSON</button>
+      </div>
+      <ul id="taskList" class="task-list" hidden></ul>
     </aside>
 
     <main class="main">
       <section class="panel topbar">
         <div>
-          <h2 id="topTitle" class="headline">Select a task</h2>
-          <p id="statusLine" class="status">Annotator ID is required before saving.</p>
+          <h2 id="topTitle" class="headline">Start your annotation session</h2>
+          <p id="statusLine" class="status">Enter an annotator ID and click Begin Annotation to unlock the next task.</p>
         </div>
-        <div id="progressText" class="progress">0 / 0 completed</div>
+        <div id="progressText" class="progress">Session not started</div>
       </section>
 
+      <section id="startPanel" class="panel start-state">
+        <span class="chip">Session Gate</span>
+        <h3 id="startPanelTitle">Tasks stay hidden until annotation begins</h3>
+        <p id="startPanelBody">Use a stable annotator ID so autosave and export write to the right reviewer folder. Once you begin, the workbench will load the first pending task automatically.</p>
+        <ul class="start-list">
+          <li>Enter your annotator ID in the left sidebar.</li>
+          <li>Click Begin Annotation to reveal the next task.</li>
+          <li>Score both systems, pick an overall preference, then save.</li>
+        </ul>
+        <div class="start-actions">
+          <button id="startSessionBtn" class="button primary" type="button">Begin Annotation</button>
+          <span class="start-note">Nothing is autosaved until you start the session.</span>
+        </div>
+      </section>
+
+      <div id="annotationWorkspace" class="workspace-shell" hidden>
       <section class="panel prompt">
         <h2 id="promptLabel">Prompt</h2>
         <p id="promptStatement">Choose a task to begin annotation.</p>
@@ -612,6 +716,7 @@
         </div>
         <div id="evidenceList" class="evidence-list"></div>
       </section>
+      </div>
     </main>
   </div>
 
@@ -625,16 +730,24 @@
       currentTask: null,
       evidenceFilter: "",
       dirty: false,
+      sessionStarted: Boolean(DEFAULT_ANNOTATOR && String(DEFAULT_ANNOTATOR).trim()),
+      isLoadingTasks: false,
     };
 
     const refs = {
       annotatorInput: document.getElementById("annotatorInput"),
       loadTasksBtn: document.getElementById("loadTasksBtn"),
+      startSessionBtn: document.getElementById("startSessionBtn"),
       exportBtn: document.getElementById("exportBtn"),
+      sidebarHint: document.getElementById("sidebarHint"),
       taskList: document.getElementById("taskList"),
       topTitle: document.getElementById("topTitle"),
       statusLine: document.getElementById("statusLine"),
       progressText: document.getElementById("progressText"),
+      startPanel: document.getElementById("startPanel"),
+      startPanelTitle: document.getElementById("startPanelTitle"),
+      startPanelBody: document.getElementById("startPanelBody"),
+      annotationWorkspace: document.getElementById("annotationWorkspace"),
       promptLabel: document.getElementById("promptLabel"),
       promptStatement: document.getElementById("promptStatement"),
       promptNotes: document.getElementById("promptNotes"),
@@ -653,14 +766,111 @@
       evidenceTitle: document.getElementById("evidenceTitle"),
       evidenceList: document.getElementById("evidenceList"),
     };
+    function setSidebarHint(title, body) {
+      refs.sidebarHint.innerHTML = `<strong>${escapeHtml(title)}</strong>${escapeHtml(body)}`;
+    }
+
+    function renderStartPanel(mode) {
+      if (mode === "loading") {
+        refs.startPanelTitle.textContent = "Loading your annotation workspace";
+        refs.startPanelBody.textContent = "Pulling tasks for this annotator and revealing the next item.";
+        refs.startSessionBtn.textContent = "Loading Tasks...";
+        return;
+      }
+
+      if (mode === "empty") {
+        refs.startPanelTitle.textContent = "No annotation tasks are ready";
+        refs.startPanelBody.textContent = "This annotator session is active, but no valid HumanAnnotationTask files were found in the selected task directory.";
+        refs.startSessionBtn.textContent = "Reload Tasks";
+        return;
+      }
+
+      if (mode === "selection") {
+        refs.startPanelTitle.textContent = "Select a task from the left sidebar";
+        refs.startPanelBody.textContent = "Your session is active. Pick a task to reveal the blinded outputs and begin grading.";
+        refs.startSessionBtn.textContent = "Reload Tasks";
+        return;
+      }
+
+      refs.startPanelTitle.textContent = "Tasks stay hidden until annotation begins";
+      refs.startPanelBody.textContent = "Use a stable annotator ID so autosave and export write to the right reviewer folder. Once you begin, the workbench will load the first pending task automatically.";
+      refs.startSessionBtn.textContent = "Begin Annotation";
+    }
+
+    function updateSessionUi() {
+      const annotatorPresent = Boolean(refs.annotatorInput.value.trim());
+      const hasActiveTask = Boolean(state.currentTask);
+      const hasTasks = state.tasks.length > 0;
+
+      refs.taskList.hidden = !state.sessionStarted;
+      refs.annotationWorkspace.hidden = !hasActiveTask;
+      refs.startPanel.hidden = hasActiveTask;
+
+      refs.loadTasksBtn.textContent = state.sessionStarted ? "Reload Tasks" : "Begin Annotation";
+      refs.startSessionBtn.textContent = state.sessionStarted ? "Reload Tasks" : "Begin Annotation";
+      refs.loadTasksBtn.disabled = state.isLoadingTasks || (!state.sessionStarted && !annotatorPresent);
+      refs.startSessionBtn.disabled = state.isLoadingTasks || (!state.sessionStarted && !annotatorPresent);
+      refs.exportBtn.disabled = !state.sessionStarted || state.isLoadingTasks;
+      refs.saveBtn.disabled = !hasActiveTask;
+      refs.saveNextBtn.disabled = !hasActiveTask;
+      refs.nextBtn.disabled = !hasActiveTask;
+      refs.prevBtn.disabled = !hasActiveTask;
+      refs.evidenceSearch.disabled = !hasActiveTask;
+
+      if (!state.sessionStarted) {
+        refs.topTitle.textContent = "Start your annotation session";
+        refs.progressText.textContent = "Session not started";
+        setSidebarHint(
+          "Before You Start",
+          "Enter your annotator ID, then click Begin Annotation. Tasks stay hidden until the session starts, and autosave is tied to that ID."
+        );
+        renderStartPanel("locked");
+        return;
+      }
+
+      setSidebarHint(
+        "Session Active",
+        "Use the same annotator ID whenever you come back so autosave and exports stay grouped under one reviewer."
+      );
+
+      if (state.isLoadingTasks) {
+        refs.topTitle.textContent = "Loading tasks";
+        refs.progressText.textContent = "Fetching tasks...";
+        renderStartPanel("loading");
+        return;
+      }
+
+      if (!hasActiveTask) {
+        refs.topTitle.textContent = hasTasks ? "Choose a task" : "No tasks found";
+        if (!hasTasks) {
+          refs.progressText.textContent = "0 / 0 completed";
+          renderStartPanel("empty");
+        } else {
+          renderStartPanel("selection");
+        }
+      }
+    }
+
     function init() {
       refs.annotatorInput.value = DEFAULT_ANNOTATOR || "";
-      refs.loadTasksBtn.addEventListener("click", () => loadTasks(true));
+      refs.loadTasksBtn.addEventListener("click", () => beginAnnotationSession(true));
+      refs.startSessionBtn.addEventListener("click", () => beginAnnotationSession(true));
       refs.exportBtn.addEventListener("click", exportResults);
       refs.saveBtn.addEventListener("click", () => saveCurrent(false));
       refs.saveNextBtn.addEventListener("click", () => saveCurrent(true));
       refs.nextBtn.addEventListener("click", () => navigateTask(1));
       refs.prevBtn.addEventListener("click", () => navigateTask(-1));
+      refs.annotatorInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          beginAnnotationSession(true);
+        }
+      });
+      refs.annotatorInput.addEventListener("input", () => {
+        if (!state.sessionStarted) {
+          updateSessionUi();
+        }
+      });
       refs.evidenceSearch.addEventListener("input", (event) => {
         state.evidenceFilter = event.target.value || "";
         renderEvidence();
@@ -693,9 +903,13 @@
         }
       });
 
-      loadTasks(false);
+      updateSessionUi();
+      if (state.sessionStarted) {
+        beginAnnotationSession(false);
+      } else {
+        setStatus("Enter an annotator ID and click Begin Annotation to unlock the next task.");
+      }
     }
-
     function setStatus(message, tone = "normal") {
       refs.statusLine.textContent = message;
       refs.statusLine.classList.remove("error", "success");
@@ -743,6 +957,22 @@
       return payload;
     }
 
+    async function beginAnnotationSession(selectInitialTask) {
+      try {
+        getAnnotatorId(true);
+        state.sessionStarted = true;
+        state.isLoadingTasks = true;
+        updateSessionUi();
+        setStatus("Loading tasks for this annotator...");
+        await loadTasks(selectInitialTask);
+      } catch (error) {
+        setStatus(String(error.message || error), "error");
+      } finally {
+        state.isLoadingTasks = false;
+        updateSessionUi();
+      }
+    }
+
     async function loadTasks(selectInitialTask) {
       try {
         const annotator = getAnnotatorId(false);
@@ -755,7 +985,6 @@
         if (!state.tasks.length) {
           state.currentTaskId = null;
           state.currentTask = null;
-          refs.topTitle.textContent = "No tasks found";
           clearTaskRender();
           setStatus("No valid HumanAnnotationTask files were found.", "error");
           return;
@@ -769,10 +998,12 @@
           await loadTask(state.currentTaskId, false);
         }
       } catch (error) {
+        if (!state.currentTask) {
+          updateSessionUi();
+        }
         setStatus(String(error.message || error), "error");
       }
     }
-
     function updateProgress(completed, total) {
       refs.progressText.textContent = `${completed} / ${total} completed`;
     }
@@ -806,6 +1037,7 @@
       refs.rubricRows.innerHTML = "";
       refs.evidenceTitle.textContent = "Retrieved Evidence";
       refs.evidenceList.innerHTML = "";
+      refs.evidenceSearch.value = "";
       refs.aRationale.value = "";
       refs.bRationale.value = "";
       refs.difficultyInput.value = "3";
@@ -813,8 +1045,8 @@
       for (const input of document.querySelectorAll("input[name='overallPreference']")) {
         input.checked = false;
       }
+      updateSessionUi();
     }
-
     async function loadTask(taskId, confirmUnsaved) {
       if (confirmUnsaved && state.dirty) {
         const proceed = window.confirm("You have unsaved changes. Discard and switch tasks?");
@@ -827,6 +1059,7 @@
         state.currentTaskId = taskId;
         state.currentTask = payload.task;
         state.dirty = false;
+        updateSessionUi();
         refs.topTitle.textContent = `Task: ${taskId}`;
 
         renderTaskList();
@@ -841,7 +1074,6 @@
         setStatus(String(error.message || error), "error");
       }
     }
-
     function renderPrompt() {
       const prompt = state.currentTask?.prompt;
       if (!prompt) return;
@@ -1052,3 +1284,11 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
