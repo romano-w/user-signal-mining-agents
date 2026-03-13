@@ -223,6 +223,32 @@ def test_build_parser_supports_human_annotation_pipeline_commands() -> None:
     assert analyze_args.runs_dir == Path("artifacts/runs")
     assert analyze_args.output_dir == Path("reports/human_annotation/analysis")
 
+    final_analysis_args = parser.parse_args([
+        "build-analysis-report",
+        "--runs-dir",
+        "artifacts/runs",
+        "--sweep-dir",
+        "artifacts/sweep_runs",
+        "--retrieval-summary",
+        "reports/research_upgrade/retrieval_eval_summary.json",
+        "--annotation-tasks-dir",
+        "artifacts/runs/_human_annotations",
+        "--annotation-results-dir",
+        "artifacts/runs/_human_annotations/_results",
+        "--annotation-exports-dir",
+        "reports/human_annotation/exports",
+        "--output-dir",
+        "reports/final_analysis",
+    ])
+    assert final_analysis_args.command == "build-analysis-report"
+    assert final_analysis_args.runs_dir == Path("artifacts/runs")
+    assert final_analysis_args.sweep_dir == Path("artifacts/sweep_runs")
+    assert final_analysis_args.retrieval_summary == Path("reports/research_upgrade/retrieval_eval_summary.json")
+    assert final_analysis_args.annotation_tasks_dir == Path("artifacts/runs/_human_annotations")
+    assert final_analysis_args.annotation_results_dir == Path("artifacts/runs/_human_annotations/_results")
+    assert final_analysis_args.annotation_exports_dir == Path("reports/human_annotation/exports")
+    assert final_analysis_args.output_dir == Path("reports/final_analysis")
+
 
 def test_cmd_sample_annotations_dispatches_to_sampler(
     monkeypatch: pytest.MonkeyPatch,
@@ -341,6 +367,91 @@ def test_cmd_analyze_human_annotations_dispatches_to_analysis(
     assert payload["payload"]["overlapping_task_count"] == 1
     assert payload["payload"]["json_report_path"] == str(json_path)
     assert payload["payload"]["markdown_report_path"] == str(markdown_path)
+
+
+def test_cmd_build_analysis_report_dispatches_to_generator(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_settings,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    from user_signal_mining_agents.evaluation import final_analysis
+
+    summary = final_analysis.FinalAnalysisSummary(
+        runs_dir=str(tmp_settings.run_artifacts_dir),
+        output_dir=str(tmp_path),
+        prompt_count=2,
+        judge_panel_mode="disabled (single judge)",
+        pipeline_wins=2,
+        baseline_wins=0,
+        ties=0,
+        baseline=final_analysis.ScoreSnapshot(
+            relevance=3.0,
+            groundedness=3.0,
+            distinctiveness=3.0,
+            overall_preference=3.0,
+        ),
+        pipeline=final_analysis.ScoreSnapshot(
+            relevance=4.0,
+            groundedness=4.0,
+            distinctiveness=4.0,
+            overall_preference=4.0,
+        ),
+        delta=final_analysis.ScoreSnapshot(
+            relevance=1.0,
+            groundedness=1.0,
+            distinctiveness=1.0,
+            overall_preference=1.0,
+        ),
+        sweep=final_analysis.SweepSummary(status="missing", note="missing"),
+        annotation=final_analysis.AnnotationProgressSummary(total_tasks=0, current_completed_tasks=0, legacy_completed_tasks=0, export_file_count=0, note="not started"),
+        warnings=["pending annotation"],
+        figure_paths=[str(tmp_path / "figures" / "overall_scores.svg")],
+    )
+    summary_path = tmp_path / "summary.json"
+    report_path = tmp_path / "report.md"
+    calls: dict[str, object] = {}
+
+    def _fake_build_analysis_report(
+        *,
+        runs_dir: Path,
+        output_dir: Path,
+        sweep_dir: Path,
+        retrieval_summary_path: Path | None,
+        annotation_tasks_dir: Path,
+        annotation_results_dir: Path,
+        annotation_exports_dir: Path,
+    ) -> tuple[final_analysis.FinalAnalysisSummary, Path, Path]:
+        calls["runs_dir"] = runs_dir
+        calls["output_dir"] = output_dir
+        calls["sweep_dir"] = sweep_dir
+        calls["retrieval_summary_path"] = retrieval_summary_path
+        calls["annotation_tasks_dir"] = annotation_tasks_dir
+        calls["annotation_results_dir"] = annotation_results_dir
+        calls["annotation_exports_dir"] = annotation_exports_dir
+        return summary, summary_path, report_path
+
+    monkeypatch.setattr(cli, "get_settings", lambda: tmp_settings)
+    monkeypatch.setattr(final_analysis, "build_analysis_report", _fake_build_analysis_report)
+
+    code = cli.cmd_build_analysis_report(
+        runs_dir=None,
+        sweep_dir=None,
+        retrieval_summary=None,
+        annotation_tasks_dir=None,
+        annotation_results_dir=None,
+        annotation_exports_dir=Path("reports/human_annotation/exports"),
+        output_dir=tmp_path,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert calls["runs_dir"] == tmp_settings.run_artifacts_dir
+    assert calls["sweep_dir"] == tmp_settings.run_artifacts_dir.parent / "sweep_runs"
+    assert calls["annotation_tasks_dir"] == tmp_settings.run_artifacts_dir / "_human_annotations"
+    assert calls["annotation_results_dir"] == tmp_settings.run_artifacts_dir / "_human_annotations" / "_results"
+    assert payload["payload"]["prompt_count"] == 2
+    assert payload["payload"]["summary_path"] == str(summary_path)
 
 def test_build_parser_supports_variant_commands() -> None:
     parser = cli.build_parser()

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="420" viewBox="0 0 980 420" role="img" aria-label="Retrieval Metrics by K">
+<style>
+text { font-family: 'Segoe UI', sans-serif; fill: #1f2937; }.title { font-size: 24px; font-weight: 700; }.axis { stroke: #94a3b8; stroke-width: 1; }.grid { stroke: #e2e8f0; stroke-width: 1; }.tick { font-size: 12px; fill: #64748b; }.label { font-size: 13px; }.value { font-size: 12px; font-weight: 600; }.legend { font-size: 12px; }
+</style>
+<rect width="980" height="420" fill="#fffaf1" />
+<text class="title" x="24" y="40">Retrieval Metrics by K</text>
+<line class="grid" x1="80" y1="330.0" x2="950" y2="330.0" />
+<text class="tick" x="70" y="334.0" text-anchor="end">0.0</text>
+<line class="grid" x1="80" y1="280.0" x2="950" y2="280.0" />
+<text class="tick" x="70" y="284.0" text-anchor="end">0.2</text>
+<line class="grid" x1="80" y1="230.0" x2="950" y2="230.0" />
+<text class="tick" x="70" y="234.0" text-anchor="end">0.4</text>
+<line class="grid" x1="80" y1="180.0" x2="950" y2="180.0" />
+<text class="tick" x="70" y="184.0" text-anchor="end">0.6</text>
+<line class="grid" x1="80" y1="130.0" x2="950" y2="130.0" />
+<text class="tick" x="70" y="134.0" text-anchor="end">0.8</text>
+<line class="grid" x1="80" y1="80.0" x2="950" y2="80.0" />
+<text class="tick" x="70" y="84.0" text-anchor="end">1.0</text>
+<line class="axis" x1="80" y1="80" x2="80" y2="330" />
+<line class="axis" x1="80" y1="330" x2="950" y2="330" />
+<rect x="114.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#5f83bf" />
+<text class="value" x="134.8" y="324.0" text-anchor="middle">0.00</text>
+<rect x="162.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#e9a03b" />
+<text class="value" x="182.8" y="324.0" text-anchor="middle">0.00</text>
+<rect x="210.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#2a9d8f" />
+<text class="value" x="230.8" y="324.0" text-anchor="middle">0.00</text>
+<text class="label" x="188.8" y="386" text-anchor="middle">@1</text>
+<rect x="332.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#5f83bf" />
+<text class="value" x="352.3" y="324.0" text-anchor="middle">0.00</text>
+<rect x="380.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#e9a03b" />
+<text class="value" x="400.3" y="324.0" text-anchor="middle">0.00</text>
+<rect x="428.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#2a9d8f" />
+<text class="value" x="448.3" y="324.0" text-anchor="middle">0.00</text>
+<text class="label" x="406.2" y="386" text-anchor="middle">@3</text>
+<rect x="549.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#5f83bf" />
+<text class="value" x="569.8" y="324.0" text-anchor="middle">0.00</text>
+<rect x="597.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#e9a03b" />
+<text class="value" x="617.8" y="324.0" text-anchor="middle">0.00</text>
+<rect x="645.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#2a9d8f" />
+<text class="value" x="665.8" y="324.0" text-anchor="middle">0.00</text>
+<text class="label" x="623.8" y="386" text-anchor="middle">@5</text>
+<rect x="767.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#5f83bf" />
+<text class="value" x="787.3" y="324.0" text-anchor="middle">0.00</text>
+<rect x="815.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#e9a03b" />
+<text class="value" x="835.3" y="324.0" text-anchor="middle">0.00</text>
+<rect x="863.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#2a9d8f" />
+<text class="value" x="883.3" y="324.0" text-anchor="middle">0.00</text>
+<text class="label" x="841.2" y="386" text-anchor="middle">@10</text>
+<rect x="760" y="36" width="14" height="14" rx="3" fill="#5f83bf" />
+<text class="legend" x="782" y="47">Recall</text>
+<rect x="760" y="54" width="14" height="14" rx="3" fill="#e9a03b" />
+<text class="legend" x="782" y="65">MRR</text>
+<rect x="760" y="72" width="14" height="14" rx="3" fill="#2a9d8f" />
+<text class="legend" x="782" y="83">nDCG</text>
+</svg>

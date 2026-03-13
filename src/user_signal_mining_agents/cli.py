@@ -479,6 +479,53 @@ def build_parser() -> argparse.ArgumentParser:
         help="Tracked output directory for the analysis JSON and Markdown report.",
     )
 
+    final_analysis_parser = subparsers.add_parser(
+        "build-analysis-report",
+        help="Build a final markdown analysis report with SVG figures from completed artifacts.",
+    )
+    final_analysis_parser.add_argument(
+        "--runs-dir",
+        type=Path,
+        default=None,
+        help="Evaluation run directory. Defaults to artifacts/runs.",
+    )
+    final_analysis_parser.add_argument(
+        "--sweep-dir",
+        type=Path,
+        default=None,
+        help="Prompt-sweep artifact directory. Defaults to artifacts/sweep_runs.",
+    )
+    final_analysis_parser.add_argument(
+        "--retrieval-summary",
+        type=Path,
+        default=None,
+        help="Optional retrieval_eval_summary.json path. Auto-detected when omitted.",
+    )
+    final_analysis_parser.add_argument(
+        "--annotation-tasks-dir",
+        type=Path,
+        default=None,
+        help="Annotation task directory. Defaults to artifacts/runs/_human_annotations.",
+    )
+    final_analysis_parser.add_argument(
+        "--annotation-results-dir",
+        type=Path,
+        default=None,
+        help="Annotation autosave directory. Defaults to artifacts/runs/_human_annotations/_results.",
+    )
+    final_analysis_parser.add_argument(
+        "--annotation-exports-dir",
+        type=Path,
+        default=Path("reports/human_annotation/exports"),
+        help="Tracked annotation export directory.",
+    )
+    final_analysis_parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("reports/final_analysis"),
+        help="Tracked output directory for the analysis summary, report, and figures.",
+    )
+
     return parser
 
 
@@ -1118,6 +1165,57 @@ def cmd_analyze_human_annotations(
     )
     return 0
 
+
+def cmd_build_analysis_report(
+    *,
+    runs_dir: Path | None,
+    sweep_dir: Path | None,
+    retrieval_summary: Path | None,
+    annotation_tasks_dir: Path | None,
+    annotation_results_dir: Path | None,
+    annotation_exports_dir: Path,
+    output_dir: Path,
+) -> int:
+    from .evaluation.final_analysis import build_analysis_report
+
+    settings = get_settings()
+    target_runs_dir = runs_dir or settings.run_artifacts_dir
+    target_sweep_dir = sweep_dir or (target_runs_dir.parent / "sweep_runs")
+    target_tasks_dir = annotation_tasks_dir or (target_runs_dir / "_human_annotations")
+    target_results_dir = annotation_results_dir or (target_runs_dir / "_human_annotations" / "_results")
+
+    summary, summary_path, report_path = build_analysis_report(
+        runs_dir=target_runs_dir,
+        output_dir=output_dir,
+        sweep_dir=target_sweep_dir,
+        retrieval_summary_path=retrieval_summary,
+        annotation_tasks_dir=target_tasks_dir,
+        annotation_results_dir=target_results_dir,
+        annotation_exports_dir=annotation_exports_dir,
+    )
+
+    print(
+        json.dumps(
+            {
+                "status": "ok",
+                "command": "build-analysis-report",
+                "payload": {
+                    "prompt_count": summary.prompt_count,
+                    "pipeline_wins": summary.pipeline_wins,
+                    "baseline_wins": summary.baseline_wins,
+                    "ties": summary.ties,
+                    "warnings": summary.warnings,
+                    "summary_path": str(summary_path),
+                    "report_path": str(report_path),
+                    "figure_paths": summary.figure_paths,
+                },
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -1203,9 +1301,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             runs_dir=args.runs_dir,
             output_dir=args.output_dir,
         )
+    if args.command == "build-analysis-report":
+        return cmd_build_analysis_report(
+            runs_dir=args.runs_dir,
+            sweep_dir=args.sweep_dir,
+            retrieval_summary=args.retrieval_summary,
+            annotation_tasks_dir=args.annotation_tasks_dir,
+            annotation_results_dir=args.annotation_results_dir,
+            annotation_exports_dir=args.annotation_exports_dir,
+            output_dir=args.output_dir,
+        )
     parser.error(f"Unknown command: {args.command}")
     return 2
-
 
 
 

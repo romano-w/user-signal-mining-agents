@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="184" viewBox="0 0 980 184" role="img" aria-label="Human Annotation Progress">
+<style>
+text { font-family: 'Segoe UI', sans-serif; fill: #1f2937; }.title { font-size: 24px; font-weight: 700; }.axis { stroke: #94a3b8; stroke-width: 1; }.grid { stroke: #e2e8f0; stroke-width: 1; }.tick { font-size: 12px; fill: #64748b; }.label { font-size: 13px; }.value { font-size: 12px; font-weight: 600; }.legend { font-size: 12px; }
+</style>
+<rect width="980" height="184" fill="#fffaf1" />
+<text class="title" x="24" y="40">Human Annotation Progress</text>
+<text class="label" x="24" y="66">Annotation is in progress; no tracked export JSON files have been saved yet.</text>
+<rect x="740" y="36" width="14" height="14" rx="3" fill="#2a9d8f" />
+<text class="legend" x="762" y="47">Current-schema results</text>
+<rect x="740" y="54" width="14" height="14" rx="3" fill="#e9a03b" />
+<text class="legend" x="762" y="65">Legacy-schema results</text>
+<text class="label" x="206" y="104" text-anchor="end">reviewer_01</text>
+<rect x="220" y="90" width="700" height="18" rx="8" fill="#e5e7eb" />
+<rect x="220.0" y="90" width="70.0" height="18" rx="8" fill="#2a9d8f" />
+<text class="value" x="930" y="104">current 2, legacy 0, exports 0</text>
+</svg>

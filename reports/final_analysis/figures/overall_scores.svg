@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="420" viewBox="0 0 980 420" role="img" aria-label="Average Scores Across All Prompts">
+<style>
+text { font-family: 'Segoe UI', sans-serif; fill: #1f2937; }.title { font-size: 24px; font-weight: 700; }.axis { stroke: #94a3b8; stroke-width: 1; }.grid { stroke: #e2e8f0; stroke-width: 1; }.tick { font-size: 12px; fill: #64748b; }.label { font-size: 13px; }.value { font-size: 12px; font-weight: 600; }.legend { font-size: 12px; }
+</style>
+<rect width="980" height="420" fill="#fffaf1" />
+<text class="title" x="24" y="40">Average Scores Across All Prompts</text>
+<line class="grid" x1="80" y1="330.0" x2="950" y2="330.0" />
+<text class="tick" x="70" y="334.0" text-anchor="end">0.0</text>
+<line class="grid" x1="80" y1="280.0" x2="950" y2="280.0" />
+<text class="tick" x="70" y="284.0" text-anchor="end">1.0</text>
+<line class="grid" x1="80" y1="230.0" x2="950" y2="230.0" />
+<text class="tick" x="70" y="234.0" text-anchor="end">2.0</text>
+<line class="grid" x1="80" y1="180.0" x2="950" y2="180.0" />
+<text class="tick" x="70" y="184.0" text-anchor="end">3.0</text>
+<line class="grid" x1="80" y1="130.0" x2="950" y2="130.0" />
+<text class="tick" x="70" y="134.0" text-anchor="end">4.0</text>
+<line class="grid" x1="80" y1="80.0" x2="950" y2="80.0" />
+<text class="tick" x="70" y="84.0" text-anchor="end">5.0</text>
+<line class="axis" x1="80" y1="80" x2="80" y2="330" />
+<line class="axis" x1="80" y1="330" x2="950" y2="330" />
+<rect x="114.8" y="127.5" width="40.0" height="202.5" rx="8" fill="#d06767" />
+<text class="value" x="134.8" y="121.5" text-anchor="middle">4.05</text>
+<rect x="162.8" y="87.5" width="40.0" height="242.5" rx="8" fill="#2a9d8f" />
+<text class="value" x="182.8" y="92.0" text-anchor="middle">4.85</text>
+<text class="label" x="188.8" y="386" text-anchor="middle">Relevance</text>
+<rect x="332.3" y="135.0" width="40.0" height="195.0" rx="8" fill="#d06767" />
+<text class="value" x="352.3" y="129.0" text-anchor="middle">3.90</text>
+<rect x="380.3" y="102.5" width="40.0" height="227.5" rx="8" fill="#2a9d8f" />
+<text class="value" x="400.3" y="96.5" text-anchor="middle">4.55</text>
+<text class="label" x="406.2" y="386" text-anchor="middle">Groundedness</text>
+<rect x="549.8" y="132.5" width="40.0" height="197.5" rx="8" fill="#d06767" />
+<text class="value" x="569.8" y="126.5" text-anchor="middle">3.95</text>
+<rect x="597.8" y="95.0" width="40.0" height="235.0" rx="8" fill="#2a9d8f" />
+<text class="value" x="617.8" y="92.0" text-anchor="middle">4.70</text>
+<text class="label" x="623.8" y="386" text-anchor="middle">Distinctiveness</text>
+<rect x="767.3" y="155.0" width="40.0" height="175.0" rx="8" fill="#d06767" />
+<text class="value" x="787.3" y="149.0" text-anchor="middle">3.50</text>
+<rect x="815.3" y="97.5" width="40.0" height="232.5" rx="8" fill="#2a9d8f" />
+<text class="value" x="835.3" y="92.0" text-anchor="middle">4.65</text>
+<text class="label" x="841.2" y="386" text-anchor="middle">Overall Preference</text>
+<rect x="760" y="36" width="14" height="14" rx="3" fill="#d06767" />
+<text class="legend" x="782" y="47">Baseline</text>
+<rect x="760" y="54" width="14" height="14" rx="3" fill="#2a9d8f" />
+<text class="legend" x="782" y="65">Pipeline</text>
+</svg>

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="780" viewBox="0 0 1280 780" role="img" aria-label="Per-Prompt Overall Preference Delta">
+<style>
+text { font-family: 'Segoe UI', sans-serif; fill: #1f2937; }.title { font-size: 24px; font-weight: 700; }.axis { stroke: #94a3b8; stroke-width: 1; }.grid { stroke: #e2e8f0; stroke-width: 1; }.tick { font-size: 12px; fill: #64748b; }.label { font-size: 13px; }.value { font-size: 12px; font-weight: 600; }.legend { font-size: 12px; }
+</style>
+<rect width="1280" height="780" fill="#fffaf1" />
+<text class="title" x="24" y="40">Per-Prompt Overall Preference Delta</text>
+<line class="grid" x1="360.0" y1="80" x2="360.0" y2="740" />
+<text class="tick" x="360.0" y="758" text-anchor="middle">-3.0</text>
+<line class="grid" x1="526.0" y1="80" x2="526.0" y2="740" />
+<text class="tick" x="526.0" y="758" text-anchor="middle">-1.8</text>
+<line class="grid" x1="692.0" y1="80" x2="692.0" y2="740" />
+<text class="tick" x="692.0" y="758" text-anchor="middle">-0.6</text>
+<line class="grid" x1="858.0" y1="80" x2="858.0" y2="740" />
+<text class="tick" x="858.0" y="758" text-anchor="middle">0.6</text>
+<line class="grid" x1="1024.0" y1="80" x2="1024.0" y2="740" />
+<text class="tick" x="1024.0" y="758" text-anchor="middle">1.8</text>
+<line class="grid" x1="1190.0" y1="80" x2="1190.0" y2="740" />
+<text class="tick" x="1190.0" y="758" text-anchor="middle">3.0</text>
+<line class="axis" x1="775.0" y1="80" x2="775.0" y2="740" />
+<text class="label" x="346" y="100" text-anchor="end">ecommerce-product-fit</text>
+<rect x="775.0" y="88.0" width="415.0" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="1196.0" y="100.0" text-anchor="start">+3.00</text>
+<text class="label" x="346" y="134" text-anchor="end">ecommerce-repeat-rate</text>
+<rect x="775.0" y="122.0" width="415.0" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="1196.0" y="134.0" text-anchor="start">+3.00</text>
+<text class="label" x="346" y="168" text-anchor="end">ecommerce-return-friction</text>
+<rect x="775.0" y="156.0" width="276.7" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="1057.7" y="168.0" text-anchor="start">+2.00</text>
+<text class="label" x="346" y="202" text-anchor="end">ecommerce-shipping-trust</text>
+<rect x="775.0" y="190.0" width="276.7" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="1057.7" y="202.0" text-anchor="start">+2.00</text>
+<text class="label" x="346" y="236" text-anchor="end">restaurant-brunch-weekend-flow</text>
+<rect x="775.0" y="224.0" width="276.7" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="1057.7" y="236.0" text-anchor="start">+2.00</text>
+<text class="label" x="346" y="270" text-anchor="end">restaurant-dietary-restriction-trust</text>
+<rect x="775.0" y="258.0" width="276.7" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="1057.7" y="270.0" text-anchor="start">+2.00</text>
+<text class="label" x="346" y="304" text-anchor="end">restaurant-family-friendly-experience</text>
+<rect x="775.0" y="292.0" width="276.7" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="1057.7" y="304.0" text-anchor="start">+2.00</text>
+<text class="label" x="346" y="338" text-anchor="end">restaurant-late-night-consistency</text>
+<rect x="775.0" y="326.0" width="276.7" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="1057.7" y="338.0" text-anchor="start">+2.00</text>
+<text class="label" x="346" y="372" text-anchor="end">saas-onboarding-dropoff</text>
+<rect x="775.0" y="360.0" width="276.7" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="1057.7" y="372.0" text-anchor="start">+2.00</text>
+<text class="label" x="346" y="406" text-anchor="end">saas-support-trust</text>
+<rect x="775.0" y="394.0" width="276.7" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="1057.7" y="406.0" text-anchor="start">+2.00</text>
+<text class="label" x="346" y="440" text-anchor="end">ecommerce-cart-abandonment</text>
+<rect x="775.0" y="428.0" width="138.3" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="919.3" y="440.0" text-anchor="start">+1.00</text>
+<text class="label" x="346" y="474" text-anchor="end">restaurant-price-value-trust</text>
+<rect x="775.0" y="462.0" width="138.3" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="919.3" y="474.0" text-anchor="start">+1.00</text>
+<text class="label" x="346" y="508" text-anchor="end">restaurant-service-recovery</text>
+<rect x="775.0" y="496.0" width="138.3" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="919.3" y="508.0" text-anchor="start">+1.00</text>
+<text class="label" x="346" y="542" text-anchor="end">restaurant-takeout-speed</text>
+<rect x="775.0" y="530.0" width="138.3" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="919.3" y="542.0" text-anchor="start">+1.00</text>
+<text class="label" x="346" y="576" text-anchor="end">saas-pricing-confusion</text>
+<rect x="775.0" y="564.0" width="138.3" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="919.3" y="576.0" text-anchor="start">+1.00</text>
+<text class="label" x="346" y="610" text-anchor="end">saas-time-to-value</text>
+<rect x="775.0" y="598.0" width="138.3" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="919.3" y="610.0" text-anchor="start">+1.00</text>
+<text class="label" x="346" y="644" text-anchor="end">saas-upgrade-conversion</text>
+<rect x="775.0" y="632.0" width="138.3" height="16" rx="6" fill="#2a9d8f" />
+<text class="value" x="919.3" y="644.0" text-anchor="start">+1.00</text>
+<text class="label" x="346" y="678" text-anchor="end">restaurant-local-discovery-standout</text>
+<rect x="636.7" y="666.0" width="138.3" height="16" rx="6" fill="#d06767" />
+<text class="value" x="630.7" y="678.0" text-anchor="end">-1.00</text>
+<text class="label" x="346" y="712" text-anchor="end">restaurant-loyalty-repeat-visits</text>
+<rect x="498.3" y="700.0" width="276.7" height="16" rx="6" fill="#d06767" />
+<text class="value" x="492.3" y="712.0" text-anchor="end">-2.00</text>
+<text class="label" x="346" y="746" text-anchor="end">restaurant-date-night-ambiance</text>
+<rect x="360.0" y="734.0" width="415.0" height="16" rx="6" fill="#d06767" />
+<text class="value" x="354.0" y="746.0" text-anchor="end">-3.00</text>
+</svg>

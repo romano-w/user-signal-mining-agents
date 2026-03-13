@@ -1,0 +1,132 @@
+# Final Analysis Report
+
+**Generated:** 2026-03-13T23:12:08.426413+00:00
+**Runs dir:** `artifacts\runs`
+**Summary JSON:** [`final_analysis_summary.json`](final_analysis_summary.json)
+
+## Executive Summary
+
+- Pipeline wins `17` of `20` evaluated prompts; baseline wins `3`, ties `0`.
+- Top-line `overall_preference` improved from `3.50` to `4.65` (`+1.15`).
+- Judge panel mode: `disabled (single judge)`.
+- Human annotation status: Annotation is in progress; no tracked export JSON files have been saved yet.
+
+## Artifact Status
+
+| Family | Status | Detail |
+|---|---|---|
+| evaluation_runs | complete | 20 current-schema prompt evaluations loaded. |
+| failure_taxonomy | complete | failure_tags.jsonl present and summarized. |
+| retrieval_eval | complete | Loaded retrieval benchmark from reports\research_upgrade\retrieval_eval_summary.json. |
+| prompt_sweep | excluded | Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting. |
+| human_annotation | partial | Annotation is in progress; no tracked export JSON files have been saved yet. |
+| variant_runs | missing | No variant runs artifacts found. |
+| robustness_runs | missing | No robustness runs artifacts found. |
+
+## Figures
+
+### Aggregate rubric scores
+![Aggregate rubric scores](figures/overall_scores.svg)
+
+### Domain-level overall preference deltas
+![Domain overall preference deltas](figures/domain_overall_delta.svg)
+
+### Prompt-level overall preference deltas
+![Prompt-level overall preference deltas](figures/prompt_overall_deltas.svg)
+
+### Failure-tag concentration by system
+![Failure tags by category](figures/failure_categories.svg)
+
+### Human annotation progress
+![Human annotation progress](figures/annotation_progress.svg)
+
+### Retrieval benchmark metrics
+![Retrieval metrics by K](figures/retrieval_metrics.svg)
+
+## Score Summary
+
+| Metric | Baseline | Pipeline | Delta |
+|---|---:|---:|---:|
+| Relevance | 4.05 | 4.85 | +0.80 |
+| Groundedness | 3.90 | 4.55 | +0.65 |
+| Distinctiveness | 3.95 | 4.70 | +0.75 |
+| Overall Preference | 3.50 | 4.65 | +1.15 |
+
+## Domain Breakdown
+
+| Domain | Prompts | Pipeline Wins | Baseline Wins | Baseline Overall | Pipeline Overall | Delta |
+|---|---:|---:|---:|---:|---:|---:|
+| ecommerce | 5 | 5 | 0 | 2.60 | 4.80 | +2.20 |
+| restaurants | 10 | 7 | 3 | 3.90 | 4.40 | +0.50 |
+| saas | 5 | 5 | 0 | 3.60 | 5.00 | +1.40 |
+
+## Strongest Gains
+
+| Prompt | Domain | Overall Delta |
+|---|---|---:|
+| ecommerce-product-fit | ecommerce | +3.00 |
+| ecommerce-repeat-rate | ecommerce | +3.00 |
+| ecommerce-return-friction | ecommerce | +2.00 |
+| ecommerce-shipping-trust | ecommerce | +2.00 |
+| restaurant-brunch-weekend-flow | restaurants | +2.00 |
+
+## Regressions
+
+| Prompt | Domain | Overall Delta |
+|---|---|---:|
+| restaurant-date-night-ambiance | restaurants | -3.00 |
+| restaurant-loyalty-repeat-visits | restaurants | -2.00 |
+| restaurant-local-discovery-standout | restaurants | -1.00 |
+
+## Failure Taxonomy
+
+| Category | Total Tags | Baseline | Pipeline | Avg Severity | Max Severity |
+|---|---:|---:|---:|---:|---:|
+| overall_preference_gap | 13 | 11 | 2 | 4.23 | 5 |
+| overall_quality_drop | 13 | 11 | 2 | 4.23 | 5 |
+| groundedness_gap | 9 | 7 | 2 | 4.11 | 5 |
+| distinctiveness_gap | 7 | 6 | 1 | 4.14 | 5 |
+| relevance_miss | 5 | 4 | 1 | 4.20 | 5 |
+
+### Highest-severity Prompt Failures
+
+| Prompt | Tag Count | Max Severity | Variants | Categories |
+|---|---:|---:|---|---|
+| ecommerce-product-fit | 4 | 5 | baseline | groundedness_gap, overall_preference_gap, overall_quality_drop, relevance_miss |
+| ecommerce-repeat-rate | 3 | 5 | baseline | overall_preference_gap, overall_quality_drop, relevance_miss |
+| ecommerce-return-friction | 3 | 5 | baseline | distinctiveness_gap, overall_preference_gap, overall_quality_drop |
+| restaurant-date-night-ambiance | 3 | 5 | pipeline | groundedness_gap, overall_preference_gap, overall_quality_drop |
+| restaurant-loyalty-repeat-visits | 5 | 4 | pipeline | distinctiveness_gap, groundedness_gap, overall_preference_gap, overall_quality_drop, relevance_miss |
+
+## Retrieval Evaluation
+
+- Queries evaluated: `2`
+- Mode: `hybrid` | Reranker: `none`
+
+| Metric | @1 | @3 | @5 | @10 |
+|---|---:|---:|---:|---:|
+| Recall | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| MRR | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| nDCG | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+
+## Human Annotation
+
+- Task batch size: `20`
+- Compatible completed tasks: `2`
+- Legacy completed tasks: `0`
+- Tracked export files: `0`
+
+| Annotator | Autosave Current | Autosave Legacy | Export Current | Export Legacy |
+|---|---:|---:|---:|---:|
+| reviewer_01 | 2 | 0 | 0 | 0 |
+
+## Exclusions And Caveats
+
+- Prompt sweep: Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting.
+- Variant and robustness suites are reported only if their artifact directories exist; they were not part of the completed run set in this workspace snapshot.
+- Main evaluation results are still judge-only; human validation is not yet ready for agreement analysis.
+
+## Warnings
+
+- Retrieval benchmark metrics are all zero; the labeled snippet IDs likely do not align with the current index contents.
+- Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting.

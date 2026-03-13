@@ -1,0 +1,805 @@
+{
+  "generated_at": "2026-03-13T23:12:08.426413+00:00",
+  "runs_dir": "artifacts\\runs",
+  "output_dir": "reports\\final_analysis",
+  "prompt_count": 20,
+  "judge_panel_mode": "disabled (single judge)",
+  "pipeline_wins": 17,
+  "baseline_wins": 3,
+  "ties": 0,
+  "baseline": {
+    "relevance": 4.05,
+    "groundedness": 3.9,
+    "distinctiveness": 3.95,
+    "overall_preference": 3.5
+  },
+  "pipeline": {
+    "relevance": 4.85,
+    "groundedness": 4.55,
+    "distinctiveness": 4.7,
+    "overall_preference": 4.65
+  },
+  "delta": {
+    "relevance": 0.7999999999999998,
+    "groundedness": 0.6499999999999999,
+    "distinctiveness": 0.75,
+    "overall_preference": 1.1500000000000004
+  },
+  "domains": [
+    {
+      "domain": "ecommerce",
+      "prompt_count": 5,
+      "pipeline_wins": 5,
+      "baseline_wins": 0,
+      "ties": 0,
+      "baseline": {
+        "relevance": 3.4,
+        "groundedness": 3.4,
+        "distinctiveness": 3.6,
+        "overall_preference": 2.6
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 4.5,
+        "distinctiveness": 4.8,
+        "overall_preference": 4.8
+      },
+      "delta": {
+        "relevance": 1.6,
+        "groundedness": 1.1,
+        "distinctiveness": 1.1999999999999997,
+        "overall_preference": 2.1999999999999997
+      }
+    },
+    {
+      "domain": "restaurants",
+      "prompt_count": 10,
+      "pipeline_wins": 7,
+      "baseline_wins": 3,
+      "ties": 0,
+      "baseline": {
+        "relevance": 4.3,
+        "groundedness": 4.2,
+        "distinctiveness": 3.9,
+        "overall_preference": 3.9
+      },
+      "pipeline": {
+        "relevance": 4.7,
+        "groundedness": 4.45,
+        "distinctiveness": 4.5,
+        "overall_preference": 4.4
+      },
+      "delta": {
+        "relevance": 0.40000000000000036,
+        "groundedness": 0.25,
+        "distinctiveness": 0.6000000000000001,
+        "overall_preference": 0.5000000000000004
+      }
+    },
+    {
+      "domain": "saas",
+      "prompt_count": 5,
+      "pipeline_wins": 5,
+      "baseline_wins": 0,
+      "ties": 0,
+      "baseline": {
+        "relevance": 4.2,
+        "groundedness": 3.8,
+        "distinctiveness": 4.4,
+        "overall_preference": 3.6
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 4.8,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 0.7999999999999998,
+        "groundedness": 1.0,
+        "distinctiveness": 0.5999999999999996,
+        "overall_preference": 1.4
+      }
+    }
+  ],
+  "prompt_outcomes": [
+    {
+      "prompt_id": "ecommerce-cart-abandonment",
+      "domain": "ecommerce",
+      "statement": "Why do shoppers abandon carts after adding items they clearly want?",
+      "baseline": {
+        "relevance": 4.0,
+        "groundedness": 3.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 3.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 4.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 4.0
+      },
+      "delta": {
+        "relevance": 1.0,
+        "groundedness": 1.0,
+        "distinctiveness": 0.0,
+        "overall_preference": 1.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "ecommerce-product-fit",
+      "domain": "ecommerce",
+      "statement": "Why are first-time buyers disappointed when products arrive?",
+      "baseline": {
+        "relevance": 3.0,
+        "groundedness": 2.5,
+        "distinctiveness": 4.0,
+        "overall_preference": 2.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 4.5,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 2.0,
+        "groundedness": 2.0,
+        "distinctiveness": 1.0,
+        "overall_preference": 3.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "ecommerce-repeat-rate",
+      "domain": "ecommerce",
+      "statement": "What keeps satisfied one-time buyers from coming back for a second purchase?",
+      "baseline": {
+        "relevance": 2.0,
+        "groundedness": 3.5,
+        "distinctiveness": 4.0,
+        "overall_preference": 2.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 4.5,
+        "distinctiveness": 4.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 3.0,
+        "groundedness": 1.0,
+        "distinctiveness": 0.0,
+        "overall_preference": 3.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "ecommerce-return-friction",
+      "domain": "ecommerce",
+      "statement": "Why do customers describe returns as stressful or not worth the effort?",
+      "baseline": {
+        "relevance": 4.0,
+        "groundedness": 3.5,
+        "distinctiveness": 2.0,
+        "overall_preference": 3.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 4.5,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 1.0,
+        "groundedness": 1.0,
+        "distinctiveness": 3.0,
+        "overall_preference": 2.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "ecommerce-shipping-trust",
+      "domain": "ecommerce",
+      "statement": "What shipping and delivery issues are reducing customer trust after purchase?",
+      "baseline": {
+        "relevance": 4.0,
+        "groundedness": 4.5,
+        "distinctiveness": 3.0,
+        "overall_preference": 3.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 1.0,
+        "groundedness": 0.5,
+        "distinctiveness": 2.0,
+        "overall_preference": 2.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "restaurant-brunch-weekend-flow",
+      "domain": "restaurants",
+      "statement": "I run a brunch spot and want to understand what frustrates guests during busy weekend visits.",
+      "baseline": {
+        "relevance": 3.0,
+        "groundedness": 3.0,
+        "distinctiveness": 4.0,
+        "overall_preference": 3.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 2.0,
+        "groundedness": 2.0,
+        "distinctiveness": 1.0,
+        "overall_preference": 2.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "restaurant-date-night-ambiance",
+      "domain": "restaurants",
+      "statement": "I run a date-night restaurant and want to know which issues most damage the feeling of a special evening.",
+      "baseline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 4.0,
+        "overall_preference": 5.0
+      },
+      "pipeline": {
+        "relevance": 4.0,
+        "groundedness": 2.0,
+        "distinctiveness": 4.0,
+        "overall_preference": 2.0
+      },
+      "delta": {
+        "relevance": -1.0,
+        "groundedness": -3.0,
+        "distinctiveness": 0.0,
+        "overall_preference": -3.0
+      },
+      "winner": "baseline"
+    },
+    {
+      "prompt_id": "restaurant-dietary-restriction-trust",
+      "domain": "restaurants",
+      "statement": "I run a restaurant serving guests with dietary restrictions and want to understand what most affects trust and confidence.",
+      "baseline": {
+        "relevance": 4.0,
+        "groundedness": 3.0,
+        "distinctiveness": 3.0,
+        "overall_preference": 3.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 1.0,
+        "groundedness": 2.0,
+        "distinctiveness": 2.0,
+        "overall_preference": 2.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "restaurant-family-friendly-experience",
+      "domain": "restaurants",
+      "statement": "I run a family-friendly restaurant and want to know what makes parents feel the experience is stressful instead of easy.",
+      "baseline": {
+        "relevance": 4.0,
+        "groundedness": 3.0,
+        "distinctiveness": 4.0,
+        "overall_preference": 3.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 4.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 1.0,
+        "groundedness": 2.0,
+        "distinctiveness": 0.0,
+        "overall_preference": 2.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "restaurant-late-night-consistency",
+      "domain": "restaurants",
+      "statement": "I run a late-night restaurant and want to know what makes the experience feel unreliable after peak evening hours.",
+      "baseline": {
+        "relevance": 4.0,
+        "groundedness": 3.0,
+        "distinctiveness": 3.0,
+        "overall_preference": 3.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 1.0,
+        "groundedness": 2.0,
+        "distinctiveness": 2.0,
+        "overall_preference": 2.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "restaurant-local-discovery-standout",
+      "domain": "restaurants",
+      "statement": "I run an independent local restaurant and want to understand why some guests try us once but do not feel compelled to recommend us.",
+      "baseline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 4.0,
+        "overall_preference": 5.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 4.5,
+        "distinctiveness": 4.0,
+        "overall_preference": 4.0
+      },
+      "delta": {
+        "relevance": 0.0,
+        "groundedness": -0.5,
+        "distinctiveness": 0.0,
+        "overall_preference": -1.0
+      },
+      "winner": "baseline"
+    },
+    {
+      "prompt_id": "restaurant-loyalty-repeat-visits",
+      "domain": "restaurants",
+      "statement": "I run a neighborhood restaurant and want to understand what keeps first-time guests from becoming regulars.",
+      "baseline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "pipeline": {
+        "relevance": 3.0,
+        "groundedness": 3.0,
+        "distinctiveness": 3.0,
+        "overall_preference": 3.0
+      },
+      "delta": {
+        "relevance": -2.0,
+        "groundedness": -2.0,
+        "distinctiveness": -2.0,
+        "overall_preference": -2.0
+      },
+      "winner": "baseline"
+    },
+    {
+      "prompt_id": "restaurant-price-value-trust",
+      "domain": "restaurants",
+      "statement": "I run a premium casual restaurant and need to understand when guests feel the experience is not worth the price.",
+      "baseline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 4.0,
+        "overall_preference": 4.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 0.0,
+        "groundedness": 0.0,
+        "distinctiveness": 1.0,
+        "overall_preference": 1.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "restaurant-service-recovery",
+      "domain": "restaurants",
+      "statement": "I run a restaurant and want to understand which mistakes customers are willing to forgive versus which ones permanently damage trust.",
+      "baseline": {
+        "relevance": 4.0,
+        "groundedness": 5.0,
+        "distinctiveness": 3.0,
+        "overall_preference": 4.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 1.0,
+        "groundedness": 0.0,
+        "distinctiveness": 2.0,
+        "overall_preference": 1.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "restaurant-takeout-speed",
+      "domain": "restaurants",
+      "statement": "I run a casual takeout restaurant and want to know which customer pain points most hurt perceived speed and reliability.",
+      "baseline": {
+        "relevance": 4.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 4.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 1.0,
+        "groundedness": 0.0,
+        "distinctiveness": 0.0,
+        "overall_preference": 1.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "saas-onboarding-dropoff",
+      "domain": "saas",
+      "statement": "Why are trial users dropping off before completing onboarding?",
+      "baseline": {
+        "relevance": 4.0,
+        "groundedness": 3.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 3.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 4.5,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 1.0,
+        "groundedness": 1.5,
+        "distinctiveness": 0.0,
+        "overall_preference": 2.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "saas-pricing-confusion",
+      "domain": "saas",
+      "statement": "What product and messaging issues make our pricing tiers feel confusing?",
+      "baseline": {
+        "relevance": 5.0,
+        "groundedness": 4.5,
+        "distinctiveness": 5.0,
+        "overall_preference": 4.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 0.0,
+        "groundedness": 0.5,
+        "distinctiveness": 0.0,
+        "overall_preference": 1.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "saas-support-trust",
+      "domain": "saas",
+      "statement": "Why do customers escalate support tickets instead of self-serving in product?",
+      "baseline": {
+        "relevance": 3.0,
+        "groundedness": 3.5,
+        "distinctiveness": 3.0,
+        "overall_preference": 3.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 2.0,
+        "groundedness": 1.5,
+        "distinctiveness": 2.0,
+        "overall_preference": 2.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "saas-time-to-value",
+      "domain": "saas",
+      "statement": "Why do new accounts say they cannot see value quickly enough?",
+      "baseline": {
+        "relevance": 5.0,
+        "groundedness": 3.5,
+        "distinctiveness": 5.0,
+        "overall_preference": 4.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 4.5,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 0.0,
+        "groundedness": 1.0,
+        "distinctiveness": 0.0,
+        "overall_preference": 1.0
+      },
+      "winner": "pipeline"
+    },
+    {
+      "prompt_id": "saas-upgrade-conversion",
+      "domain": "saas",
+      "statement": "What prevents high-usage free users from converting to paid plans?",
+      "baseline": {
+        "relevance": 4.0,
+        "groundedness": 4.5,
+        "distinctiveness": 4.0,
+        "overall_preference": 4.0
+      },
+      "pipeline": {
+        "relevance": 5.0,
+        "groundedness": 5.0,
+        "distinctiveness": 5.0,
+        "overall_preference": 5.0
+      },
+      "delta": {
+        "relevance": 1.0,
+        "groundedness": 0.5,
+        "distinctiveness": 1.0,
+        "overall_preference": 1.0
+      },
+      "winner": "pipeline"
+    }
+  ],
+  "failure_categories": [
+    {
+      "category": "overall_preference_gap",
+      "total_count": 13,
+      "baseline_count": 11,
+      "pipeline_count": 2,
+      "avg_severity": 4.230769230769231,
+      "max_severity": 5
+    },
+    {
+      "category": "overall_quality_drop",
+      "total_count": 13,
+      "baseline_count": 11,
+      "pipeline_count": 2,
+      "avg_severity": 4.230769230769231,
+      "max_severity": 5
+    },
+    {
+      "category": "groundedness_gap",
+      "total_count": 9,
+      "baseline_count": 7,
+      "pipeline_count": 2,
+      "avg_severity": 4.111111111111111,
+      "max_severity": 5
+    },
+    {
+      "category": "distinctiveness_gap",
+      "total_count": 7,
+      "baseline_count": 6,
+      "pipeline_count": 1,
+      "avg_severity": 4.142857142857143,
+      "max_severity": 5
+    },
+    {
+      "category": "relevance_miss",
+      "total_count": 5,
+      "baseline_count": 4,
+      "pipeline_count": 1,
+      "avg_severity": 4.2,
+      "max_severity": 5
+    }
+  ],
+  "top_failure_prompts": [
+    {
+      "prompt_id": "ecommerce-product-fit",
+      "tag_count": 4,
+      "max_severity": 5,
+      "variants": [
+        "baseline"
+      ],
+      "categories": [
+        "groundedness_gap",
+        "overall_preference_gap",
+        "overall_quality_drop",
+        "relevance_miss"
+      ]
+    },
+    {
+      "prompt_id": "ecommerce-repeat-rate",
+      "tag_count": 3,
+      "max_severity": 5,
+      "variants": [
+        "baseline"
+      ],
+      "categories": [
+        "overall_preference_gap",
+        "overall_quality_drop",
+        "relevance_miss"
+      ]
+    },
+    {
+      "prompt_id": "ecommerce-return-friction",
+      "tag_count": 3,
+      "max_severity": 5,
+      "variants": [
+        "baseline"
+      ],
+      "categories": [
+        "distinctiveness_gap",
+        "overall_preference_gap",
+        "overall_quality_drop"
+      ]
+    },
+    {
+      "prompt_id": "restaurant-date-night-ambiance",
+      "tag_count": 3,
+      "max_severity": 5,
+      "variants": [
+        "pipeline"
+      ],
+      "categories": [
+        "groundedness_gap",
+        "overall_preference_gap",
+        "overall_quality_drop"
+      ]
+    },
+    {
+      "prompt_id": "restaurant-loyalty-repeat-visits",
+      "tag_count": 5,
+      "max_severity": 4,
+      "variants": [
+        "pipeline"
+      ],
+      "categories": [
+        "distinctiveness_gap",
+        "groundedness_gap",
+        "overall_preference_gap",
+        "overall_quality_drop",
+        "relevance_miss"
+      ]
+    }
+  ],
+  "retrieval": {
+    "path": "reports\\research_upgrade\\retrieval_eval_summary.json",
+    "query_count": 2,
+    "retrieval_mode": "hybrid",
+    "reranker": "none",
+    "k_values": [
+      1,
+      3,
+      5,
+      10
+    ],
+    "recall_at_k": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "mrr_at_k": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "ndcg_at_k": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    }
+  },
+  "sweep": {
+    "status": "legacy",
+    "note": "Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting.",
+    "variants_found": [
+      "control",
+      "evidence-budget",
+      "fewer-points",
+      "strict-quoting"
+    ],
+    "aggregates": []
+  },
+  "annotation": {
+    "total_tasks": 20,
+    "current_completed_tasks": 2,
+    "legacy_completed_tasks": 0,
+    "export_file_count": 0,
+    "annotators": [
+      {
+        "annotator_id": "reviewer_01",
+        "autosave_current_count": 2,
+        "autosave_legacy_count": 0,
+        "export_current_count": 0,
+        "export_legacy_count": 0
+      }
+    ],
+    "note": "Annotation is in progress; no tracked export JSON files have been saved yet."
+  },
+  "artifact_statuses": [
+    {
+      "family": "evaluation_runs",
+      "status": "complete",
+      "detail": "20 current-schema prompt evaluations loaded."
+    },
+    {
+      "family": "failure_taxonomy",
+      "status": "complete",
+      "detail": "failure_tags.jsonl present and summarized."
+    },
+    {
+      "family": "retrieval_eval",
+      "status": "complete",
+      "detail": "Loaded retrieval benchmark from reports\\research_upgrade\\retrieval_eval_summary.json."
+    },
+    {
+      "family": "prompt_sweep",
+      "status": "excluded",
+      "detail": "Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting."
+    },
+    {
+      "family": "human_annotation",
+      "status": "partial",
+      "detail": "Annotation is in progress; no tracked export JSON files have been saved yet."
+    },
+    {
+      "family": "variant_runs",
+      "status": "missing",
+      "detail": "No variant runs artifacts found."
+    },
+    {
+      "family": "robustness_runs",
+      "status": "missing",
+      "detail": "No robustness runs artifacts found."
+    }
+  ],
+  "figure_paths": [
+    "reports\\final_analysis\\figures\\overall_scores.svg",
+    "reports\\final_analysis\\figures\\domain_overall_delta.svg",
+    "reports\\final_analysis\\figures\\prompt_overall_deltas.svg",
+    "reports\\final_analysis\\figures\\failure_categories.svg",
+    "reports\\final_analysis\\figures\\annotation_progress.svg",
+    "reports\\final_analysis\\figures\\retrieval_metrics.svg"
+  ],
+  "warnings": [
+    "Retrieval benchmark metrics are all zero; the labeled snippet IDs likely do not align with the current index contents.",
+    "Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting."
+  ]
+}
