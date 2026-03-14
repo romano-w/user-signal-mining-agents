@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-03-14T02:03:53.028054Z",
+  "tasks_dir": "artifacts\\runs\\_human_annotations",
+  "runs_dir": "artifacts\\runs",
+  "exports": [
+    {
+      "annotator_id": "reviewer_01",
+      "path": "reports\\human_annotation\\exports\\reviewer_01.json",
+      "result_count": 20
+    }
+  ],
+  "overlapping_task_ids": [],
+  "only_in_export_a": [
+    "task_ecommerce-cart-abandonment",
+    "task_ecommerce-product-fit",
+    "task_ecommerce-repeat-rate",
+    "task_ecommerce-return-friction",
+    "task_ecommerce-shipping-trust",
+    "task_restaurant-brunch-weekend-flow",
+    "task_restaurant-date-night-ambiance",
+    "task_restaurant-dietary-restriction-trust",
+    "task_restaurant-family-friendly-experience",
+    "task_restaurant-late-night-consistency",
+    "task_restaurant-local-discovery-standout",
+    "task_restaurant-loyalty-repeat-visits",
+    "task_restaurant-price-value-trust",
+    "task_restaurant-service-recovery",
+    "task_restaurant-takeout-speed",
+    "task_saas-onboarding-dropoff",
+    "task_saas-pricing-confusion",
+    "task_saas-support-trust",
+    "task_saas-time-to-value",
+    "task_saas-upgrade-conversion"
+  ],
+  "only_in_export_b": [],
+  "interannotator_overall_preference": null,
+  "interannotator_dimensions": [],
+  "judge_alignment": [
+    {
+      "annotator_id": "reviewer_01",
+      "sample_size": 20,
+      "exact_agreement": 0.7,
+      "cohen_kappa": 0.3406593406593405,
+      "human_preference_counts": {
+        "system_a": 7,
+        "system_b": 13,
+        "tie": 0
+      },
+      "judge_preference_counts": {
+        "system_a": 7,
+        "system_b": 13,
+        "tie": 0
+      }
+    }
+  ],
+  "missing_task_ids": [],
+  "missing_judge_prompt_ids": []
+}

@@ -1,6 +1,6 @@
 # Final Analysis Report
 
-**Generated:** 2026-03-13T23:12:08.426413+00:00
+**Generated:** 2026-03-14T02:04:21.443847+00:00
 **Runs dir:** `artifacts\runs`
 **Summary JSON:** [`final_analysis_summary.json`](final_analysis_summary.json)
 
@@ -9,7 +9,7 @@
 - Pipeline wins `17` of `20` evaluated prompts; baseline wins `3`, ties `0`.
 - Top-line `overall_preference` improved from `3.50` to `4.65` (`+1.15`).
 - Judge panel mode: `disabled (single judge)`.
-- Human annotation status: Annotation is in progress; no tracked export JSON files have been saved yet.
+- Human annotation status: Tracked annotation exports are present.
 
 ## Artifact Status
 
@@ -19,7 +19,7 @@
 | failure_taxonomy | complete | failure_tags.jsonl present and summarized. |
 | retrieval_eval | complete | Loaded retrieval benchmark from reports\research_upgrade\retrieval_eval_summary.json. |
 | prompt_sweep | excluded | Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting. |
-| human_annotation | partial | Annotation is in progress; no tracked export JSON files have been saved yet. |
+| human_annotation | partial | Tracked annotation exports are present. |
 | variant_runs | missing | No variant runs artifacts found. |
 | robustness_runs | missing | No robustness runs artifacts found. |
 
@@ -101,24 +101,24 @@
 ## Retrieval Evaluation
 
 - Queries evaluated: `2`
-- Mode: `hybrid` | Reranker: `none`
+- Mode: `hybrid` | Reranker: `token_overlap`
 
 | Metric | @1 | @3 | @5 | @10 |
 |---|---:|---:|---:|---:|
-| Recall | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
-| MRR | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
-| nDCG | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| Recall | 0.5000 | 1.0000 | 1.0000 | 1.0000 |
+| MRR | 0.5000 | 0.6667 | 0.6667 | 0.6667 |
+| nDCG | 0.5000 | 0.7500 | 0.7500 | 0.7500 |
 
 ## Human Annotation
 
 - Task batch size: `20`
-- Compatible completed tasks: `2`
+- Compatible completed tasks: `20`
 - Legacy completed tasks: `0`
-- Tracked export files: `0`
+- Tracked export files: `1`
 
 | Annotator | Autosave Current | Autosave Legacy | Export Current | Export Legacy |
 |---|---:|---:|---:|---:|
-| reviewer_01 | 2 | 0 | 0 | 0 |
+| reviewer_01 | 20 | 0 | 20 | 0 |
 
 ## Exclusions And Caveats
 
@@ -128,5 +128,4 @@
 
 ## Warnings
 
-- Retrieval benchmark metrics are all zero; the labeled snippet IDs likely do not align with the current index contents.
 - Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting.

@@ -18,33 +18,33 @@ text { font-family: 'Segoe UI', sans-serif; fill: #1f2937; }.title { font-size: 
 <text class="tick" x="70" y="84.0" text-anchor="end">1.0</text>
 <line class="axis" x1="80" y1="80" x2="80" y2="330" />
 <line class="axis" x1="80" y1="330" x2="950" y2="330" />
-<rect x="114.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#5f83bf" />
-<text class="value" x="134.8" y="324.0" text-anchor="middle">0.00</text>
-<rect x="162.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#e9a03b" />
-<text class="value" x="182.8" y="324.0" text-anchor="middle">0.00</text>
-<rect x="210.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#2a9d8f" />
-<text class="value" x="230.8" y="324.0" text-anchor="middle">0.00</text>
+<rect x="114.8" y="205.0" width="40.0" height="125.0" rx="8" fill="#5f83bf" />
+<text class="value" x="134.8" y="199.0" text-anchor="middle">0.50</text>
+<rect x="162.8" y="205.0" width="40.0" height="125.0" rx="8" fill="#e9a03b" />
+<text class="value" x="182.8" y="199.0" text-anchor="middle">0.50</text>
+<rect x="210.8" y="205.0" width="40.0" height="125.0" rx="8" fill="#2a9d8f" />
+<text class="value" x="230.8" y="199.0" text-anchor="middle">0.50</text>
 <text class="label" x="188.8" y="386" text-anchor="middle">@1</text>
-<rect x="332.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#5f83bf" />
-<text class="value" x="352.3" y="324.0" text-anchor="middle">0.00</text>
-<rect x="380.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#e9a03b" />
-<text class="value" x="400.3" y="324.0" text-anchor="middle">0.00</text>
-<rect x="428.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#2a9d8f" />
-<text class="value" x="448.3" y="324.0" text-anchor="middle">0.00</text>
+<rect x="332.3" y="80.0" width="40.0" height="250.0" rx="8" fill="#5f83bf" />
+<text class="value" x="352.3" y="92.0" text-anchor="middle">1.00</text>
+<rect x="380.3" y="163.3" width="40.0" height="166.7" rx="8" fill="#e9a03b" />
+<text class="value" x="400.3" y="157.3" text-anchor="middle">0.67</text>
+<rect x="428.3" y="142.5" width="40.0" height="187.5" rx="8" fill="#2a9d8f" />
+<text class="value" x="448.3" y="136.5" text-anchor="middle">0.75</text>
 <text class="label" x="406.2" y="386" text-anchor="middle">@3</text>
-<rect x="549.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#5f83bf" />
-<text class="value" x="569.8" y="324.0" text-anchor="middle">0.00</text>
-<rect x="597.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#e9a03b" />
-<text class="value" x="617.8" y="324.0" text-anchor="middle">0.00</text>
-<rect x="645.8" y="330.0" width="40.0" height="0.0" rx="8" fill="#2a9d8f" />
-<text class="value" x="665.8" y="324.0" text-anchor="middle">0.00</text>
+<rect x="549.8" y="80.0" width="40.0" height="250.0" rx="8" fill="#5f83bf" />
+<text class="value" x="569.8" y="92.0" text-anchor="middle">1.00</text>
+<rect x="597.8" y="163.3" width="40.0" height="166.7" rx="8" fill="#e9a03b" />
+<text class="value" x="617.8" y="157.3" text-anchor="middle">0.67</text>
+<rect x="645.8" y="142.5" width="40.0" height="187.5" rx="8" fill="#2a9d8f" />
+<text class="value" x="665.8" y="136.5" text-anchor="middle">0.75</text>
 <text class="label" x="623.8" y="386" text-anchor="middle">@5</text>
-<rect x="767.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#5f83bf" />
-<text class="value" x="787.3" y="324.0" text-anchor="middle">0.00</text>
-<rect x="815.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#e9a03b" />
-<text class="value" x="835.3" y="324.0" text-anchor="middle">0.00</text>
-<rect x="863.3" y="330.0" width="40.0" height="0.0" rx="8" fill="#2a9d8f" />
-<text class="value" x="883.3" y="324.0" text-anchor="middle">0.00</text>
+<rect x="767.3" y="80.0" width="40.0" height="250.0" rx="8" fill="#5f83bf" />
+<text class="value" x="787.3" y="92.0" text-anchor="middle">1.00</text>
+<rect x="815.3" y="163.3" width="40.0" height="166.7" rx="8" fill="#e9a03b" />
+<text class="value" x="835.3" y="157.3" text-anchor="middle">0.67</text>
+<rect x="863.3" y="142.5" width="40.0" height="187.5" rx="8" fill="#2a9d8f" />
+<text class="value" x="883.3" y="136.5" text-anchor="middle">0.75</text>
 <text class="label" x="841.2" y="386" text-anchor="middle">@10</text>
 <rect x="760" y="36" width="14" height="14" rx="3" fill="#5f83bf" />
 <text class="legend" x="782" y="47">Recall</text>

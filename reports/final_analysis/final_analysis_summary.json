@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-13T23:12:08.426413+00:00",
+  "generated_at": "2026-03-14T02:04:21.443847Z",
   "runs_dir": "artifacts\\runs",
   "output_dir": "reports\\final_analysis",
   "prompt_count": 20,
@@ -700,7 +700,7 @@
     "path": "reports\\research_upgrade\\retrieval_eval_summary.json",
     "query_count": 2,
     "retrieval_mode": "hybrid",
-    "reranker": "none",
+    "reranker": "token_overlap",
     "k_values": [
       1,
       3,
@@ -708,22 +708,22 @@
       10
     ],
     "recall_at_k": {
-      "1": 0.0,
-      "3": 0.0,
-      "5": 0.0,
-      "10": 0.0
+      "1": 0.5,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
     },
     "mrr_at_k": {
-      "1": 0.0,
-      "3": 0.0,
-      "5": 0.0,
-      "10": 0.0
+      "1": 0.5,
+      "3": 0.6666666666666666,
+      "5": 0.6666666666666666,
+      "10": 0.6666666666666666
     },
     "ndcg_at_k": {
-      "1": 0.0,
-      "3": 0.0,
-      "5": 0.0,
-      "10": 0.0
+      "1": 0.5,
+      "3": 0.75,
+      "5": 0.75,
+      "10": 0.75
     }
   },
   "sweep": {
@@ -739,19 +739,19 @@
   },
   "annotation": {
     "total_tasks": 20,
-    "current_completed_tasks": 2,
+    "current_completed_tasks": 20,
     "legacy_completed_tasks": 0,
-    "export_file_count": 0,
+    "export_file_count": 1,
     "annotators": [
       {
         "annotator_id": "reviewer_01",
-        "autosave_current_count": 2,
+        "autosave_current_count": 20,
         "autosave_legacy_count": 0,
-        "export_current_count": 0,
+        "export_current_count": 20,
         "export_legacy_count": 0
       }
     ],
-    "note": "Annotation is in progress; no tracked export JSON files have been saved yet."
+    "note": "Tracked annotation exports are present."
   },
   "artifact_statuses": [
     {
@@ -777,7 +777,7 @@
     {
       "family": "human_annotation",
       "status": "partial",
-      "detail": "Annotation is in progress; no tracked export JSON files have been saved yet."
+      "detail": "Tracked annotation exports are present."
     },
     {
       "family": "variant_runs",
@@ -799,7 +799,6 @@
     "reports\\final_analysis\\figures\\retrieval_metrics.svg"
   ],
   "warnings": [
-    "Retrieval benchmark metrics are all zero; the labeled snippet IDs likely do not align with the current index contents.",
     "Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting."
   ]
 }
