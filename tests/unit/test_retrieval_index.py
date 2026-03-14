@@ -243,6 +243,52 @@ def test_search_retrieval_index_reranker_can_reorder_candidates(
     assert [hit.snippet.snippet_id for hit in hits] == ["s1", "s2"]
 
 
+def test_search_retrieval_index_hybrid_reranker_rescues_strong_lexical_match(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    snippets = [
+        _snippet(1, text="food takes a very long time to come out"),
+        _snippet(2, text="it takes a long time for our food to come out"),
+        _snippet(3, text="friendly staff and quick seating"),
+    ]
+    embeddings = np.array(
+        [
+            [0.2, 0.8],
+            [0.98, 0.02],
+            [0.97, 0.03],
+        ],
+        dtype=np.float32,
+    )
+    metadata = retrieval_index.DenseIndexMetadata(
+        embedding_model="m",
+        device="cpu",
+        snippet_count=3,
+        vector_dimension=2,
+    )
+    monkeypatch.setattr(retrieval_index, "load_dense_index", lambda _d: (metadata, embeddings, snippets))
+
+    class _FakeModel:
+        def encode(self, queries, **_kwargs):
+            assert queries == ["food takes a very long time to come out"]
+            return np.array([[1.0, 0.0]], dtype=np.float32)
+
+    monkeypatch.setattr(retrieval_index, "load_embedding_model", lambda *_args, **_kwargs: _FakeModel())
+
+    hits = retrieval_index.search_retrieval_index(
+        "food takes a very long time to come out",
+        index_dir=tmp_path,
+        top_k=2,
+        mode="hybrid",
+        candidate_pool=3,
+        fusion_k=10,
+        reranker="token_overlap",
+        reranker_weight=1.0,
+    )
+
+    assert [hit.snippet.snippet_id for hit in hits] == ["s1", "s2"]
+
+
 def test_dump_search_results_writes_expected_payload(tmp_path: Path) -> None:
     hits = [DenseRetrievalHit(snippet=_snippet(1), score=0.91)]
     output = tmp_path / "out" / "results.json"

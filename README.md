@@ -175,8 +175,8 @@ All settings use the `USM_` prefix and can be set via `.env` or environment vari
 | `USM_RETRIEVAL_LEXICAL_WEIGHT` | `1.0` | Lexical reciprocal-rank-fusion weight |
 | `USM_RETRIEVAL_FUSION_K` | `60` | RRF smoothing constant |
 | `USM_RETRIEVAL_CANDIDATE_POOL` | `200` | Candidate pool size before final top-k cut |
-| `USM_RETRIEVAL_RERANKER` | `none` | Optional reranker stage (`none`, `token_overlap`) |
-| `USM_RETRIEVAL_RERANKER_WEIGHT` | `0.25` | Blend weight for reranker contribution |
+| `USM_RETRIEVAL_RERANKER` | `token_overlap` | Optional reranker stage (`none`, `token_overlap`) |
+| `USM_RETRIEVAL_RERANKER_WEIGHT` | `0.75` | Blend weight for reranker contribution |
 | `USM_RETRIEVAL_BM25_K1` | `1.5` | BM25 term-frequency saturation |
 | `USM_RETRIEVAL_BM25_B` | `0.75` | BM25 length normalization factor |
 | `USM_SYNTHESIS_EVIDENCE_K` | `20` | Evidence snippets for synthesis |
@@ -290,8 +290,6 @@ uv run python scripts/build_index.py --device cpu
 ## Data Policy
 
 The Yelp dataset is intended for educational use. Review the [official terms](https://business.yelp.com/data/resources/open-dataset/) before use. Raw data, processed outputs, and generated artifacts are excluded from git.
-
-
 
 
 

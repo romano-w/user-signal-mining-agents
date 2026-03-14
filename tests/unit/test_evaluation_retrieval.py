@@ -98,6 +98,47 @@ def test_run_retrieval_evaluation_supports_graded_relevance(
     assert summary.aggregates["ndcg_at_k"]["2"] == pytest.approx(0.709810, rel=1e-5)
 
 
+def test_run_retrieval_evaluation_defaults_to_settings_reranker(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+    tmp_settings,
+) -> None:
+    label_set = tmp_path / "labels.jsonl"
+    label_set.write_text(
+        json.dumps(
+            {
+                "query_id": "q1",
+                "query": "slow service",
+                "relevant_snippet_ids": ["s1"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    captured: dict[str, object] = {}
+
+    def _fake_search(*_args, **kwargs):
+        captured["reranker"] = kwargs["reranker"]
+        captured["reranker_weight"] = kwargs["reranker_weight"]
+        return [_hit("s1")]
+
+    monkeypatch.setattr(retrieval_runner, "search_retrieval_index", _fake_search)
+
+    summary = retrieval_runner.run_retrieval_evaluation(
+        label_set,
+        tmp_settings,
+        mode="hybrid",
+        top_k=1,
+        k_values=[1],
+    )
+
+    assert captured["reranker"] == tmp_settings.retrieval_reranker
+    assert captured["reranker_weight"] == tmp_settings.retrieval_reranker_weight
+    assert summary.reranker == tmp_settings.retrieval_reranker
+    assert summary.reranker_weight == tmp_settings.retrieval_reranker_weight
+
+
 def test_generate_retrieval_report_writes_json_and_markdown(tmp_path) -> None:
     summary = retrieval_runner.RetrievalEvaluationSummary(
         generated_at=datetime(2026, 3, 11, 12, 0, tzinfo=timezone.utc),

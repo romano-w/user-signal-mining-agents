@@ -412,7 +412,7 @@ def search_retrieval_index(
     fusion_k: int = 60,
     candidate_pool: int | None = None,
     reranker: str = "none",
-    reranker_weight: float = 0.25,
+    reranker_weight: float = 0.75,
     bm25_k1: float = 1.5,
     bm25_b: float = 0.75,
 ) -> list[DenseRetrievalHit]:

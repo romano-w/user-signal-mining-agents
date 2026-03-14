@@ -35,5 +35,5 @@ def test_settings_include_retrieval_stack_v2_defaults() -> None:
     assert settings.retrieval_dense_weight == 1.0
     assert settings.retrieval_lexical_weight == 1.0
     assert settings.retrieval_fusion_k == 60
-    assert settings.retrieval_reranker == "none"
-    assert settings.retrieval_reranker_weight == 0.25
+    assert settings.retrieval_reranker == "token_overlap"
+    assert settings.retrieval_reranker_weight == 0.75

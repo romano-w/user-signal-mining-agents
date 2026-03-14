@@ -82,8 +82,8 @@ class Settings(BaseSettings):
     retrieval_lexical_weight: float = 1.0
     retrieval_fusion_k: int = 60
     retrieval_candidate_pool: int = 200
-    retrieval_reranker: str = "none"
-    retrieval_reranker_weight: float = 0.25
+    retrieval_reranker: str = "token_overlap"
+    retrieval_reranker_weight: float = 0.75
     retrieval_bm25_k1: float = 1.5
     retrieval_bm25_b: float = 0.75
     synthesis_evidence_k: int = 20
@@ -116,7 +116,5 @@ def ensure_scaffold_directories(settings: Settings) -> list[Path]:
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-
-
 
 
