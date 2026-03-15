@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 from .. import console as con
 from ..config import Settings, get_settings
 from ..llm_client import call_llm_json

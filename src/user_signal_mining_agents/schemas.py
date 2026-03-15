@@ -1,7 +1,13 @@
+"""Pydantic data models shared across the agent pipeline and evaluation framework."""
+
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Literal
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -153,7 +159,7 @@ class HumanAnnotationResult(BaseModel):
     system_b_scores: HumanAnnotationScores
     overall_preference: Literal["system_a", "system_b", "tie"]
     difficulty_rating: int = Field(ge=1, le=5, description="How subjective or difficult was this to grade?")
-    annotated_at: datetime = Field(default_factory=datetime.utcnow)
+    annotated_at: datetime = Field(default_factory=_utcnow)
 
 
 
@@ -187,7 +193,7 @@ class DatasetSnapshotManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     snapshot_id: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_utcnow)
     dataset_ids: list[str] = Field(default_factory=list)
     record_count: int = Field(ge=0)
     checksum_sha256: str
@@ -199,7 +205,7 @@ class ExperimentManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     run_id: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_utcnow)
     dataset_snapshot_id: str
     prompt_bundle_id: str
     embedding_index_id: str

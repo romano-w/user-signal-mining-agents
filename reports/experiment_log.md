@@ -1,5 +1,13 @@
 # Experiment Log
 
+## 2026-03-14 - Final Analysis & Paper
+
+- Generated final analysis report from 20 current-schema evaluation runs.
+- Pipeline wins 17/20 prompts; overall preference 3.50 → 4.65 (+1.15).
+- Human annotation (n=20, 1 annotator): 70% exact agreement with LLM judge (κ = 0.34).
+- Created conference-style paper at `paper/final_report.md`.
+- All 192 tests passing; deprecation warnings resolved.
+
 ## 2026-03-13 - Rubric Simplification
 
 - Decision: simplify the evaluation design to four final signals.

@@ -4,6 +4,35 @@ Founder-grounded review mining framework for the AI Agents W26 final project.
 
 This system compares a **zero-shot baseline** against a **multi-step grounded pipeline** for extracting actionable focus points from customer reviews, scored by an **LLM judge** across 4 rubric dimensions.
 
+> **Final report:** [`paper/final_report.md`](paper/final_report.md) (1–2 page conference-style paper)
+> **Generated analysis:** [`reports/final_analysis/final_analysis_report.md`](reports/final_analysis/final_analysis_report.md)
+
+## Research Questions
+
+1. **Does multi-step decomposition improve quality?** We compare a zero-shot retrieval-augmented baseline against a 4-agent grounded pipeline (intent → evidence → synthesis → verification) across 20 founder prompts in 3 domains.
+2. **How well does LLM-as-judge align with human preferences?** We run a blinded human annotation study (n=20) and measure agreement with the automated judge.
+
+## Key Results
+
+- Pipeline preferred on **17/20** prompts; overall preference improved from **3.50 → 4.65** (+1.15 on a 5-point scale).
+- Largest gains on **relevance** (+0.80) and **groundedness** (+0.65) -- intent decomposition and evidence grounding are the key drivers.
+- Out-of-domain prompts (ecommerce +2.20, SaaS +1.40) benefit most from query planning.
+- Human–judge agreement: **70% exact match** on winner selection (Cohen's κ = 0.34).
+
+## Connection to Course Concepts
+
+This project applies several core themes from the AI Agents course:
+
+| Course Concept | How It Appears in This Project |
+|---|---|
+| **Agentic architecture** | Task decomposed into specialized sub-agents (intent, evidence, synthesis, verification) rather than a monolithic LLM call. |
+| **Tool use** | Agents query a hybrid retrieval index (dense embeddings + BM25) as an external tool for evidence gathering. |
+| **Planning & decomposition** | The intent agent generates structured retrieval plans; the query planner expands coverage with counter-hypothesis queries. |
+| **Grounding & hallucination reduction** | Synthesis enforces inline evidence quotes; the evidence verifier checks attribution against the source corpus. |
+| **Evaluation methodology** | LLM-as-judge with A/B position debiasing, multi-judge panel support, failure taxonomy, and human annotation calibration. |
+| **Prompt engineering** | Distinct prompt templates per agent, iteratively refined based on failure analysis. |
+| **Domain transfer** | Pipeline tested across 3 domains to assess generalization beyond the primary training corpus. |
+
 ## Architecture
 
 ```
@@ -290,8 +319,4 @@ uv run python scripts/build_index.py --device cpu
 ## Data Policy
 
 The Yelp dataset is intended for educational use. Review the [official terms](https://business.yelp.com/data/resources/open-dataset/) before use. Raw data, processed outputs, and generated artifacts are excluded from git.
-
-
-
-
 
