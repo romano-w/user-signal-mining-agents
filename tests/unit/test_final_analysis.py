@@ -4,6 +4,14 @@ import json
 from pathlib import Path
 
 from user_signal_mining_agents.evaluation.final_analysis import build_analysis_report
+from user_signal_mining_agents.schemas import (
+    EvidenceSnippet,
+    FocusPoint,
+    FounderPrompt,
+    HumanAnnotationResult,
+    HumanAnnotationScores,
+    HumanAnnotationTask,
+)
 
 
 def _write_prompt_run(
@@ -167,6 +175,81 @@ def _write_annotation_progress(runs_dir: Path) -> None:
     )
 
 
+def _focus_point(index: int) -> FocusPoint:
+    return FocusPoint(
+        label=f"focus-{index}",
+        why_it_matters=f"Why {index}",
+        supporting_snippets=[f"snippet-{index}"],
+        counter_signal=f"Counter {index}",
+        next_validation_question=f"Question {index}?",
+    )
+
+
+def _write_annotation_task(
+    tasks_dir: Path,
+    *,
+    task_id: str,
+    prompt_id: str,
+    domain: str,
+    statement: str,
+    mapping: dict[str, str],
+) -> None:
+    task = HumanAnnotationTask(
+        task_id=task_id,
+        prompt=FounderPrompt(id=prompt_id, statement=statement, domain=domain),
+        retrieved_evidence=[
+            EvidenceSnippet(
+                snippet_id="snippet-1",
+                review_id="review-1",
+                business_id="biz-1",
+                text="Customers mentioned onboarding confusion and trust issues.",
+            )
+        ],
+        system_a_focus_points=[_focus_point(1), _focus_point(2), _focus_point(3)],
+        system_b_focus_points=[_focus_point(4), _focus_point(5), _focus_point(6)],
+        ground_truth_mapping=mapping,
+    )
+    (tasks_dir / f"{task_id}.json").write_text(task.model_dump_json(indent=2), encoding="utf-8")
+
+
+def _annotation_result(
+    task_id: str,
+    annotator_id: str,
+    *,
+    overall_preference: str,
+    system_a_relevance: int,
+    system_b_relevance: int,
+) -> HumanAnnotationResult:
+    return HumanAnnotationResult(
+        task_id=task_id,
+        annotator_id=annotator_id,
+        system_a_scores=HumanAnnotationScores(
+            relevance=system_a_relevance,
+            groundedness=4,
+            distinctiveness=4,
+            rationale="System A rationale",
+        ),
+        system_b_scores=HumanAnnotationScores(
+            relevance=system_b_relevance,
+            groundedness=5,
+            distinctiveness=3,
+            rationale="System B rationale",
+        ),
+        overall_preference=overall_preference,
+        difficulty_rating=2,
+    )
+
+
+def _write_annotation_export(path: Path, annotator_id: str, results: list[HumanAnnotationResult]) -> None:
+    payload = {
+        "annotator_id": annotator_id,
+        "count": len(results),
+        "results": [result.model_dump(mode="json") for result in results],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
 def test_build_analysis_report_generates_outputs_and_flags_legacy_artifacts(tmp_path: Path) -> None:
     runs_dir = tmp_path / "artifacts" / "runs"
     sweep_dir = tmp_path / "artifacts" / "sweep_runs"
@@ -224,3 +307,110 @@ def test_build_analysis_report_generates_outputs_and_flags_legacy_artifacts(tmp_
     assert "Prompt sweep" in markdown
     assert "legacy-format autosaves" in markdown
     assert "retrieval benchmark metrics" in markdown.lower()
+
+
+def test_build_analysis_report_integrates_human_annotation_findings(tmp_path: Path) -> None:
+    runs_dir = tmp_path / "artifacts" / "runs"
+    output_dir = tmp_path / "reports" / "final_analysis"
+    exports_dir = tmp_path / "reports" / "human_annotation" / "exports"
+    tasks_dir = runs_dir / "_human_annotations"
+
+    _write_prompt_run(
+        runs_dir,
+        prompt_id="prompt-a",
+        domain="restaurants",
+        statement="Why do guests stop returning?",
+        baseline_overall=3.0,
+        pipeline_overall=5.0,
+    )
+    _write_prompt_run(
+        runs_dir,
+        prompt_id="prompt-b",
+        domain="saas",
+        statement="Why do users escalate support?",
+        baseline_overall=4.0,
+        pipeline_overall=3.0,
+    )
+    _write_failure_tags(runs_dir)
+    _write_retrieval_summary(tmp_path)
+    tasks_dir.mkdir(parents=True, exist_ok=True)
+    _write_annotation_task(
+        tasks_dir,
+        task_id="task_prompt-a",
+        prompt_id="prompt-a",
+        domain="restaurants",
+        statement="Why do guests stop returning?",
+        mapping={"system_a": "baseline", "system_b": "pipeline"},
+    )
+    _write_annotation_task(
+        tasks_dir,
+        task_id="task_prompt-b",
+        prompt_id="prompt-b",
+        domain="saas",
+        statement="Why do users escalate support?",
+        mapping={"system_a": "pipeline", "system_b": "baseline"},
+    )
+    _write_annotation_export(
+        exports_dir / "reviewer_1.json",
+        "reviewer_1",
+        [
+            _annotation_result(
+                "task_prompt-a",
+                "reviewer_1",
+                overall_preference="system_b",
+                system_a_relevance=3,
+                system_b_relevance=5,
+            ),
+            _annotation_result(
+                "task_prompt-b",
+                "reviewer_1",
+                overall_preference="system_b",
+                system_a_relevance=4,
+                system_b_relevance=5,
+            ),
+        ],
+    )
+    _write_annotation_export(
+        exports_dir / "reviewer_2.json",
+        "reviewer_2",
+        [
+            _annotation_result(
+                "task_prompt-a",
+                "reviewer_2",
+                overall_preference="system_a",
+                system_a_relevance=4,
+                system_b_relevance=5,
+            ),
+            _annotation_result(
+                "task_prompt-b",
+                "reviewer_2",
+                overall_preference="system_b",
+                system_a_relevance=4,
+                system_b_relevance=4,
+            ),
+        ],
+    )
+
+    summary, _, report_path = build_analysis_report(
+        runs_dir=runs_dir,
+        output_dir=output_dir,
+        sweep_dir=tmp_path / "artifacts" / "sweep_runs",
+        retrieval_summary_path=None,
+        annotation_tasks_dir=tasks_dir,
+        annotation_results_dir=tasks_dir / "_results",
+        annotation_exports_dir=exports_dir,
+    )
+
+    assert summary.annotation_findings is not None
+    assert summary.annotation_findings.overlapping_task_count == 2
+    assert summary.annotation_findings.interannotator_overall_preference is not None
+    assert summary.annotation_findings.interannotator_overall_preference.exact_agreement == 0.5
+    assert len(summary.annotation_findings.judge_alignment) == 2
+    assert any(status.family == "human_annotation" and status.status == "complete" for status in summary.artifact_statuses)
+    assert any(path.endswith("interannotator_agreement.svg") for path in summary.figure_paths)
+
+    markdown = report_path.read_text(encoding="utf-8")
+    assert "### Interannotator agreement" in markdown
+    assert "### Interannotator Agreement" in markdown
+    assert "### Judge Alignment vs LLM Judge" in markdown
+    assert "calibration claims remain fragile" in markdown

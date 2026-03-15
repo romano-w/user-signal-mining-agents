@@ -17,7 +17,7 @@ This system compares a **zero-shot baseline** against a **multi-step grounded pi
 - Pipeline preferred on **17/20** prompts; overall preference improved from **3.50 → 4.65** (+1.15 on a 5-point scale).
 - Largest gains on **relevance** (+0.80) and **groundedness** (+0.65) -- intent decomposition and evidence grounding are the key drivers.
 - Out-of-domain prompts (ecommerce +2.20, SaaS +1.40) benefit most from query planning.
-- Human–judge agreement: **70% exact match** on winner selection (Cohen's κ = 0.34).
+- Human calibration is unstable: two annotators agree on **40%** of winner labels (Cohen's κ = -0.19), and LLM-judge alignment ranges from **35% to 70%** across annotators.
 
 ## Connection to Course Concepts
 
@@ -319,4 +319,3 @@ uv run python scripts/build_index.py --device cpu
 ## Data Policy
 
 The Yelp dataset is intended for educational use. Review the [official terms](https://business.yelp.com/data/resources/open-dataset/) before use. Raw data, processed outputs, and generated artifacts are excluded from git.
-

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-14T02:04:21.443847Z",
+  "generated_at": "2026-03-15T23:13:10.471576Z",
   "runs_dir": "artifacts\\runs",
   "output_dir": "reports\\final_analysis",
   "prompt_count": 20,
@@ -741,7 +741,7 @@
     "total_tasks": 20,
     "current_completed_tasks": 20,
     "legacy_completed_tasks": 0,
-    "export_file_count": 1,
+    "export_file_count": 2,
     "annotators": [
       {
         "annotator_id": "reviewer_01",
@@ -749,9 +749,95 @@
         "autosave_legacy_count": 0,
         "export_current_count": 20,
         "export_legacy_count": 0
+      },
+      {
+        "annotator_id": "reviewer_02",
+        "autosave_current_count": 0,
+        "autosave_legacy_count": 0,
+        "export_current_count": 20,
+        "export_legacy_count": 0
       }
     ],
     "note": "Tracked annotation exports are present."
+  },
+  "annotation_findings": {
+    "exports_used": [
+      "reports\\human_annotation\\exports\\reviewer_01.json",
+      "reports\\human_annotation\\exports\\reviewer_02.json"
+    ],
+    "overlapping_task_count": 20,
+    "only_in_export_a": [],
+    "only_in_export_b": [],
+    "interannotator_overall_preference": {
+      "metric": "overall_preference",
+      "sample_size": 20,
+      "exact_agreement": 0.4,
+      "cohen_kappa": -0.19402985074626863,
+      "mean_abs_diff": null,
+      "quadratic_weighted_kappa": null
+    },
+    "interannotator_dimensions": [
+      {
+        "metric": "relevance",
+        "sample_size": 40,
+        "exact_agreement": 0.35,
+        "cohen_kappa": -0.05476673427991887,
+        "mean_abs_diff": 0.85,
+        "quadratic_weighted_kappa": -0.1637931034482758
+      },
+      {
+        "metric": "groundedness",
+        "sample_size": 40,
+        "exact_agreement": 0.3,
+        "cohen_kappa": -0.054613935969868174,
+        "mean_abs_diff": 1.15,
+        "quadratic_weighted_kappa": -0.06990881458966558
+      },
+      {
+        "metric": "distinctiveness",
+        "sample_size": 40,
+        "exact_agreement": 0.375,
+        "cohen_kappa": 0.06976744186046512,
+        "mean_abs_diff": 0.725,
+        "quadratic_weighted_kappa": -0.08823529411764719
+      }
+    ],
+    "judge_alignment": [
+      {
+        "annotator_id": "reviewer_01",
+        "sample_size": 20,
+        "exact_agreement": 0.7,
+        "cohen_kappa": 0.3406593406593405,
+        "human_preference_counts": {
+          "system_a": 7,
+          "system_b": 13,
+          "tie": 0
+        },
+        "judge_preference_counts": {
+          "system_a": 7,
+          "system_b": 13,
+          "tie": 0
+        }
+      },
+      {
+        "annotator_id": "reviewer_02",
+        "sample_size": 20,
+        "exact_agreement": 0.35,
+        "cohen_kappa": -0.29353233830845776,
+        "human_preference_counts": {
+          "system_a": 8,
+          "system_b": 11,
+          "tie": 1
+        },
+        "judge_preference_counts": {
+          "system_a": 7,
+          "system_b": 13,
+          "tie": 0
+        }
+      }
+    ],
+    "missing_task_ids": [],
+    "missing_judge_prompt_ids": []
   },
   "artifact_statuses": [
     {
@@ -776,8 +862,8 @@
     },
     {
       "family": "human_annotation",
-      "status": "partial",
-      "detail": "Tracked annotation exports are present."
+      "status": "complete",
+      "detail": "Agreement analysis available for 2 annotators across 20 overlapping tasks."
     },
     {
       "family": "variant_runs",
@@ -796,6 +882,7 @@
     "reports\\final_analysis\\figures\\prompt_overall_deltas.svg",
     "reports\\final_analysis\\figures\\failure_categories.svg",
     "reports\\final_analysis\\figures\\annotation_progress.svg",
+    "reports\\final_analysis\\figures\\interannotator_agreement.svg",
     "reports\\final_analysis\\figures\\retrieval_metrics.svg"
   ],
   "warnings": [

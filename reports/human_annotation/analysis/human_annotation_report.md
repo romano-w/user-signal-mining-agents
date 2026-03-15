@@ -1,6 +1,6 @@
 # Human Annotation Analysis
 
-**Generated:** 2026-03-14T02:03:53.028054+00:00
+**Generated:** 2026-03-15T22:38:55.460997+00:00
 **Tasks dir:** `artifacts\runs\_human_annotations`
 **Runs dir:** `artifacts\runs`
 
@@ -8,11 +8,25 @@
 | Annotator | Results | Path |
 |---|---:|---|
 | reviewer_01 | 20 | `reports\human_annotation\exports\reviewer_01.json` |
+| reviewer_02 | 20 | `reports\human_annotation\exports\reviewer_02.json` |
+
+## Interannotator Agreement
+**Overlapping tasks:** 20
+
+### Overall Preference
+| Metric | Samples | Exact Agreement | Cohen's Kappa |
+|---|---:|---:|---:|
+| overall_preference | 20 | 40.00% | -0.194 |
+
+### Rubric Dimensions
+| Dimension | Samples | Exact Agreement | Mean Abs Diff | Quadratic Weighted Kappa |
+|---|---:|---:|---:|---:|
+| relevance | 40 | 35.00% | 0.850 | -0.164 |
+| groundedness | 40 | 30.00% | 1.150 | -0.070 |
+| distinctiveness | 40 | 37.50% | 0.725 | -0.088 |
 
 ## Judge Alignment
 | Annotator | Samples | Exact Agreement | Cohen's Kappa | Judge A | Judge B | Judge Tie |
 |---|---:|---:|---:|---:|---:|---:|
 | reviewer_01 | 20 | 70.00% | 0.341 | 7 | 13 | 0 |
-
-## Missing or Unmatched Inputs
-- Only in export A: task_ecommerce-cart-abandonment, task_ecommerce-product-fit, task_ecommerce-repeat-rate, task_ecommerce-return-friction, task_ecommerce-shipping-trust, task_restaurant-brunch-weekend-flow, task_restaurant-date-night-ambiance, task_restaurant-dietary-restriction-trust, task_restaurant-family-friendly-experience, task_restaurant-late-night-consistency, task_restaurant-local-discovery-standout, task_restaurant-loyalty-repeat-visits, task_restaurant-price-value-trust, task_restaurant-service-recovery, task_restaurant-takeout-speed, task_saas-onboarding-dropoff, task_saas-pricing-confusion, task_saas-support-trust, task_saas-time-to-value, task_saas-upgrade-conversion
+| reviewer_02 | 20 | 35.00% | -0.294 | 7 | 13 | 0 |

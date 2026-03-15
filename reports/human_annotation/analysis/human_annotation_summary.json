@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-14T02:03:53.028054Z",
+  "generated_at": "2026-03-15T22:38:55.460997Z",
   "tasks_dir": "artifacts\\runs\\_human_annotations",
   "runs_dir": "artifacts\\runs",
   "exports": [
@@ -7,10 +7,14 @@
       "annotator_id": "reviewer_01",
       "path": "reports\\human_annotation\\exports\\reviewer_01.json",
       "result_count": 20
+    },
+    {
+      "annotator_id": "reviewer_02",
+      "path": "reports\\human_annotation\\exports\\reviewer_02.json",
+      "result_count": 20
     }
   ],
-  "overlapping_task_ids": [],
-  "only_in_export_a": [
+  "overlapping_task_ids": [
     "task_ecommerce-cart-abandonment",
     "task_ecommerce-product-fit",
     "task_ecommerce-repeat-rate",
@@ -32,9 +36,42 @@
     "task_saas-time-to-value",
     "task_saas-upgrade-conversion"
   ],
+  "only_in_export_a": [],
   "only_in_export_b": [],
-  "interannotator_overall_preference": null,
-  "interannotator_dimensions": [],
+  "interannotator_overall_preference": {
+    "metric": "overall_preference",
+    "sample_size": 20,
+    "exact_agreement": 0.4,
+    "cohen_kappa": -0.19402985074626863,
+    "mean_abs_diff": null,
+    "quadratic_weighted_kappa": null
+  },
+  "interannotator_dimensions": [
+    {
+      "metric": "relevance",
+      "sample_size": 40,
+      "exact_agreement": 0.35,
+      "cohen_kappa": -0.05476673427991887,
+      "mean_abs_diff": 0.85,
+      "quadratic_weighted_kappa": -0.1637931034482758
+    },
+    {
+      "metric": "groundedness",
+      "sample_size": 40,
+      "exact_agreement": 0.3,
+      "cohen_kappa": -0.054613935969868174,
+      "mean_abs_diff": 1.15,
+      "quadratic_weighted_kappa": -0.06990881458966558
+    },
+    {
+      "metric": "distinctiveness",
+      "sample_size": 40,
+      "exact_agreement": 0.375,
+      "cohen_kappa": 0.06976744186046512,
+      "mean_abs_diff": 0.725,
+      "quadratic_weighted_kappa": -0.08823529411764719
+    }
+  ],
   "judge_alignment": [
     {
       "annotator_id": "reviewer_01",
@@ -45,6 +82,22 @@
         "system_a": 7,
         "system_b": 13,
         "tie": 0
+      },
+      "judge_preference_counts": {
+        "system_a": 7,
+        "system_b": 13,
+        "tie": 0
+      }
+    },
+    {
+      "annotator_id": "reviewer_02",
+      "sample_size": 20,
+      "exact_agreement": 0.35,
+      "cohen_kappa": -0.29353233830845776,
+      "human_preference_counts": {
+        "system_a": 8,
+        "system_b": 11,
+        "tie": 1
       },
       "judge_preference_counts": {
         "system_a": 7,

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="394" viewBox="0 0 1080 394" role="img" aria-label="Interannotator Agreement by Metric">
+<style>
+text { font-family: 'Segoe UI', sans-serif; fill: #1f2937; }.title { font-size: 24px; font-weight: 700; }.axis { stroke: #94a3b8; stroke-width: 1; }.grid { stroke: #e2e8f0; stroke-width: 1; }.tick { font-size: 12px; fill: #64748b; }.label { font-size: 13px; }.value { font-size: 12px; font-weight: 600; }.legend { font-size: 12px; }
+</style>
+<rect width="1080" height="394" fill="#fffaf1" />
+<text class="title" x="24" y="40">Interannotator Agreement by Metric</text>
+<text class="label" x="24" y="76">Overlapping tasks: 20</text>
+<text class="label" x="210" y="92">Exact Agreement</text>
+<text class="label" x="620" y="92">Cohen&apos;s Kappa</text>
+<line class="grid" x1="210.0" y1="104" x2="210.0" y2="366" />
+<text class="tick" x="210.0" y="384" text-anchor="middle">0%</text>
+<line class="grid" x1="270.0" y1="104" x2="270.0" y2="366" />
+<text class="tick" x="270.0" y="384" text-anchor="middle">25%</text>
+<line class="grid" x1="330.0" y1="104" x2="330.0" y2="366" />
+<text class="tick" x="330.0" y="384" text-anchor="middle">50%</text>
+<line class="grid" x1="390.0" y1="104" x2="390.0" y2="366" />
+<text class="tick" x="390.0" y="384" text-anchor="middle">75%</text>
+<line class="grid" x1="450.0" y1="104" x2="450.0" y2="366" />
+<text class="tick" x="450.0" y="384" text-anchor="middle">100%</text>
+<line class="grid" x1="620.0" y1="104" x2="620.0" y2="366" />
+<text class="tick" x="620.0" y="384" text-anchor="middle">-1.0</text>
+<line class="grid" x1="700.0" y1="104" x2="700.0" y2="366" />
+<text class="tick" x="700.0" y="384" text-anchor="middle">-0.5</text>
+<line class="axis" x1="780.0" y1="104" x2="780.0" y2="366" />
+<text class="tick" x="780.0" y="384" text-anchor="middle">0</text>
+<line class="grid" x1="860.0" y1="104" x2="860.0" y2="366" />
+<text class="tick" x="860.0" y="384" text-anchor="middle">+0.5</text>
+<line class="grid" x1="940.0" y1="104" x2="940.0" y2="366" />
+<text class="tick" x="940.0" y="384" text-anchor="middle">+1.0</text>
+<text class="label" x="194" y="122" text-anchor="end">Overall Preference</text>
+<rect x="210" y="130" width="240" height="14" rx="7" fill="#e5e7eb" />
+<rect x="210" y="130" width="96.0" height="14" rx="7" fill="#2a9d8f" />
+<text class="value" x="460" y="142">40%</text>
+<rect x="620" y="130" width="320" height="14" rx="7" fill="#eef2f7" />
+<rect x="749.0" y="130" width="31.0" height="14" rx="7" fill="#d06767" />
+<text class="value" x="741.0" y="142" text-anchor="end">-0.19</text>
+<text class="label" x="194" y="178" text-anchor="end">Relevance</text>
+<rect x="210" y="186" width="240" height="14" rx="7" fill="#e5e7eb" />
+<rect x="210" y="186" width="84.0" height="14" rx="7" fill="#2a9d8f" />
+<text class="value" x="460" y="198">35%</text>
+<rect x="620" y="186" width="320" height="14" rx="7" fill="#eef2f7" />
+<rect x="771.2" y="186" width="8.8" height="14" rx="7" fill="#d06767" />
+<text class="value" x="763.2" y="198" text-anchor="end">-0.05</text>
+<text class="tick" x="1056" y="198" text-anchor="end">MAD 0.85</text>
+<text class="label" x="194" y="234" text-anchor="end">Groundedness</text>
+<rect x="210" y="242" width="240" height="14" rx="7" fill="#e5e7eb" />
+<rect x="210" y="242" width="72.0" height="14" rx="7" fill="#2a9d8f" />
+<text class="value" x="460" y="254">30%</text>
+<rect x="620" y="242" width="320" height="14" rx="7" fill="#eef2f7" />
+<rect x="771.3" y="242" width="8.7" height="14" rx="7" fill="#d06767" />
+<text class="value" x="763.3" y="254" text-anchor="end">-0.05</text>
+<text class="tick" x="1056" y="254" text-anchor="end">MAD 1.15</text>
+<text class="label" x="194" y="290" text-anchor="end">Distinctiveness</text>
+<rect x="210" y="298" width="240" height="14" rx="7" fill="#e5e7eb" />
+<rect x="210" y="298" width="90.0" height="14" rx="7" fill="#2a9d8f" />
+<text class="value" x="460" y="310">38%</text>
+<rect x="620" y="298" width="320" height="14" rx="7" fill="#eef2f7" />
+<rect x="780.0" y="298" width="11.2" height="14" rx="7" fill="#5f83bf" />
+<text class="value" x="799.2" y="310" text-anchor="start">+0.07</text>
+<text class="tick" x="1056" y="310" text-anchor="end">MAD 0.72</text>
+</svg>

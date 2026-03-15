@@ -1,6 +1,6 @@
 # Final Analysis Report
 
-**Generated:** 2026-03-14T02:04:21.443847+00:00
+**Generated:** 2026-03-15T23:13:10.471576+00:00
 **Runs dir:** `artifacts\runs`
 **Summary JSON:** [`final_analysis_summary.json`](final_analysis_summary.json)
 
@@ -9,7 +9,7 @@
 - Pipeline wins `17` of `20` evaluated prompts; baseline wins `3`, ties `0`.
 - Top-line `overall_preference` improved from `3.50` to `4.65` (`+1.15`).
 - Judge panel mode: `disabled (single judge)`.
-- Human annotation status: Tracked annotation exports are present.
+- Human annotation spans `2` annotators across `20` overlapping tasks; `overall_preference` agreement is `40.00%` (`kappa = -0.194`).
 
 ## Artifact Status
 
@@ -19,7 +19,7 @@
 | failure_taxonomy | complete | failure_tags.jsonl present and summarized. |
 | retrieval_eval | complete | Loaded retrieval benchmark from reports\research_upgrade\retrieval_eval_summary.json. |
 | prompt_sweep | excluded | Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting. |
-| human_annotation | partial | Tracked annotation exports are present. |
+| human_annotation | complete | Agreement analysis available for 2 annotators across 20 overlapping tasks. |
 | variant_runs | missing | No variant runs artifacts found. |
 | robustness_runs | missing | No robustness runs artifacts found. |
 
@@ -39,6 +39,9 @@
 
 ### Human annotation progress
 ![Human annotation progress](figures/annotation_progress.svg)
+
+### Interannotator agreement
+![Interannotator agreement by metric](figures/interannotator_agreement.svg)
 
 ### Retrieval benchmark metrics
 ![Retrieval metrics by K](figures/retrieval_metrics.svg)
@@ -114,17 +117,41 @@
 - Task batch size: `20`
 - Compatible completed tasks: `20`
 - Legacy completed tasks: `0`
-- Tracked export files: `1`
+- Tracked export files: `2`
 
 | Annotator | Autosave Current | Autosave Legacy | Export Current | Export Legacy |
 |---|---:|---:|---:|---:|
 | reviewer_01 | 20 | 0 | 20 | 0 |
+| reviewer_02 | 0 | 0 | 20 | 0 |
+
+### Interannotator Agreement
+
+- Overlapping tasks: `20`
+
+| Metric | Samples | Exact Agreement | Cohen's Kappa |
+|---|---:|---:|---:|
+| overall_preference | 20 | 40.00% | -0.194 |
+
+### Rubric Agreement
+
+| Dimension | Samples | Exact Agreement | Mean Abs Diff | Quadratic Weighted Kappa |
+|---|---:|---:|---:|---:|
+| relevance | 40 | 35.00% | 0.850 | -0.164 |
+| groundedness | 40 | 30.00% | 1.150 | -0.070 |
+| distinctiveness | 40 | 37.50% | 0.725 | -0.088 |
+
+### Judge Alignment vs LLM Judge
+
+| Annotator | Samples | Exact Agreement | Cohen's Kappa | Human A | Human B | Human Tie | Judge A | Judge B | Judge Tie |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| reviewer_01 | 20 | 70.00% | 0.341 | 7 | 13 | 0 | 7 | 13 | 0 |
+| reviewer_02 | 20 | 35.00% | -0.294 | 8 | 11 | 1 | 7 | 13 | 0 |
 
 ## Exclusions And Caveats
 
 - Prompt sweep: Existing prompt-sweep artifacts use the pre-migration rubric schema and were excluded: control, evidence-budget, fewer-points, strict-quoting.
 - Variant and robustness suites are reported only if their artifact directories exist; they were not part of the completed run set in this workspace snapshot.
-- Main evaluation results are still judge-only; human validation is not yet ready for agreement analysis.
+- Human validation is included, but interannotator overall-preference agreement is only 40.00% (`kappa = -0.194`), so calibration claims remain fragile.
 
 ## Warnings
 

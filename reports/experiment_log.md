@@ -1,10 +1,18 @@
 # Experiment Log
 
+## 2026-03-15 - Completed Human Annotation Integration
+
+- Regenerated the tracked human-annotation analysis from both reviewer exports.
+- Interannotator overall-preference agreement across 20 shared tasks is 40% (κ = -0.19).
+- Judge alignment is inconsistent across annotators: reviewer_01 matches the LLM judge 70% of the time (κ = 0.34), while reviewer_02 matches 35% (κ = -0.29).
+- Rebuilt the final analysis report so completed human-annotation findings are integrated into the tracked summaries.
+- Updated the README and paper to replace the earlier single-annotator calibration claim with the completed two-annotator result.
+
 ## 2026-03-14 - Final Analysis & Paper
 
 - Generated final analysis report from 20 current-schema evaluation runs.
 - Pipeline wins 17/20 prompts; overall preference 3.50 → 4.65 (+1.15).
-- Human annotation (n=20, 1 annotator): 70% exact agreement with LLM judge (κ = 0.34).
+- Initial human annotation snapshot (n=20, 1 annotator): 70% exact agreement with LLM judge (κ = 0.34).
 - Created conference-style paper at `paper/final_report.md`.
 - All 192 tests passing; deprecation warnings resolved.
 
@@ -35,4 +43,3 @@
   - project docs and rubric references
 - Validation status at migration point:
   - `uv run pytest -q` passing (`178 passed`)
-

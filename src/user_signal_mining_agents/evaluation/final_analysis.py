@@ -12,6 +12,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .human_annotation_analysis import AgreementMetric, JudgeAlignmentSummary, analyze_human_annotations
+
 
 CURRENT_METRICS = ("relevance", "groundedness", "distinctiveness", "overall_preference")
 LEGACY_JUDGE_KEYS = ("actionability", "evidence_grounding", "coverage", "contradiction", "non_redundancy")
@@ -108,6 +110,18 @@ class AnnotationProgressSummary(BaseModel):
     note: str
 
 
+class AnnotationFindingsSummary(BaseModel):
+    exports_used: list[str] = Field(default_factory=list)
+    overlapping_task_count: int = Field(ge=0)
+    only_in_export_a: list[str] = Field(default_factory=list)
+    only_in_export_b: list[str] = Field(default_factory=list)
+    interannotator_overall_preference: AgreementMetric | None = None
+    interannotator_dimensions: list[AgreementMetric] = Field(default_factory=list)
+    judge_alignment: list[JudgeAlignmentSummary] = Field(default_factory=list)
+    missing_task_ids: list[str] = Field(default_factory=list)
+    missing_judge_prompt_ids: list[str] = Field(default_factory=list)
+
+
 class ArtifactStatus(BaseModel):
     family: str
     status: Literal["complete", "partial", "missing", "excluded"]
@@ -133,6 +147,7 @@ class FinalAnalysisSummary(BaseModel):
     retrieval: RetrievalSummarySnapshot | None = None
     sweep: SweepSummary
     annotation: AnnotationProgressSummary
+    annotation_findings: AnnotationFindingsSummary | None = None
     artifact_statuses: list[ArtifactStatus] = Field(default_factory=list)
     figure_paths: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
@@ -588,6 +603,54 @@ def _load_annotation_progress(
     return summary, warnings
 
 
+def _load_annotation_findings(
+    tasks_dir: Path,
+    exports_dir: Path,
+    runs_dir: Path,
+) -> tuple[AnnotationFindingsSummary | None, list[str]]:
+    if not exports_dir.exists():
+        return None, []
+
+    export_paths = sorted(path for path in exports_dir.glob("*.json") if path.is_file())
+    if not export_paths:
+        return None, []
+
+    warnings: list[str] = []
+    export_a_path = export_paths[0]
+    export_b_path = export_paths[1] if len(export_paths) >= 2 else None
+    if len(export_paths) > 2 and export_b_path is not None:
+        warnings.append(
+            "More than two tracked annotation exports were found; "
+            f"using {export_a_path.name} and {export_b_path.name} for interannotator analysis."
+        )
+
+    try:
+        summary = analyze_human_annotations(
+            export_a_path,
+            export_b_path=export_b_path,
+            tasks_dir=tasks_dir,
+            runs_dir=runs_dir,
+        )
+    except Exception as exc:
+        warnings.append(f"Could not compute human-annotation findings from tracked exports: {exc}")
+        return None, warnings
+
+    return (
+        AnnotationFindingsSummary(
+            exports_used=[export.path for export in summary.exports],
+            overlapping_task_count=len(summary.overlapping_task_ids),
+            only_in_export_a=summary.only_in_export_a,
+            only_in_export_b=summary.only_in_export_b,
+            interannotator_overall_preference=summary.interannotator_overall_preference,
+            interannotator_dimensions=summary.interannotator_dimensions,
+            judge_alignment=summary.judge_alignment,
+            missing_task_ids=summary.missing_task_ids,
+            missing_judge_prompt_ids=summary.missing_judge_prompt_ids,
+        ),
+        warnings,
+    )
+
+
 def _status_for_optional_dir(path: Path, *, family: str, detail_when_present: str) -> ArtifactStatus:
     if path.exists() and any(path.iterdir()):
         return ArtifactStatus(family=family, status="complete", detail=detail_when_present)
@@ -835,6 +898,74 @@ def _write_annotation_progress_chart(path: Path, annotation: AnnotationProgressS
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
+def _write_interannotator_agreement_chart(path: Path, findings: AnnotationFindingsSummary | None) -> None:
+    if findings is None or findings.interannotator_overall_preference is None:
+        _render_empty_svg(path, title="Interannotator Agreement by Metric", message="Interannotator agreement is not available.")
+        return
+
+    metrics = [findings.interannotator_overall_preference] + findings.interannotator_dimensions
+    width = 1080
+    row_h = 56
+    height = 170 + len(metrics) * row_h
+    top = 104
+    exact_left = 210
+    exact_w = 240
+    kappa_left = 620
+    kappa_w = 320
+    kappa_zero_x = kappa_left + (kappa_w / 2)
+    lines = _svg_header("Interannotator Agreement by Metric", width, height)
+    lines.append(
+        f'<text class="label" x="24" y="76">Overlapping tasks: {findings.overlapping_task_count}</text>'
+    )
+    lines.append(f'<text class="label" x="{exact_left}" y="92">Exact Agreement</text>')
+    lines.append(f'<text class="label" x="{kappa_left}" y="92">Cohen&apos;s Kappa</text>')
+
+    for tick_index, percent in enumerate((0.0, 0.25, 0.5, 0.75, 1.0)):
+        x = exact_left + (exact_w * percent)
+        lines.append(f'<line class="grid" x1="{x:.1f}" y1="{top}" x2="{x:.1f}" y2="{height - 28}" />')
+        lines.append(f'<text class="tick" x="{x:.1f}" y="{height - 10}" text-anchor="middle">{percent:.0%}</text>')
+
+    for tick in (-1.0, -0.5, 0.0, 0.5, 1.0):
+        x = kappa_left + ((tick + 1.0) / 2.0) * kappa_w
+        css_class = "axis" if tick == 0.0 else "grid"
+        lines.append(f'<line class="{css_class}" x1="{x:.1f}" y1="{top}" x2="{x:.1f}" y2="{height - 28}" />')
+        tick_label = "0" if tick == 0.0 else f"{tick:+.1f}"
+        lines.append(f'<text class="tick" x="{x:.1f}" y="{height - 10}" text-anchor="middle">{tick_label}</text>')
+
+    for index, metric in enumerate(metrics):
+        y = top + index * row_h
+        label_y = y + 18
+        bar_y = y + 26
+        metric_label = _metric_label(metric.metric)
+        exact_width = metric.exact_agreement * exact_w
+        kappa_width = abs(metric.cohen_kappa) * (kappa_w / 2)
+        kappa_x = kappa_zero_x if metric.cohen_kappa >= 0 else kappa_zero_x - kappa_width
+        kappa_color = "#5f83bf" if metric.cohen_kappa >= 0 else "#d06767"
+
+        lines.append(f'<text class="label" x="{exact_left - 16}" y="{label_y}" text-anchor="end">{html.escape(metric_label)}</text>')
+        lines.append(f'<rect x="{exact_left}" y="{bar_y}" width="{exact_w}" height="14" rx="7" fill="#e5e7eb" />')
+        lines.append(f'<rect x="{exact_left}" y="{bar_y}" width="{exact_width:.1f}" height="14" rx="7" fill="#2a9d8f" />')
+        lines.append(
+            f'<text class="value" x="{exact_left + exact_w + 10}" y="{label_y + 20}">{metric.exact_agreement:.0%}</text>'
+        )
+
+        lines.append(f'<rect x="{kappa_left}" y="{bar_y}" width="{kappa_w}" height="14" rx="7" fill="#eef2f7" />')
+        lines.append(f'<rect x="{kappa_x:.1f}" y="{bar_y}" width="{kappa_width:.1f}" height="14" rx="7" fill="{kappa_color}" />')
+        value_anchor = "start" if metric.cohen_kappa >= 0 else "end"
+        value_x = kappa_x + kappa_width + 8 if metric.cohen_kappa >= 0 else kappa_x - 8
+        lines.append(
+            f'<text class="value" x="{value_x:.1f}" y="{label_y + 20}" text-anchor="{value_anchor}">{metric.cohen_kappa:+.2f}</text>'
+        )
+
+        if metric.mean_abs_diff is not None:
+            lines.append(
+                f'<text class="tick" x="{width - 24}" y="{label_y + 20}" text-anchor="end">MAD {metric.mean_abs_diff:.2f}</text>'
+            )
+
+    lines.append("</svg>")
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def _write_retrieval_metrics_chart(path: Path, retrieval: RetrievalSummarySnapshot) -> None:
     k_labels = [f"@{k}" for k in retrieval.k_values]
     recall = [retrieval.recall_at_k.get(str(k), 0.0) for k in retrieval.k_values]
@@ -878,6 +1009,7 @@ def _generate_figures(summary: FinalAnalysisSummary, output_dir: Path) -> list[P
     prompt_path = figures_dir / "prompt_overall_deltas.svg"
     failure_path = figures_dir / "failure_categories.svg"
     annotation_path = figures_dir / "annotation_progress.svg"
+    interannotator_path = figures_dir / "interannotator_agreement.svg"
 
     _write_overall_scores_chart(overall_path, summary)
     _write_domain_delta_chart(domain_path, summary.domains)
@@ -886,6 +1018,9 @@ def _generate_figures(summary: FinalAnalysisSummary, output_dir: Path) -> list[P
     _write_annotation_progress_chart(annotation_path, summary.annotation)
 
     figure_paths = [overall_path, domain_path, prompt_path, failure_path, annotation_path]
+    if summary.annotation_findings is not None and summary.annotation_findings.interannotator_overall_preference is not None:
+        _write_interannotator_agreement_chart(interannotator_path, summary.annotation_findings)
+        figure_paths.append(interannotator_path)
     if summary.retrieval is not None:
         retrieval_path = figures_dir / "retrieval_metrics.svg"
         _write_retrieval_metrics_chart(retrieval_path, summary.retrieval)
@@ -894,12 +1029,43 @@ def _generate_figures(summary: FinalAnalysisSummary, output_dir: Path) -> list[P
     return figure_paths
 
 
+def _human_annotation_status(
+    annotation: AnnotationProgressSummary,
+    findings: AnnotationFindingsSummary | None,
+) -> ArtifactStatus:
+    if annotation.total_tasks == 0:
+        return ArtifactStatus(family="human_annotation", status="missing", detail=annotation.note)
+
+    if findings is None:
+        return ArtifactStatus(family="human_annotation", status="partial", detail=annotation.note)
+
+    if findings.interannotator_overall_preference is not None:
+        return ArtifactStatus(
+            family="human_annotation",
+            status="complete",
+            detail=(
+                "Agreement analysis available for "
+                f"{len(findings.judge_alignment)} annotators across {findings.overlapping_task_count} overlapping tasks."
+            ),
+        )
+
+    if findings.judge_alignment:
+        return ArtifactStatus(
+            family="human_annotation",
+            status="partial",
+            detail=f"Judge alignment available for {len(findings.judge_alignment)} annotator(s); interannotator agreement is still pending.",
+        )
+
+    return ArtifactStatus(family="human_annotation", status="partial", detail=annotation.note)
+
+
 def _status_table(
     outcomes: list[PromptOutcome],
     failures_present: bool,
     retrieval: RetrievalSummarySnapshot | None,
     sweep: SweepSummary,
     annotation: AnnotationProgressSummary,
+    annotation_findings: AnnotationFindingsSummary | None,
     runs_dir: Path,
 ) -> list[ArtifactStatus]:
     return [
@@ -927,11 +1093,7 @@ def _status_table(
             status="complete" if sweep.status == "current" else ("excluded" if sweep.status in {"legacy", "mixed"} else "missing"),
             detail=sweep.note,
         ),
-        ArtifactStatus(
-            family="human_annotation",
-            status="partial" if annotation.total_tasks > 0 else "missing",
-            detail=annotation.note,
-        ),
+        _human_annotation_status(annotation, annotation_findings),
         _status_for_optional_dir(runs_dir.parent / "variant_runs", family="variant_runs", detail_when_present="Variant evaluation artifacts found."),
         _status_for_optional_dir(runs_dir.parent / "robustness_runs", family="robustness_runs", detail_when_present="Robustness evaluation artifacts found."),
     ]
@@ -955,6 +1117,8 @@ def _write_markdown_report(summary: FinalAnalysisSummary, summary_path: Path, ou
     top_gains = _top_outcomes(summary.prompt_outcomes, positive=True, limit=5)
     regressions = _top_outcomes(summary.prompt_outcomes, positive=False, limit=len(summary.prompt_outcomes))
     figure_rel = {Path(path).name: _relative_path(output_dir, Path(path)) for path in summary.figure_paths}
+    annotation_findings = summary.annotation_findings
+    interannotator = annotation_findings.interannotator_overall_preference if annotation_findings is not None else None
 
     lines: list[str] = [
         "# Final Analysis Report",
@@ -968,13 +1132,28 @@ def _write_markdown_report(summary: FinalAnalysisSummary, summary_path: Path, ou
         f"- Pipeline wins `{summary.pipeline_wins}` of `{summary.prompt_count}` evaluated prompts; baseline wins `{summary.baseline_wins}`, ties `{summary.ties}`.",
         f"- Top-line `overall_preference` improved from `{summary.baseline.overall_preference:.2f}` to `{summary.pipeline.overall_preference:.2f}` (`{summary.delta.overall_preference:+.2f}`).",
         f"- Judge panel mode: `{summary.judge_panel_mode}`.",
-        f"- Human annotation status: {summary.annotation.note}",
+    ]
+    if interannotator is not None:
+        lines.append(
+            "- Human annotation spans "
+            f"`{len(annotation_findings.judge_alignment)}` annotators across `{annotation_findings.overlapping_task_count}` overlapping tasks; "
+            f"`overall_preference` agreement is `{interannotator.exact_agreement:.2%}` (`kappa = {interannotator.cohen_kappa:.3f}`)."
+        )
+    elif annotation_findings is not None and annotation_findings.judge_alignment:
+        lines.append(
+            f"- Human annotation includes judge-alignment checks for `{len(annotation_findings.judge_alignment)}` annotator(s), "
+            "but interannotator agreement is not available yet."
+        )
+    else:
+        lines.append(f"- Human annotation status: {summary.annotation.note}")
+
+    lines.extend([
         "",
         "## Artifact Status",
         "",
         "| Family | Status | Detail |",
         "|---|---|---|",
-    ]
+    ])
 
     for status in summary.artifact_statuses:
         lines.append(f"| {status.family} | {status.status} | {status.detail} |")
@@ -998,6 +1177,13 @@ def _write_markdown_report(summary: FinalAnalysisSummary, summary_path: Path, ou
         "### Human annotation progress",
         f"![Human annotation progress]({figure_rel['annotation_progress.svg']})",
     ])
+
+    if "interannotator_agreement.svg" in figure_rel:
+        lines.extend([
+            "",
+            "### Interannotator agreement",
+            f"![Interannotator agreement by metric]({figure_rel['interannotator_agreement.svg']})",
+        ])
 
     if summary.retrieval is not None and "retrieval_metrics.svg" in figure_rel:
         lines.extend([
@@ -1123,13 +1309,81 @@ def _write_markdown_report(summary: FinalAnalysisSummary, summary_path: Path, ou
     else:
         lines.append("| none | 0 | 0 | 0 | 0 |")
 
+    if annotation_findings is not None and interannotator is not None:
+        lines.extend([
+            "",
+            "### Interannotator Agreement",
+            "",
+            f"- Overlapping tasks: `{annotation_findings.overlapping_task_count}`",
+            "",
+            "| Metric | Samples | Exact Agreement | Cohen's Kappa |",
+            "|---|---:|---:|---:|",
+            f"| {interannotator.metric} | {interannotator.sample_size} | {interannotator.exact_agreement:.2%} | {interannotator.cohen_kappa:.3f} |",
+            "",
+            "### Rubric Agreement",
+            "",
+            "| Dimension | Samples | Exact Agreement | Mean Abs Diff | Quadratic Weighted Kappa |",
+            "|---|---:|---:|---:|---:|",
+        ])
+        for metric in annotation_findings.interannotator_dimensions:
+            mean_abs = "n/a" if metric.mean_abs_diff is None else f"{metric.mean_abs_diff:.3f}"
+            weighted = "n/a" if metric.quadratic_weighted_kappa is None else f"{metric.quadratic_weighted_kappa:.3f}"
+            lines.append(
+                f"| {metric.metric} | {metric.sample_size} | {metric.exact_agreement:.2%} | {mean_abs} | {weighted} |"
+            )
+
+    if annotation_findings is not None and annotation_findings.judge_alignment:
+        lines.extend([
+            "",
+            "### Judge Alignment vs LLM Judge",
+            "",
+            "| Annotator | Samples | Exact Agreement | Cohen's Kappa | Human A | Human B | Human Tie | Judge A | Judge B | Judge Tie |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        ])
+        for row in annotation_findings.judge_alignment:
+            human_counts = row.human_preference_counts
+            judge_counts = row.judge_preference_counts
+            lines.append(
+                f"| {row.annotator_id} | {row.sample_size} | {row.exact_agreement:.2%} | {row.cohen_kappa:.3f} | "
+                f"{human_counts.get('system_a', 0)} | {human_counts.get('system_b', 0)} | {human_counts.get('tie', 0)} | "
+                f"{judge_counts.get('system_a', 0)} | {judge_counts.get('system_b', 0)} | {judge_counts.get('tie', 0)} |"
+            )
+
+    if annotation_findings is not None and (
+        annotation_findings.only_in_export_a
+        or annotation_findings.only_in_export_b
+        or annotation_findings.missing_task_ids
+        or annotation_findings.missing_judge_prompt_ids
+    ):
+        lines.extend([
+            "",
+            "### Annotation Gaps",
+        ])
+        if annotation_findings.only_in_export_a:
+            lines.append(f"- Only in export A: {', '.join(annotation_findings.only_in_export_a)}")
+        if annotation_findings.only_in_export_b:
+            lines.append(f"- Only in export B: {', '.join(annotation_findings.only_in_export_b)}")
+        if annotation_findings.missing_task_ids:
+            lines.append(f"- Missing task files: {', '.join(annotation_findings.missing_task_ids)}")
+        if annotation_findings.missing_judge_prompt_ids:
+            lines.append(f"- Missing judge artifacts: {', '.join(annotation_findings.missing_judge_prompt_ids)}")
+
+    human_caveat = "- Main evaluation results are still judge-only; human validation is not yet ready for agreement analysis."
+    if interannotator is not None:
+        human_caveat = (
+            "- Human validation is included, but interannotator overall-preference agreement is only "
+            f"{interannotator.exact_agreement:.2%} (`kappa = {interannotator.cohen_kappa:.3f}`), so calibration claims remain fragile."
+        )
+    elif annotation_findings is not None and annotation_findings.judge_alignment:
+        human_caveat = "- Human validation includes judge-alignment checks, but only one tracked annotator export has been summarized."
+
     lines.extend([
         "",
         "## Exclusions And Caveats",
         "",
         f"- Prompt sweep: {summary.sweep.note}",
         "- Variant and robustness suites are reported only if their artifact directories exist; they were not part of the completed run set in this workspace snapshot.",
-        "- Main evaluation results are still judge-only; human validation is not yet ready for agreement analysis.",
+        human_caveat,
     ])
     if summary.warnings:
         lines.extend([
@@ -1172,10 +1426,16 @@ def build_analysis_report(
         annotation_results_dir,
         annotation_exports_dir,
     )
+    annotation_findings, annotation_findings_warnings = _load_annotation_findings(
+        annotation_tasks_dir,
+        annotation_exports_dir,
+        runs_dir,
+    )
     warnings.extend(failure_warnings)
     warnings.extend(retrieval_warnings)
     warnings.extend(sweep_warnings)
     warnings.extend(annotation_warnings)
+    warnings.extend(annotation_findings_warnings)
 
     summary = FinalAnalysisSummary(
         runs_dir=str(runs_dir),
@@ -1195,6 +1455,7 @@ def build_analysis_report(
         retrieval=retrieval,
         sweep=sweep,
         annotation=annotation,
+        annotation_findings=annotation_findings,
         warnings=warnings,
     )
 
@@ -1204,6 +1465,7 @@ def build_analysis_report(
         retrieval=retrieval,
         sweep=sweep,
         annotation=annotation,
+        annotation_findings=annotation_findings,
         runs_dir=runs_dir,
     )
 
