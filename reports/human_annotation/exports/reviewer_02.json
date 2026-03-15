@@ -1,0 +1,386 @@
+{
+  "annotator_id": "reviewer_02",
+  "results": [
+    {
+      "task_id": "task_ecommerce-cart-abandonment",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 5,
+        "groundedness": 3,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 5,
+        "groundedness": 4,
+        "distinctiveness": 3,
+        "rationale": null
+      },
+      "overall_preference": "system_a",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T19:31:12.426000Z"
+    },
+    {
+      "task_id": "task_ecommerce-product-fit",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 3,
+        "groundedness": 4,
+        "distinctiveness": 3,
+        "rationale": null
+      },
+      "overall_preference": "system_a",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T19:57:36.122000Z"
+    },
+    {
+      "task_id": "task_ecommerce-repeat-rate",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T19:58:30.003000Z"
+    },
+    {
+      "task_id": "task_ecommerce-return-friction",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 3,
+        "groundedness": 4,
+        "distinctiveness": 3,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 5,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T19:58:53.028000Z"
+    },
+    {
+      "task_id": "task_ecommerce-shipping-trust",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_a",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T19:59:11.943000Z"
+    },
+    {
+      "task_id": "task_restaurant-brunch-weekend-flow",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:00:35.785000Z"
+    },
+    {
+      "task_id": "task_restaurant-date-night-ambiance",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_a",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:04:36.694000Z"
+    },
+    {
+      "task_id": "task_restaurant-dietary-restriction-trust",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 5,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_a",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:05:04.650000Z"
+    },
+    {
+      "task_id": "task_restaurant-family-friendly-experience",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 3,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 5,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:06:22.802000Z"
+    },
+    {
+      "task_id": "task_restaurant-late-night-consistency",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:06:56.912000Z"
+    },
+    {
+      "task_id": "task_restaurant-local-discovery-standout",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_a",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:07:19.676000Z"
+    },
+    {
+      "task_id": "task_restaurant-loyalty-repeat-visits",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_a",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:07:38.351000Z"
+    },
+    {
+      "task_id": "task_restaurant-price-value-trust",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:07:56.809000Z"
+    },
+    {
+      "task_id": "task_restaurant-service-recovery",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 5,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:08:13.009000Z"
+    },
+    {
+      "task_id": "task_restaurant-takeout-speed",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 5,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_a",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:08:58.925000Z"
+    },
+    {
+      "task_id": "task_saas-onboarding-dropoff",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "tie",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:09:15.558000Z"
+    },
+    {
+      "task_id": "task_saas-pricing-confusion",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 3,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 5,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:09:37.297000Z"
+    },
+    {
+      "task_id": "task_saas-support-trust",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 3,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:10:19.326000Z"
+    },
+    {
+      "task_id": "task_saas-time-to-value",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 3,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 5,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:11:21.423000Z"
+    },
+    {
+      "task_id": "task_saas-upgrade-conversion",
+      "annotator_id": "reviewer_02",
+      "system_a_scores": {
+        "relevance": 4,
+        "groundedness": 4,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "system_b_scores": {
+        "relevance": 5,
+        "groundedness": 5,
+        "distinctiveness": 4,
+        "rationale": null
+      },
+      "overall_preference": "system_b",
+      "difficulty_rating": 3,
+      "annotated_at": "2026-03-15T20:12:05.544000Z"
+    }
+  ],
+  "count": 20
+}
