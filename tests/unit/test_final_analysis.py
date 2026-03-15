@@ -307,6 +307,7 @@ def test_build_analysis_report_generates_outputs_and_flags_legacy_artifacts(tmp_
     assert "Prompt sweep" in markdown
     assert "legacy-format autosaves" in markdown
     assert "retrieval benchmark metrics" in markdown.lower()
+    assert "### Human annotation progress" not in markdown
 
 
 def test_build_analysis_report_integrates_human_annotation_findings(tmp_path: Path) -> None:
@@ -414,3 +415,4 @@ def test_build_analysis_report_integrates_human_annotation_findings(tmp_path: Pa
     assert "### Interannotator Agreement" in markdown
     assert "### Judge Alignment vs LLM Judge" in markdown
     assert "calibration claims remain fragile" in markdown
+    assert "annotation_progress.svg" not in markdown

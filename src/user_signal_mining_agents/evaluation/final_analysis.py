@@ -1008,16 +1008,14 @@ def _generate_figures(summary: FinalAnalysisSummary, output_dir: Path) -> list[P
     domain_path = figures_dir / "domain_overall_delta.svg"
     prompt_path = figures_dir / "prompt_overall_deltas.svg"
     failure_path = figures_dir / "failure_categories.svg"
-    annotation_path = figures_dir / "annotation_progress.svg"
     interannotator_path = figures_dir / "interannotator_agreement.svg"
 
     _write_overall_scores_chart(overall_path, summary)
     _write_domain_delta_chart(domain_path, summary.domains)
     _write_prompt_delta_chart(prompt_path, summary.prompt_outcomes)
     _write_failure_category_chart(failure_path, summary.failure_categories)
-    _write_annotation_progress_chart(annotation_path, summary.annotation)
 
-    figure_paths = [overall_path, domain_path, prompt_path, failure_path, annotation_path]
+    figure_paths = [overall_path, domain_path, prompt_path, failure_path]
     if summary.annotation_findings is not None and summary.annotation_findings.interannotator_overall_preference is not None:
         _write_interannotator_agreement_chart(interannotator_path, summary.annotation_findings)
         figure_paths.append(interannotator_path)
@@ -1173,9 +1171,6 @@ def _write_markdown_report(summary: FinalAnalysisSummary, summary_path: Path, ou
         "",
         "### Failure-tag concentration by system",
         f"![Failure tags by category]({figure_rel['failure_categories.svg']})",
-        "",
-        "### Human annotation progress",
-        f"![Human annotation progress]({figure_rel['annotation_progress.svg']})",
     ])
 
     if "interannotator_agreement.svg" in figure_rel:

@@ -881,7 +881,6 @@
     "reports\\final_analysis\\figures\\domain_overall_delta.svg",
     "reports\\final_analysis\\figures\\prompt_overall_deltas.svg",
     "reports\\final_analysis\\figures\\failure_categories.svg",
-    "reports\\final_analysis\\figures\\annotation_progress.svg",
     "reports\\final_analysis\\figures\\interannotator_agreement.svg",
     "reports\\final_analysis\\figures\\retrieval_metrics.svg"
   ],

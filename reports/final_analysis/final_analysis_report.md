@@ -37,9 +37,6 @@
 ### Failure-tag concentration by system
 ![Failure tags by category](figures/failure_categories.svg)
 
-### Human annotation progress
-![Human annotation progress](figures/annotation_progress.svg)
-
 ### Interannotator agreement
 ![Interannotator agreement by metric](figures/interannotator_agreement.svg)
 
